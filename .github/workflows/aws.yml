@@ -66,4 +66,4 @@ jobs:
           docker pull ${{ secrets.DOCKER_USERNAME }}/comket:latest  
           docker stop comket || true  
           docker rm comket || true  
-          docker run -d -p 8080:8080 --name citest ${{ secrets.DOCKER_USERNAME }}/comket:latest
+          docker run -d -p 8080:8080 --name comket ${{ secrets.DOCKER_USERNAME }}/comket:latest
