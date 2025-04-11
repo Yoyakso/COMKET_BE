@@ -5,3 +5,5 @@ services:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      RDS_USERNAME: ${RDS_USERNAME}
+      RDS_PASSWORD: ${RDS_PASSWORD}
