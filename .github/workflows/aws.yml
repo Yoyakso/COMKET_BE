@@ -26,44 +26,47 @@
 
 name: CD with Docker and EC2
 
-on:  
-  push:  
-    branches: [ main ]  
-  
-jobs:  
-  build-and-deploy:  
-    runs-on: ubuntu-latest  
-  
-    steps:  
-    - name: 📦 Checkout Repository  
-      uses: actions/checkout@v3  
-  
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📦 Checkout Repository
+      uses: actions/checkout@v3
+
     - name: ☕ Set up JDK 21
-      uses: actions/setup-java@v4  
-      with:  
-        java-version: '21'  
-        distribution: 'temurin'  
-  
-    - name: 🛠️ Build Spring Boot with Gradle  
-      run: ./gradlew clean build -x test  
-  
-    - name: 🐳 Log in to DockerHub  
-      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin  
-  
-    - name: 📦 Build Docker Image  
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/comket:latest .  
-  
-    - name: 🚀 Push Docker Image to DockerHub  
-      run: docker push ${{ secrets.DOCKER_USERNAME }}/comket:latest  
-  
-    - name: 🔑 Deploy to EC2 with SSH  
-      uses: appleboy/ssh-action@v1.0.0  
-      with:  
-        host: ${{ secrets.EC2_HOST }}  
-        username: ec2-user  
-        key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}  
-        script: |  
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    - name: 🛠️ Build Spring Boot with Gradle
+      run: ./gradlew clean build -x test
+
+    - name: 🐳 Log in to DockerHub
+      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: 📦 Build Docker Image
+      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/comket:latest .
+
+    - name: 🚀 Push Docker Image to DockerHub
+      run: docker push ${{ secrets.DOCKER_USERNAME }}/comket:latest
+
+    - name: 🔑 Deploy to EC2 with SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        script: |
+          echo "RDS_USERNAME=${{ secrets.RDS_USERNAME }}" > .env
+          echo "RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}" >> .env
+          
           docker pull ${{ secrets.DOCKER_USERNAME }}/comket:latest  
           docker stop comket || true  
           docker rm comket || true  
-          docker run -d -p 8080:8080 --name comket ${{ secrets.DOCKER_USERNAME }}/comket:latest
+          docker run -d --env-file .env -p 8080:8080 --name comket ${{ secrets.DOCKER_USERNAME }}/comket:latest
