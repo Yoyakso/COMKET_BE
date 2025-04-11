@@ -1,0 +1,60 @@
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+spring:
+  profiles:
+    active: test # 해당 부분을 local로 설정 시 로컬 환경 적용, test로 설정 시 테스트 서버 환경 적용
+
+--- # 운영 환경에 대한 설정
+--- # 테스트 서버 환경에 대한 설정
+spring:
+  config:
+    activate:
+      on-profile: test
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    driverClassName: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://comket-rds.c3mka68c68ht.ap-northeast-2.rds.amazonaws.com:3306/test
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+  jpa:
+    # Show sql when spring data jpa performs query
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        # Format queries
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+  devtools:
+    restart:
+      enabled: false
+
+--- # 로컬 서버 환경에 대한 설정
+
+spring:
+  config:
+    activate:
+      on-profile: local
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    driverClassName: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:9000/test
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+  jpa:
+    # Show sql when spring data jpa performs query
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        # Format queries
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
