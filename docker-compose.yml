@@ -1,0 +1,7 @@
+services:
+  app:
+    image: comket:latest
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
