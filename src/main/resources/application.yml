@@ -6,7 +6,7 @@ springdoc:
 
 spring:
   profiles:
-    active: test # 해당 부분을 local로 설정 시 로컬 환경 적용, test로 설정 시 테스트 서버 환경 적용
+    active: local # 해당 부분을 local로 설정 시 로컬 환경 적용, test로 설정 시 테스트 서버 환경 적용
 
 --- # 운영 환경에 대한 설정
 --- # 테스트 서버 환경에 대한 설정
@@ -58,3 +58,6 @@ spring:
         # Format queries
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+  docker:
+    compose:
+      enabled: false
