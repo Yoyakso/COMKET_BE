@@ -10,9 +10,6 @@ spring:
 
 --- # 운영 환경에 대한 설정
 --- # 라이브 서버 환경에 대한 설정
-server:
-  port: 80
-  forward-headers-strategy: native
 
 spring:
   baseurl: "http://comket.co.kr"
