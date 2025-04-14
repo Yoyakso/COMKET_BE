@@ -63,9 +63,12 @@ jobs:
         username: ec2-user
         key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
         script: |
+          # .env 파일 생성 (덮어쓰기 주의)
           echo "RDS_USERNAME=${{ secrets.RDS_USERNAME }}" > .env
           echo "RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}" >> .env
-          
+          echo "google_oauth2_client_id=${{ secrets.GOOGLE_OAUTH2_CLIENT_ID }}" >> .env
+          echo "google_oauth2_client_secret=${{ secrets.GOOGLE_OAUTH2_CLIENT_SECRET }}" >> .env
+
           docker pull ${{ secrets.DOCKER_USERNAME }}/comket:latest  
           docker stop comket || true  
           docker rm comket || true  
