@@ -3,6 +3,8 @@ package com.yoyakso.comket.exception;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -26,20 +28,26 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ResponseEntity<Map<String,String>> handleValidationException(MethodArgumentNotValidException ex) {
+	public ResponseEntity<Map<String, String>> handleValidationException(MethodArgumentNotValidException ex) {
+		Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 		Map<String, String> errors = new HashMap<>();
 		for (FieldError error : ex.getBindingResult().getFieldErrors()) {
 			errors.put(error.getField(), error.getDefaultMessage());
 		}
+		logger.error("Validation failed: {}", errors, ex);
+
 		return ResponseEntity.badRequest().body(errors);
 	}
 
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ResponseEntity<Map<String,String>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+	public ResponseEntity<Map<String, String>> handleHttpMessageNotReadableException(
+		HttpMessageNotReadableException ex) {
+		Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+		logger.error("HttpMessageNotReadableException occurred: {}", ex.getMessage(), ex);
+
 		Map<String, String> error = new HashMap<>();
 		error.put("error", "Invalid request body format");
-		error.put("message", ex.getLocalizedMessage());
 		return ResponseEntity.badRequest().body(error);
 	}
 }
