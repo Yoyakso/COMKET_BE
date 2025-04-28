@@ -16,6 +16,7 @@ import com.yoyakso.comket.member.dto.MemberUpdateRequest;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.util.JwtTokenProvider;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -31,6 +32,7 @@ public class MemberController {
 
 	//회원가입
 	@PostMapping("/auth/register")
+	@Operation(summary = "회원가입", description = "새로운 회원을 등록합니다.")
 	public ResponseEntity<MemberRegisterResponse> registerMember(
 		@RequestBody MemberRegisterRequest memberRegisterRequest) {
 		Member member = Member.fromRequest(memberRegisterRequest);
@@ -41,6 +43,7 @@ public class MemberController {
 
 	//회원 정보 조회
 	@GetMapping("/members/me")
+	@Operation(summary = "회원 정보 조회", description = "현재 로그인한 회원의 정보를 조회합니다.")
 	public ResponseEntity<MemberInfoResponse> getMember(HttpServletRequest request) {
 
 		Member member = getAuthenticatedMember(request);
@@ -58,6 +61,7 @@ public class MemberController {
 
 	//회원 정보 수정
 	@PatchMapping("/members/me")
+	@Operation(summary = "회원 정보 수정", description = "현재 로그인한 회원의 정보를 수정합니다.")
 	public ResponseEntity<MemberInfoResponse> updateMember(HttpServletRequest request,
 		@RequestBody MemberUpdateRequest updateRequest) {
 		Member member = getAuthenticatedMember(request);
@@ -77,6 +81,7 @@ public class MemberController {
 
 	// 회원 탈퇴
 	@DeleteMapping("/members/me")
+	@Operation(summary = "회원 탈퇴", description = "현재 로그인한 회원의 계정을 삭제합니다.")
 	public ResponseEntity<Void> deleteMember(HttpServletRequest request) {
 		String token = jwtTokenProvider.getTokenFromHeader(request);
 		if (token == null) {
@@ -95,6 +100,10 @@ public class MemberController {
 		}
 
 		String email = jwtTokenProvider.parseToken(token).getSubject();
+		Member member = memberService.findByEmail(email);
+		if (member == null) {
+			// 회원 정보가 없을 경우
+		}
 		return memberService.findByEmail(email);
 	}
 }
