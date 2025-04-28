@@ -13,8 +13,10 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.member.MemberService;
 import com.yoyakso.comket.oauth2.dto.GoogleDetailRequest;
 import com.yoyakso.comket.oauth2.dto.GoogleDetailResponse;
+import com.yoyakso.comket.oauth2.dto.GoogleLoginResponse;
 import com.yoyakso.comket.oauth2.dto.GoogleTokenRequest;
 import com.yoyakso.comket.oauth2.dto.GoogleTokenResponse;
 
@@ -25,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class GoogleOAuth2ServiceImpl implements OAuth2Service {
 
 	private final RestTemplate restTemplate;
+	private final MemberService memberService;
 	@Value("${google_oauth2_client_id}")
 	private String googleClientId;
 	@Value("${google_oauth2_client_secret}")
@@ -42,17 +45,21 @@ public class GoogleOAuth2ServiceImpl implements OAuth2Service {
 	}
 
 	@Override
-	public GoogleDetailResponse getGoogleUserInfo(String code) {
+	public GoogleLoginResponse handleGoogleLogin(String code) {
 		try {
+			// 구글 토큰 요청
 			GoogleTokenRequest tokenRequest = new GoogleTokenRequest(code, googleClientId, googleClientSecret,
 				googleRedirectUri);
 			GoogleTokenResponse googleToken = requestGoogleToken(tokenRequest);
 
+			if (googleToken == null || googleToken.getAccess_token() == null) {
+				throw new CustomException("OAUTH2_TOKEN_ERROR", "구글 토큰 발급에 실패했습니다.");
+			}
+
 			GoogleDetailRequest detailRequest = new GoogleDetailRequest(googleToken.getAccess_token());
+			GoogleDetailResponse detailResponse = requestGoogleUserInfo(detailRequest);
 
-			//TODO - 유저 검증 및 토큰 발급 로직 연결
-
-			return requestGoogleUserInfo(detailRequest);
+			return memberService.handleOAuth2Member(detailResponse);
 
 		} catch (RestClientException e) {
 			throw new CustomException("OAUTH2_COMMUNICATION_ERROR", "구글 서버와 통신 중 오류가 발생했습니다." + e.getMessage());
