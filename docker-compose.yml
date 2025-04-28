@@ -1,9 +1,11 @@
 services:
   app:
+    build:
+        context: .
     image: comket:latest
     env_file:
       - .env
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       RDS_USERNAME: ${RDS_USERNAME}
       RDS_PASSWORD: ${RDS_PASSWORD}

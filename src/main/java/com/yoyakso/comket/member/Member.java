@@ -1,9 +1,16 @@
 package com.yoyakso.comket.member;
 
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -15,6 +22,7 @@ import lombok.extern.java.Log;
 @Getter
 @Setter
 @Entity
+@Table(name = "member")
 public class Member {
 
 	@Id
@@ -23,7 +31,7 @@ public class Member {
 
 	@NotNull
 	@Size(min=2, max=50)
-	private String name;
+	private String realName;
 
 	@NotNull
 	@Email
@@ -34,25 +42,23 @@ public class Member {
 	private String password;
 
 	@NotNull
-	private String phoneNumber;
+	@Size(min=2, max=50)
+	private String nickname;
 
-	private String profileImageUrl;
+	@Column(updatable = false)
+	private LocalDateTime createdAt;
 
-	@NotNull
-	private PositionType positionType;
+	// private PositionType positionType;
 
-	@NotNull
-	private LoginType loginType;
+	@PrePersist
+	protected void onCreate() {
+		this.createdAt = LocalDateTime.now();
+	}
 
-	public Member(Long id, String name, String email, String password, String phoneNumber, String profileImageUrl, int positionType, int loginType) {
-		this.id = id;
-		this.name = name;
+	public Member( String realName, String email, String password ) {
+		this.realName = realName;
 		this.email = email;
 		this.password = password;
-		this.phoneNumber = phoneNumber;
-		this.profileImageUrl = profileImageUrl;
-		this.positionType = PositionType.fromType(positionType);
-		this.loginType = LoginType.fromType(loginType);
 	}
 
 	public Member() {
