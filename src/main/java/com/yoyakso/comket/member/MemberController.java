@@ -88,7 +88,7 @@ public class MemberController {
 		return ResponseEntity.noContent().build();
 	}
 
-	public Member getAuthenticatedMember(HttpServletRequest request) {
+	private Member getAuthenticatedMember(HttpServletRequest request) {
 		String token = jwtTokenProvider.getTokenFromHeader(request);
 		if (token == null) {
 			return null; // 토큰이 없을 경우
