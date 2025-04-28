@@ -9,8 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.oauth2.dto.GoogleDetailRequest;
 import com.yoyakso.comket.oauth2.dto.GoogleDetailResponse;
 import com.yoyakso.comket.oauth2.dto.GoogleTokenRequest;
@@ -41,53 +43,66 @@ public class GoogleOAuth2ServiceImpl implements OAuth2Service {
 
 	@Override
 	public GoogleDetailResponse getGoogleUserInfo(String code) {
-		GoogleTokenRequest tokenRequest = new GoogleTokenRequest(code, googleClientId, googleClientSecret,
-			googleRedirectUri);
-		GoogleTokenResponse googleToken = requestGoogleToken(tokenRequest);
+		try {
+			GoogleTokenRequest tokenRequest = new GoogleTokenRequest(code, googleClientId, googleClientSecret,
+				googleRedirectUri);
+			GoogleTokenResponse googleToken = requestGoogleToken(tokenRequest);
 
-		GoogleDetailRequest detailRequest = new GoogleDetailRequest(googleToken.getAccess_token());
+			GoogleDetailRequest detailRequest = new GoogleDetailRequest(googleToken.getAccess_token());
 
-		//TODO - 유저 검증 및 토큰 발급 로직 연결
+			//TODO - 유저 검증 및 토큰 발급 로직 연결
 
-		return requestGoogleUserInfo(detailRequest);
+			return requestGoogleUserInfo(detailRequest);
+
+		} catch (RestClientException e) {
+			throw new CustomException("OAUTH2_COMMUNICATION_ERROR", "구글 서버와 통신 중 오류가 발생했습니다." + e.getMessage());
+		}
 	}
 
 	// 구글 로그인 토큰 요청
 	private GoogleTokenResponse requestGoogleToken(GoogleTokenRequest requestDto) {
-		String tokenUrl = "https://oauth2.googleapis.com/token";
+		try {
+			String tokenUrl = "https://oauth2.googleapis.com/token";
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-		params.add("code", requestDto.getCode());
-		params.add("client_id", requestDto.getClientId());
-		params.add("client_secret", requestDto.getClientSecret());
-		params.add("redirect_uri", requestDto.getRedirectUri());
-		params.add("grant_type", "authorization_code");
+			MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+			params.add("code", requestDto.getCode());
+			params.add("client_id", requestDto.getClientId());
+			params.add("client_secret", requestDto.getClientSecret());
+			params.add("redirect_uri", requestDto.getRedirectUri());
+			params.add("grant_type", "authorization_code");
 
-		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+			HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
 
-		ResponseEntity<GoogleTokenResponse> response = restTemplate.postForEntity(
-			tokenUrl, request, GoogleTokenResponse.class
-		);
+			ResponseEntity<GoogleTokenResponse> response = restTemplate.postForEntity(
+				tokenUrl, request, GoogleTokenResponse.class
+			);
 
-		return response.getBody();
+			return response.getBody();
+		} catch (RestClientException e) {
+			throw new CustomException("OAUTH2_TOKEN_REQUEST_FAILED", "구글 토큰 요청에 실패했습니다." + e.getMessage());
+		}
 	}
 
 	// 유저 정보 조회 요청
 	private GoogleDetailResponse requestGoogleUserInfo(GoogleDetailRequest requestDto) {
-		String userInfoUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
+		try {
+			String userInfoUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.setBearerAuth(requestDto.getAccessToken());
+			HttpHeaders headers = new HttpHeaders();
+			headers.setBearerAuth(requestDto.getAccessToken());
 
-		HttpEntity<Void> request = new HttpEntity<>(headers);
+			HttpEntity<Void> request = new HttpEntity<>(headers);
 
-		ResponseEntity<GoogleDetailResponse> response = restTemplate.exchange(
-			userInfoUrl, HttpMethod.GET, request, GoogleDetailResponse.class
-		);
+			ResponseEntity<GoogleDetailResponse> response = restTemplate.exchange(
+				userInfoUrl, HttpMethod.GET, request, GoogleDetailResponse.class
+			);
 
-		return response.getBody();
+			return response.getBody();
+		} catch (RestClientException e) {
+			throw new CustomException("OAUTH2_USERINFO_REQUEST_FAILED", "구글 유저 정보 요청에 실패했습니다." + e.getMessage());
+		}
 	}
 }
