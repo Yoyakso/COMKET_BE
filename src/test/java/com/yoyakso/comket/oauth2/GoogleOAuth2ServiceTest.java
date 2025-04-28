@@ -13,7 +13,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import com.yoyakso.comket.member.MemberService;
 import com.yoyakso.comket.oauth2.dto.GoogleDetailResponse;
+import com.yoyakso.comket.oauth2.dto.GoogleLoginResponse;
 import com.yoyakso.comket.oauth2.dto.GoogleTokenResponse;
 import com.yoyakso.comket.oauth2.service.GoogleOAuth2ServiceImpl;
 
@@ -22,6 +24,9 @@ class GoogleOAuth2ServiceTest {
 
 	@InjectMocks
 	private GoogleOAuth2ServiceImpl service;
+
+	@Mock
+	private MemberService memberService;
 
 	@Mock
 	private RestTemplate restTemplate;
@@ -36,12 +41,16 @@ class GoogleOAuth2ServiceTest {
 	void testGetGoogleUserInfo() {
 		// given
 		String dummyCode = "dummy-code";
-		GoogleTokenResponse mockTokenResponse = new GoogleTokenResponse();
+
+		GoogleTokenResponse mockTokenResponse = new GoogleTokenResponse(); // 구글에서 넘겨준 것으로 가장한 가짜 토큰 정보
 		mockTokenResponse.setAccess_token("dummy-access-token");
 
-		GoogleDetailResponse mockDetailResponse = new GoogleDetailResponse();
+		GoogleDetailResponse mockDetailResponse = new GoogleDetailResponse(); // 구글에서 넘겨준 것으로 가장한 가짜 유저 정보
 		mockDetailResponse.setEmail("test@example.com");
 		mockDetailResponse.setName("Test User");
+
+		// 최종 로그인 응답 Mock
+		GoogleLoginResponse mockLoginResponse = new GoogleLoginResponse("mock-jwt-token", "Test User");
 
 		// when - 토큰 요청 Mock
 		Mockito.when(restTemplate.postForEntity(
@@ -58,10 +67,14 @@ class GoogleOAuth2ServiceTest {
 			Mockito.eq(GoogleDetailResponse.class)
 		)).thenReturn(ResponseEntity.ok(mockDetailResponse));
 
-		// then
-		GoogleDetailResponse response = service.getGoogleUserInfo(dummyCode);
+		// when - MemberSerbvice Mock 설정
+		Mockito.when(memberService.handleOAuth2Member(mockDetailResponse))
+			.thenReturn(mockLoginResponse);
 
-		assertEquals("test@example.com", response.getEmail());
-		assertEquals("Test User", response.getName());
+		GoogleLoginResponse response = service.handleGoogleLogin(dummyCode);
+
+		// 검증
+		assertEquals("mock-jwt-token", response.getAccessToken());
+		assertEquals("Test User", response.getNickname());
 	}
 }
