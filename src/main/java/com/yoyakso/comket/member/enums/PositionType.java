@@ -1,4 +1,4 @@
-package com.yoyakso.comket.member;
+package com.yoyakso.comket.member.enums;
 
 public enum PositionType {
 
@@ -11,12 +11,8 @@ public enum PositionType {
 
 	private final int type;
 
-	PositionType( int type ){
+	PositionType(int type) {
 		this.type = type;
-	}
-
-	public int getType(){
-		return type;
 	}
 
 	public static PositionType fromType(int type) {
@@ -26,5 +22,9 @@ public enum PositionType {
 			}
 		}
 		throw new IllegalArgumentException("Invalid type: " + type);
+	}
+
+	public int getType() {
+		return type;
 	}
 }

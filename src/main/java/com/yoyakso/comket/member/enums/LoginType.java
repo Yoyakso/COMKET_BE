@@ -1,4 +1,4 @@
-package com.yoyakso.comket.member;
+package com.yoyakso.comket.member.enums;
 
 public enum LoginType {
 	GOOGLE(1),
@@ -6,11 +6,8 @@ public enum LoginType {
 
 	private final int type;
 
-	LoginType( int type ){
+	LoginType(int type) {
 		this.type = type;
-	}
-	public int getType(){
-		return type;
 	}
 
 	public static LoginType fromType(int type) {
@@ -20,5 +17,9 @@ public enum LoginType {
 			}
 		}
 		throw new IllegalArgumentException("Invalid type: " + type);
+	}
+
+	public int getType() {
+		return type;
 	}
 }
