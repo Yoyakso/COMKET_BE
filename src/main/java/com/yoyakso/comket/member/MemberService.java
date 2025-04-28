@@ -9,18 +9,14 @@ import com.yoyakso.comket.member.dto.MemberUpdateRequest;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.util.JwtTokenProvider;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class MemberService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
-
-	public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder,
-		JwtTokenProvider jwtTokenProvider) {
-		this.memberRepository = memberRepository;
-		this.passwordEncoder = passwordEncoder;
-		this.jwtTokenProvider = jwtTokenProvider;
-	}
 
 	public Member findByEmail(String email) {
 		return memberRepository.findByEmail(email);
