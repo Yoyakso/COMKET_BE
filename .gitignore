@@ -6,6 +6,8 @@ build/
 !**/src/test/**/build/
 logs/
 .env
+/src/main/resources/application-local.yml
+**.ds_store
 
 ### STS ###
 .apt_generated
