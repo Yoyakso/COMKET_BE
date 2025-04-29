@@ -7,6 +7,8 @@ import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.dto.MemberRegisterResponse;
 import com.yoyakso.comket.member.dto.MemberUpdateRequest;
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.oauth2.dto.GoogleDetailResponse;
+import com.yoyakso.comket.oauth2.dto.GoogleLoginResponse;
 import com.yoyakso.comket.util.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -76,5 +78,19 @@ public class MemberService {
 			member.setRealName(updateRequest.getRealName());
 		}
 		return memberRepository.save(member);
+	}
+
+	// 구글 로그인 로직 처리
+	public GoogleLoginResponse handleOAuth2Member(GoogleDetailResponse googleUserInfo) {
+		Member member = memberRepository.findByEmail(googleUserInfo.getEmail());
+
+		if (member == null) {
+			// 회원가입 페이지로 유도
+			throw new CustomException("OAUTH2_SIGNUP_REQUIRED", "회원가입이 필요한 사용자입니다.");
+		}
+
+		String token = jwtTokenProvider.createToken(member.getEmail());
+
+		return new GoogleLoginResponse(token, member.getNickname());
 	}
 }
