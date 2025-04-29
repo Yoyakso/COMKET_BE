@@ -10,6 +10,8 @@ spring:
 
 --- # 운영 환경에 대한 설정
 --- # 라이브 서버 환경에 대한 설정
+google:
+  oauth2_redirect_uri: http://comket.co.kr/api/v1/auth/oauth2/google/login
 
 spring:
   baseurl: "http://comket.co.kr"
@@ -39,6 +41,8 @@ spring:
       enabled: false
 
 --- # 로컬 서버 환경에 대한 설정
+google:
+  oauth2_redirect_uri: http://localhost:8080/api/v1/auth/oauth2/google/login
 
 spring:
   config:
