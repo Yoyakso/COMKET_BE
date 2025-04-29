@@ -6,7 +6,7 @@ springdoc:
 
 spring:
   profiles:
-    active: local # 해당 부분을 local로 설정 시 로컬 환경 적용, live로 설정 시 라이브 서버 환경 적용
+    active: live # 해당 부분을 local로 설정 시 로컬 환경 적용, live로 설정 시 라이브 서버 환경 적용
 
 --- # 운영 환경에 대한 설정
 --- # 라이브 서버 환경에 대한 설정
