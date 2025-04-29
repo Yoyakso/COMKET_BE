@@ -18,17 +18,14 @@ import com.yoyakso.comket.util.JwtTokenProvider;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class MemberController {
 	private final MemberService memberService;
 	private final JwtTokenProvider jwtTokenProvider;
-
-	public MemberController(MemberService memberService, JwtTokenProvider jwtTokenProvider) {
-		this.memberService = memberService;
-		this.jwtTokenProvider = jwtTokenProvider;
-	}
 
 	//회원가입
 	@PostMapping("/auth/register")
