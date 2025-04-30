@@ -43,12 +43,14 @@ public class Project {
 	private String name;
 
 	@Column(length = 255)
-	private String description;
+	private String purpose;
 
 	@Column(length = 255)
-	private String profileUrl;
+	private String description;
 
 	private ProjectState state;
+
+	private Boolean isPublic;
 
 	@CreationTimestamp
 	private LocalDateTime createTime;
@@ -59,24 +61,36 @@ public class Project {
 	@Builder
 	public Project(
 		Long id,
+		Workspace workspace,
 		String name,
+		String purpose,
 		String description,
-		String profileUrl,
-		ProjectState state
+		ProjectState state,
+		Boolean isPublic
 	) {
 		this.id = id;
+		this.workspace = workspace;
 		this.name = name;
+		this.purpose = purpose;
 		this.description = description;
-		this.profileUrl = profileUrl;
 		this.state = state;
+		this.isPublic = isPublic;
 	}
 
 	public void updateState(ProjectState state) {
 		this.state = state;
 	}
 
+	public void updateProjectPublicity(Boolean isPublic) {
+		this.isPublic = isPublic;
+	}
+
 	public void updateName(String name) {
 		this.name = name;
+	}
+
+	public void updatePurpose(String purpose) {
+		this.purpose = purpose;
 	}
 
 	public void updateDescription(String description) {
