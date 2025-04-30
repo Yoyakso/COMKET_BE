@@ -17,32 +17,20 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class WorkspaceService {
+
 	private final WorkspaceRepository workspaceRepository;
 	private final WorkspaceMemberService workspaceMemberService;
 
 	public Workspace registerWorkspace(Workspace workspace, Member member) {
-		if (workspaceRepository.existsByName(workspace.getName())) {
-			throw new CustomException("WORKSPACE_NAME_DUPLICATE", "워크스페이스 이름이 중복되었습니다.");
-		}
-		// 워크스페이스 생성
+		validateWorkspaceNameUniqueness(workspace.getName());
 		Workspace savedWorkspace = workspaceRepository.save(workspace);
-		// 워크스페이스 멤버 추가
 		workspaceMemberService.createWorkspaceMember(savedWorkspace, member, true, "ADMIN");
 		return savedWorkspace;
 	}
 
 	public Workspace getWorkspaceById(Long id, Member member) {
-		Workspace workspace = workspaceRepository.findById(id)
-			.filter(ws -> !ws.isDeleted())
-			.orElse(null);
-
-		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(id,
-			member.getId());
-		// 1. 워크스페이스가 존재하지 않거나
-		// 2. 워크스페이스가 비공개이고, 해당 멤버가 워크스페이스에 속하지 않는 경우
-		if (workspace == null || (workspace.getVisibility().equals(Visibility.PRIVATE) && workspaceMember == null)) {
-			throw new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스 정보를 찾을 수 없습니다.");
-		}
+		Workspace workspace = findWorkspaceById(id);
+		validateWorkspaceAccess(workspace, member);
 		return workspace;
 	}
 
@@ -51,50 +39,19 @@ public class WorkspaceService {
 	}
 
 	public Workspace updateWorkspace(Member member, Long id, Workspace workspace) {
-		// 워크스페이스 멤버 확인
-		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(id,
-			member.getId());
-		// 워크스페이스 멤버가 존재하지 않거나 비활성화된 경우, 또는 ADMIN, OWNER가 아닌 경우
-		if (workspaceMember == null || !workspaceMember.isActive() ||
-			(!workspaceMember.getPositionType().equals("ADMIN") && !workspaceMember.getPositionType()
-				.equals("OWNER"))) {
-			throw new CustomException("WORKSPACE_AUTHORIZATION_FAILED", "워크스페이스에 대한 권한이 없습니다.");
-		}
-		Workspace originalWorkspace = workspaceRepository.findById(id)
-			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스 정보를 찾을 수 없습니다."));
-		// 워크스페이스 이름 중복 확인
-		if (workspaceRepository.existsByName(workspace.getName()) &&
-			!originalWorkspace.getName().equals(workspace.getName())) {
-			throw new CustomException("WORKSPACE_NAME_DUPLICATE", "워크스페이스 이름이 중복되었습니다.");
-		}
-		// 워크스페이스 정보 업데이트
-		originalWorkspace.setName(workspace.getName());
-		originalWorkspace.setDescription(workspace.getDescription());
-		originalWorkspace.setVisibility(workspace.getVisibility());
-		originalWorkspace.setUpdatedAt(workspace.getUpdatedAt());
-		// 워크스페이스 저장
+		Workspace originalWorkspace = findWorkspaceById(id);
+		validateUpdatePermission(member, id);
+		validateWorkspaceNameUniquenessForUpdate(workspace.getName(), originalWorkspace.getName());
+		updateWorkspaceDetails(originalWorkspace, workspace);
 		return workspaceRepository.save(originalWorkspace);
 	}
 
 	public void deleteWorkspace(Long id, Member member) {
-		// 워크스페이스 멤버 확인
-		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(id,
-			member.getId());
-		// 워크스페이스 멤버가 존재하지 않거나 비활성화된 경우, 또는 ADMIN, OWNER가 아닌 경우
-		if (workspaceMember == null || !workspaceMember.isActive() ||
-			(!workspaceMember.getPositionType().equals("ADMIN") && !workspaceMember.getPositionType()
-				.equals("OWNER"))) {
-			throw new CustomException("WORKSPACE_AUTHORIZATION_FAILED", "워크스페이스에 대한 권한이 없습니다.");
-		}
-		// 워크스페이스가 이미 is_deleted 상태인 경우
-		if (workspaceRepository.findById(id).orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND",
-			"워크스페이스 정보를 찾을 수 없습니다.")).isDeleted()) {
+		Workspace workspace = findWorkspaceById(id);
+		validateDeletePermission(member, id);
+		if (workspace.isDeleted()) {
 			throw new CustomException("WORKSPACE_ALREADY_DELETED", "이미 삭제된 워크스페이스입니다.");
 		}
-		// 워크스페이스 삭제
-		// is_deleted 컬럼을 true로 업데이트
-		Workspace workspace = workspaceRepository.findById(id)
-			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스 정보를 찾을 수 없습니다."));
 		workspace.setDeleted(true);
 		workspaceRepository.save(workspace);
 	}
@@ -108,5 +65,54 @@ public class WorkspaceService {
 			.filter(workspace -> Visibility.PUBLIC.equals(workspace.getVisibility()))
 			.filter(workspace -> !workspace.isDeleted())
 			.collect(Collectors.toList());
+	}
+
+	// --- Private Helper Methods ---
+
+	private Workspace findWorkspaceById(Long id) {
+		return workspaceRepository.findById(id)
+			.filter(ws -> !ws.isDeleted())
+			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스 정보를 찾을 수 없습니다."));
+	}
+
+	private void validateWorkspaceNameUniqueness(String name) {
+		if (workspaceRepository.existsByName(name)) {
+			throw new CustomException("WORKSPACE_NAME_DUPLICATE", "워크스페이스 이름이 중복되었습니다.");
+		}
+	}
+
+	private void validateWorkspaceNameUniquenessForUpdate(String newName, String currentName) {
+		if (workspaceRepository.existsByName(newName) && !currentName.equals(newName)) {
+			throw new CustomException("WORKSPACE_NAME_DUPLICATE", "워크스페이스 이름이 중복되었습니다.");
+		}
+	}
+
+	private void validateWorkspaceAccess(Workspace workspace, Member member) {
+		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
+			workspace.getId(), member.getId());
+		if (workspace.getVisibility().equals(Visibility.PRIVATE) && workspaceMember == null) {
+			throw new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스 정보를 찾을 수 없습니다.");
+		}
+	}
+
+	private void validateUpdatePermission(Member member, Long workspaceId) {
+		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
+			workspaceId, member.getId());
+		if (workspaceMember == null || !workspaceMember.isActive() ||
+			(!"ADMIN".equals(workspaceMember.getPositionType()) && !"OWNER".equals(
+				workspaceMember.getPositionType()))) {
+			throw new CustomException("WORKSPACE_AUTHORIZATION_FAILED", "워크스페이스에 대한 권한이 없습니다.");
+		}
+	}
+
+	private void validateDeletePermission(Member member, Long workspaceId) {
+		validateUpdatePermission(member, workspaceId); // 삭제 권한은 업데이트 권한과 동일
+	}
+
+	private void updateWorkspaceDetails(Workspace originalWorkspace, Workspace updatedWorkspace) {
+		originalWorkspace.setName(updatedWorkspace.getName());
+		originalWorkspace.setDescription(updatedWorkspace.getDescription());
+		originalWorkspace.setVisibility(updatedWorkspace.getVisibility());
+		originalWorkspace.setUpdatedAt(updatedWorkspace.getUpdatedAt());
 	}
 }
