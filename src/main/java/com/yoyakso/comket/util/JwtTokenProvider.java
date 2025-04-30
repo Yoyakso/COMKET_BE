@@ -18,7 +18,7 @@ public class JwtTokenProvider {
 	private final SecretKey secretKey;
 	private final long expirationTime = 1000 * 60 * 60 * 24; // 1일
 
-	public JwtTokenProvider(@Value("${JWT_SECRET}") String secret) {
+	public JwtTokenProvider(@Value("${jwt.secret}") String secret) {
 		assert secret != null;
 		this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
 	}

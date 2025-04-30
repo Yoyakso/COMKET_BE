@@ -2,17 +2,25 @@ package com.yoyakso.comket.workspace.entity;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
+import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
+import com.yoyakso.comket.workspace.enums.Visibility;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,6 +30,7 @@ import lombok.Setter;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name = "workspace")
 public class Workspace {
 
@@ -38,23 +47,35 @@ public class Workspace {
 	@Column(length = 255)
 	private String description;
 
+	@NotNull
+	@Enumerated(EnumType.STRING)
+	@Column(length = 10)
+	private Visibility visibility;
+
 	@Column(updatable = true)
 	private boolean isDeleted;
 
-	@Column(updatable = false)
+	@CreationTimestamp
 	private LocalDateTime createdAt;
 
-	@Column(updatable = true)
+	@UpdateTimestamp
 	private LocalDateTime updatedAt;
 
-	@PrePersist
-	protected void onCreate() {
-		this.createdAt = LocalDateTime.now();
-		this.updatedAt = LocalDateTime.now();
+	public static Workspace fromRequest(WorkspaceRegisterRequest workspaceRegisterRequest) {
+		return Workspace.builder()
+			.name(workspaceRegisterRequest.getName())
+			.description(workspaceRegisterRequest.getDescription())
+			.visibility(workspaceRegisterRequest.getVisibility())
+			.isDeleted(false)
+			.build();
 	}
 
-	@PreUpdate
-	protected void onUpdate() {
-		this.updatedAt = LocalDateTime.now();
+	public static Workspace fromRequest(WorkspaceUpdateRequest workspaceUpdateRequest) {
+		return Workspace.builder()
+			.name(workspaceUpdateRequest.getName())
+			.description(workspaceUpdateRequest.getDescription())
+			.visibility(workspaceUpdateRequest.getVisibility())
+			.isDeleted(false)
+			.build();
 	}
 }

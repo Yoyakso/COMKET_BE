@@ -4,10 +4,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.yoyakso.comket.workspace.entity.Workspace;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public interface WorkspaceRepository extends JpaRepository<Workspace, Long> {
-	// Custom query methods can be defined here if needed
-	// For example:
-	// List<Workspace> findByName(String name);
-	// List<Workspace> findByOwnerId(Long ownerId);
+	boolean existsByName(@NotNull @Size(min = 2, max = 100) String name);
 
 }
