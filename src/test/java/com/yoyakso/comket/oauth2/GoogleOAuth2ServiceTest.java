@@ -75,6 +75,6 @@ class GoogleOAuth2ServiceTest {
 
 		// 검증
 		assertEquals("mock-jwt-token", response.getAccessToken());
-		assertEquals("Test User", response.getNickname());
+		assertEquals("Test User", response.getName());
 	}
 }
