@@ -16,7 +16,7 @@ google:
   oauth2_client_secret: ${GOOGLE_OAUTH2_CLIENT_SECRET}
 
 spring:
-  baseurl: "http://comket-api.co.kr"
+  baseurl: "https://comket-api.co.kr"
 
   config:
     activate:
