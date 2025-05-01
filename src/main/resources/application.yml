@@ -12,6 +12,8 @@ spring:
 --- # 라이브 서버 환경에 대한 설정
 google:
   oauth2_redirect_uri: http://comket.co.kr/api/v1/auth/oauth2/google/login
+  oauth2_client_id: ${GOOGLE_OAUTH2_CLIENT_ID}
+  oauth2_client_secret: ${GOOGLE_OAUTH2_CLIENT_SECRET}
 
 spring:
   baseurl: "http://comket.co.kr"
@@ -39,32 +41,5 @@ spring:
   devtools:
     restart:
       enabled: false
-
---- # 로컬 서버 환경에 대한 설정
-google:
-  oauth2_redirect_uri: http://localhost:8080/api/v1/auth/oauth2/google/login
-
-spring:
-  config:
-    activate:
-      on-profile: local
-  main:
-    allow-bean-definition-overriding: true
-  datasource:
-    driverClassName: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://localhost:9000/test
-    username: ${RDS_USERNAME}
-    password: ${RDS_PASSWORD}
-  jpa:
-    # Show sql when spring data jpa performs query
-    show-sql: true
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        # Format queries
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
-  docker:
-    compose:
-      enabled: false
+jwt:
+  secret: ${JWT_SECRET}

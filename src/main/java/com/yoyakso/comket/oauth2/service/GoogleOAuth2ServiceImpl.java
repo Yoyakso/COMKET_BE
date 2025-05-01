@@ -28,9 +28,9 @@ public class GoogleOAuth2ServiceImpl implements OAuth2Service {
 
 	private final RestTemplate restTemplate;
 	private final MemberService memberService;
-	@Value("${google_oauth2_client_id}")
+	@Value("${google.oauth2_client_id}")
 	private String googleClientId;
-	@Value("${google_oauth2_client_secret}")
+	@Value("${google.oauth2_client_secret}")
 	private String googleClientSecret;
 	@Value("${google.oauth2_redirect_uri}")
 	private String googleRedirectUri;
