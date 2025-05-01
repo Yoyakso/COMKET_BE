@@ -20,15 +20,15 @@ import lombok.RequiredArgsConstructor;
 public class OAuth2Controller {
 	private final OAuth2Service oAuth2Service;
 
-	@Operation(method = "GET", description = "구글 로그인 페이지 URL 반환 메서드")
-	@GetMapping("/google")
-	public ResponseEntity<String> requestGoogleLogin() {
-		return ResponseEntity.ok(oAuth2Service.returnGoogleLoginPageUrl());
-	}
+	// @GetMapping("/google/url")
+	// public ResponseEntity<String> requestGoogleLogin() {
+	// 	return ResponseEntity.ok(oAuth2Service.returnGoogleLoginPageUrl());
+	// }
 
 	@Operation(method = "GET", description = "구글 OAuth2 로그인 처리")
-	@GetMapping("/google/login")
-	public ResponseEntity<GoogleLoginResponse> googleLoginCallback(@RequestParam String code) {
+	@GetMapping("/google")
+	public ResponseEntity<GoogleLoginResponse> googleLoginCallback(@RequestParam(value = "code") String code) {
+		System.out.println("CODE ==>" + code);
 		GoogleLoginResponse response = oAuth2Service.handleGoogleLogin(code);
 		System.out.println("RESPONSE =====> " + response);
 		return ResponseEntity.ok(response);
