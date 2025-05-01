@@ -43,7 +43,7 @@ public class MemberController {
 	@Operation(summary = "회원 정보 조회", description = "현재 로그인한 회원의 정보를 조회합니다.")
 	public ResponseEntity<MemberInfoResponse> getMember(HttpServletRequest request) {
 
-		Member member = getAuthenticatedMember(request);
+		Member member = memberService.getAuthenticatedMember(request);
 		if (member == null) {
 			return ResponseEntity.notFound().build(); // 회원 정보가 없을 경우
 		}
@@ -61,7 +61,7 @@ public class MemberController {
 	@Operation(summary = "회원 정보 수정", description = "현재 로그인한 회원의 정보를 수정합니다.")
 	public ResponseEntity<MemberInfoResponse> updateMember(HttpServletRequest request,
 		@RequestBody MemberUpdateRequest updateRequest) {
-		Member member = getAuthenticatedMember(request);
+		Member member = memberService.getAuthenticatedMember(request);
 		if (member == null) {
 			return ResponseEntity.notFound().build(); // 회원 정보가 없을 경우
 		}
@@ -90,17 +90,4 @@ public class MemberController {
 		return ResponseEntity.noContent().build();
 	}
 
-	private Member getAuthenticatedMember(HttpServletRequest request) {
-		String token = jwtTokenProvider.getTokenFromHeader(request);
-		if (token == null) {
-			return null; // 토큰이 없을 경우
-		}
-
-		String email = jwtTokenProvider.parseToken(token).getSubject();
-		Member member = memberService.findByEmail(email);
-		if (member == null) {
-			// 회원 정보가 없을 경우
-		}
-		return memberService.findByEmail(email);
-	}
 }
