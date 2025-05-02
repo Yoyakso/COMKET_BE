@@ -18,6 +18,7 @@ public class SecurityConfig {
 		http
 			.csrf(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(auth -> auth
+				.requestMatchers("/actuator/health").permitAll()
 				.requestMatchers("/api/v1/**").permitAll() // 인증 없이 접근 허용
 				.anyRequest().authenticated() // 나머지 요청은 인증 필요
 			)

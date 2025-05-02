@@ -7,7 +7,7 @@ build/
 logs/
 .env
 /src/main/resources/application-local.yml
-**.ds_store
+**.DS_Store
 
 ### STS ###
 .apt_generated

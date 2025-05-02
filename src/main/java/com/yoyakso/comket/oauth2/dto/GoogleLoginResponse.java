@@ -7,5 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class GoogleLoginResponse {
 	private String accessToken;
-	private String nickname;
+	// private String refreshToken;
+	private String name;
 }

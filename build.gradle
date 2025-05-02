@@ -70,6 +70,9 @@ dependencies {
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 //	testImplementation 'com.h2database:h2'
 
+    // HealthCheck
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
     annotationProcessor 'org.projectlombok:lombok'
