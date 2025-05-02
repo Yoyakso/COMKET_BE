@@ -11,6 +11,7 @@ import com.yoyakso.comket.oauth2.dto.GoogleDetailResponse;
 import com.yoyakso.comket.oauth2.dto.GoogleLoginResponse;
 import com.yoyakso.comket.util.JwtTokenProvider;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -92,5 +93,19 @@ public class MemberService {
 		String token = jwtTokenProvider.createToken(member.getEmail());
 
 		return new GoogleLoginResponse(token, member.getNickname());
+	}
+
+	public Member getAuthenticatedMember(HttpServletRequest request) {
+		String token = jwtTokenProvider.getTokenFromHeader(request);
+		if (token == null) {
+			return null; // 토큰이 없을 경우
+		}
+
+		String email = jwtTokenProvider.parseToken(token).getSubject();
+		Member member = memberRepository.findByEmail(email);
+		if (member == null) {
+			return null; // 회원 정보가 없을 경우
+		}
+		return member;
 	}
 }

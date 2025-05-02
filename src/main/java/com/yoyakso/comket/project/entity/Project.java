@@ -43,9 +43,6 @@ public class Project {
 	private String name;
 
 	@Column(length = 255)
-	private String purpose;
-
-	@Column(length = 255)
 	private String description;
 
 	private ProjectState state;
@@ -71,7 +68,6 @@ public class Project {
 		this.id = id;
 		this.workspace = workspace;
 		this.name = name;
-		this.purpose = purpose;
 		this.description = description;
 		this.state = state;
 		this.isPublic = isPublic;
@@ -87,10 +83,6 @@ public class Project {
 
 	public void updateName(String name) {
 		this.name = name;
-	}
-
-	public void updatePurpose(String purpose) {
-		this.purpose = purpose;
 	}
 
 	public void updateDescription(String description) {
