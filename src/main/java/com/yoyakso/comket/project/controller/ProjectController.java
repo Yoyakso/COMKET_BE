@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.member.MemberService;
+import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.dto.ProjectCreateRequest;
 import com.yoyakso.comket.project.dto.ProjectInfoResponse;
 import com.yoyakso.comket.project.service.ProjectService;
@@ -25,6 +28,7 @@ import lombok.AllArgsConstructor;
 @RequestMapping("/api/v1")
 public class ProjectController {
 	private final ProjectService projectService;
+	private final MemberService memberService;
 
 	@Operation(method = "POST", description = "프로젝트 생성 API")
 	@PostMapping("/{workspaceName}/project")
@@ -33,7 +37,11 @@ public class ProjectController {
 		@RequestBody ProjectCreateRequest request,
 		HttpServletRequest userRequest
 	) {
-		ProjectInfoResponse info = projectService.createProject(workspaceName, request, userRequest);
+		Member member = memberService.getAuthenticatedMember(userRequest);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		ProjectInfoResponse info = projectService.createProject(workspaceName, request, member);
 		return ResponseEntity.ok(info);
 	}
 
@@ -45,7 +53,11 @@ public class ProjectController {
 		@RequestBody ProjectCreateRequest request,
 		HttpServletRequest userRequest
 	) {
-		ProjectInfoResponse info = projectService.patchProject(workspaceName, projectId, request, userRequest);
+		Member member = memberService.getAuthenticatedMember(userRequest);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		ProjectInfoResponse info = projectService.updateProject(workspaceName, projectId, request, member);
 		return ResponseEntity.ok(info);
 	}
 
@@ -56,7 +68,11 @@ public class ProjectController {
 		@PathVariable("projectId") Long projectId,
 		HttpServletRequest userRequest
 	) {
-		projectService.deleteProject(workspaceName, projectId, userRequest);
+		Member member = memberService.getAuthenticatedMember(userRequest);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		projectService.deleteProject(workspaceName, projectId, member);
 		return ResponseEntity.noContent().build();
 	}
 
@@ -67,7 +83,11 @@ public class ProjectController {
 		@PathVariable("projectId") Long projectId,
 		HttpServletRequest userRequest
 	) {
-		projectService.exitProject(workspaceName, projectId, userRequest);
+		Member member = memberService.getAuthenticatedMember(userRequest);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		projectService.exitProject(workspaceName, projectId, member);
 		return ResponseEntity.noContent().build();
 	}
 
@@ -77,7 +97,11 @@ public class ProjectController {
 		@PathVariable("workspaceName") String workspaceName,
 		HttpServletRequest userRequest
 	) {
-		List<ProjectInfoResponse> responses = projectService.getAllProjects(workspaceName, userRequest);
+		Member member = memberService.getAuthenticatedMember(userRequest);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		List<ProjectInfoResponse> responses = projectService.getAllProjects(workspaceName, member);
 		return ResponseEntity.ok(responses);
 	}
 
@@ -87,7 +111,11 @@ public class ProjectController {
 		@PathVariable("workspaceName") String workspaceName,
 		HttpServletRequest userRequest
 	) {
-		List<ProjectInfoResponse> responses = projectService.getAllProjectsByMember(workspaceName, userRequest);
+		Member member = memberService.getAuthenticatedMember(userRequest);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		List<ProjectInfoResponse> responses = projectService.getAllProjectsByMember(workspaceName, member);
 		return ResponseEntity.ok(responses);
 	}
 }

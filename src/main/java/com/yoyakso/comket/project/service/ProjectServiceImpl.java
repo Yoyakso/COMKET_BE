@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.exception.CustomException;
-import com.yoyakso.comket.member.MemberService;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.dto.ProjectCreateRequest;
 import com.yoyakso.comket.project.dto.ProjectInfoResponse;
@@ -18,7 +17,6 @@ import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -28,20 +26,12 @@ import lombok.RequiredArgsConstructor;
 public class ProjectServiceImpl implements ProjectService {
 	private final ProjectRepository projectRepository;
 	private final WorkspaceRepository workspaceRepository;
-	private final MemberService memberService;
 	private final ProjectMemberService projectMemberService;
 	private final ProjectMemberRepository projectMemberRepository;
 
 	@Override
 	public ProjectInfoResponse createProject(String workSpaceName, ProjectCreateRequest request,
-		HttpServletRequest userRequest) {
-
-		// API 요청 멤버 조회
-		Member member = memberService.getAuthenticatedMember(userRequest);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
-
+		Member member) {
 		//TODO: 워크스페이스-멤버에서 권한이 오너, 관리자인 경우에만 프로젝트를 생성할 수 있도록 해야함.
 
 		// 워크스페이스 조회
@@ -61,26 +51,19 @@ public class ProjectServiceImpl implements ProjectService {
 			.isPublic(request.getIsPublic())
 			.build();
 
-		projectRepository.save(project);
+		Project savedProject = projectRepository.save(project);
 
 		projectMemberService.addProjectMember(project, member, "OWNER");
 
 		return ProjectInfoResponse.builder()
-			.projectId(project.getId())
-			.projectName(project.getName())
+			.projectId(savedProject.getId())
+			.projectName(savedProject.getName())
 			.build();
 	}
 
 	@Override
-	public ProjectInfoResponse patchProject(String workSpaceName, Long projectId, ProjectCreateRequest request,
-		HttpServletRequest userRequest) {
-
-		// API 요청 멤버 조회
-		Member member = memberService.getAuthenticatedMember(userRequest);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
-
+	public ProjectInfoResponse updateProject(String workSpaceName, Long projectId, ProjectCreateRequest request,
+		Member member) {
 		// 워크스페이스 조회
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
@@ -108,21 +91,16 @@ public class ProjectServiceImpl implements ProjectService {
 			.isPublic(request.getIsPublic())
 			.build();
 
-		projectRepository.save(project);
+		Project savedProject = projectRepository.save(project);
 
 		return ProjectInfoResponse.builder()
-			.projectId(project.getId())
-			.projectName(project.getName())
+			.projectId(savedProject.getId())
+			.projectName(savedProject.getName())
 			.build();
 	}
 
 	@Override
-	public void deleteProject(String workSpaceName, Long projectId, HttpServletRequest userRequest) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
-
+	public void deleteProject(String workSpaceName, Long projectId, Member member) {
 		// 워크스페이스 조회
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
@@ -145,12 +123,7 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
-	public void exitProject(String workSpaceName, Long projectId, HttpServletRequest userRequest) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
-
+	public void exitProject(String workSpaceName, Long projectId, Member member) {
 		// 워크스페이스 조회
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
@@ -168,12 +141,8 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
-	public List<ProjectInfoResponse> getAllProjects(String workSpaceName, HttpServletRequest userRequest) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
-
+	public List<ProjectInfoResponse> getAllProjects(String workSpaceName, Member member) {
+		// 워크스페이스 조회
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
@@ -185,15 +154,7 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
-	public List<ProjectInfoResponse> getAllProjectsByMember(
-		String workSpaceName,
-		HttpServletRequest userRequest
-	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
-
+	public List<ProjectInfoResponse> getAllProjectsByMember(String workSpaceName, Member member) {
 		// 워크스페이스 조회
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
