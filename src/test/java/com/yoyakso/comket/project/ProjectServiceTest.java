@@ -23,8 +23,8 @@ import com.yoyakso.comket.project.repository.ProjectRepository;
 import com.yoyakso.comket.project.service.ProjectServiceImpl;
 import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
+import com.yoyakso.comket.workspace.WorkspaceRepository;
 import com.yoyakso.comket.workspace.entity.Workspace;
-import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -68,7 +68,7 @@ public class ProjectServiceTest {
 			.workspace(mockWorkspace)
 			.name(request.getName())
 			.description(request.getDescription())
-			.isPublic(request.getIsPublic())
+			.visibility(request.getIsPublic())
 			.state(ProjectState.ACTIVE)
 			.build();
 
@@ -116,7 +116,7 @@ public class ProjectServiceTest {
 			.workspace(mockWorkspace)
 			.name("COMKET_BE")
 			.description("Some Descriptions")
-			.isPublic(true)
+			.visibility(true)
 			.state(ProjectState.ACTIVE)
 			.build();
 
@@ -145,7 +145,7 @@ public class ProjectServiceTest {
 			.workspace(mockWorkspace)
 			.name("Project1")
 			.description("")
-			.isPublic(true)
+			.visibility(true)
 			.state(ProjectState.ACTIVE)
 			.build();
 
@@ -154,7 +154,7 @@ public class ProjectServiceTest {
 			.workspace(mockWorkspace)
 			.name("Project2")
 			.description("")
-			.isPublic(true)
+			.visibility(true)
 			.state(ProjectState.ACTIVE)
 			.build();
 
@@ -163,7 +163,7 @@ public class ProjectServiceTest {
 			.workspace(mockWorkspace)
 			.name("Project3")
 			.description("")
-			.isPublic(true)
+			.visibility(true)
 			.state(ProjectState.ACTIVE)
 			.build();
 
@@ -172,7 +172,7 @@ public class ProjectServiceTest {
 		member.setNickname("MINION");
 
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
-		when(projectRepository.findAllByWorkspaceAndIsPublicTrue(mockWorkspace))
+		when(projectRepository.findAllByWorkspaceAndVisibilityTrue(mockWorkspace))
 			.thenReturn(List.of(savedProject1, savedProject2, savedProject3));
 
 		// when

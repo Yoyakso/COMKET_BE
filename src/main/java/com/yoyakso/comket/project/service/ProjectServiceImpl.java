@@ -14,8 +14,8 @@ import com.yoyakso.comket.project.repository.ProjectRepository;
 import com.yoyakso.comket.projectMember.entity.ProjectMember;
 import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
+import com.yoyakso.comket.workspace.WorkspaceRepository;
 import com.yoyakso.comket.workspace.entity.Workspace;
-import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +48,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.name(request.getName())
 			.description(request.getDescription())
 			.state(ProjectState.ACTIVE) // 초기 상태 예: ACTIVE
-			.isPublic(request.getIsPublic())
+			.visibility(request.getIsPublic())
 			.build();
 
 		Project savedProject = projectRepository.save(project);
@@ -88,7 +88,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.name(request.getName())
 			.description(request.getDescription())
 			.state(ProjectState.ACTIVE) // 초기 상태 예: ACTIVE
-			.isPublic(request.getIsPublic())
+			.visibility(request.getIsPublic())
 			.build();
 
 		Project savedProject = projectRepository.save(project);
@@ -146,7 +146,7 @@ public class ProjectServiceImpl implements ProjectService {
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
-		List<Project> projects = projectRepository.findAllByWorkspaceAndIsPublicTrue(workSpace);
+		List<Project> projects = projectRepository.findAllByWorkspaceAndVisibilityTrue(workSpace);
 
 		return projects.stream()
 			.map(project -> new ProjectInfoResponse(project.getId(), project.getName()))

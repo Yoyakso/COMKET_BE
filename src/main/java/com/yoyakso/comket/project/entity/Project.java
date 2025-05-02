@@ -19,7 +19,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -42,12 +41,14 @@ public class Project {
 	@Column(length = 100)
 	private String name;
 
+	@Size(min = 0, max = 255)
 	@Column(length = 255)
 	private String description;
 
-	private ProjectState state;
+	@NotNull
+	private Boolean visibility;
 
-	private Boolean isPublic;
+	private ProjectState state;
 
 	@CreationTimestamp
 	private LocalDateTime createTime;
@@ -55,30 +56,12 @@ public class Project {
 	@UpdateTimestamp
 	private LocalDateTime updateTime;
 
-	@Builder
-	public Project(
-		Long id,
-		Workspace workspace,
-		String name,
-		String purpose,
-		String description,
-		ProjectState state,
-		Boolean isPublic
-	) {
-		this.id = id;
-		this.workspace = workspace;
-		this.name = name;
-		this.description = description;
-		this.state = state;
-		this.isPublic = isPublic;
-	}
-
 	public void updateState(ProjectState state) {
 		this.state = state;
 	}
 
-	public void updateProjectPublicity(Boolean isPublic) {
-		this.isPublic = isPublic;
+	public void updateProjectVisibility(Boolean state) {
+		this.visibility = state;
 	}
 
 	public void updateName(String name) {

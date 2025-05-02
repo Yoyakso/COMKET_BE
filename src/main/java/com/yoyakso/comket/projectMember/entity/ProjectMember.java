@@ -54,19 +54,6 @@ public class ProjectMember {
 	@UpdateTimestamp
 	private LocalDateTime updatedAt;
 
-	@Builder
-	public ProjectMember(
-		Project project,
-		Member member,
-		boolean isActive,
-		String positionType
-	) {
-		this.project = project;
-		this.member = member;
-		this.isActive = isActive;
-		this.positionType = positionType;
-	}
-
 	public void updateIsActive(boolean state) {
 		this.isActive = state;
 	}
