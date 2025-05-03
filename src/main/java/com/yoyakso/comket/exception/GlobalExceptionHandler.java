@@ -50,4 +50,10 @@ public class GlobalExceptionHandler {
 		error.put("error", "Invalid request body format");
 		return ResponseEntity.badRequest().body(error);
 	}
+	
+	@ExceptionHandler(IllegalStateException.class)
+	public ResponseEntity<String> handleIllegalStateException(IllegalStateException ex) {
+		// 예외 메시지를 HTTP 응답으로 반환
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+	}
 }

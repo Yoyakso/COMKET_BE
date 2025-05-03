@@ -37,9 +37,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web-services'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 //	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0' // Swagger
@@ -79,6 +76,12 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 //    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.mockito:mockito-core:5.4.0'
+
+    //Email
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    //thymeleaf(for email service)
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
 }
 
 tasks.withType(Test).configureEach {
