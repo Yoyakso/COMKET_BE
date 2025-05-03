@@ -68,7 +68,7 @@ public class ProjectServiceTest {
 			.workspace(mockWorkspace)
 			.name(request.getName())
 			.description(request.getDescription())
-			.visibility(request.getIsPublic())
+			.isPublic(request.getIsPublic())
 			.state(ProjectState.ACTIVE)
 			.build();
 
@@ -116,7 +116,7 @@ public class ProjectServiceTest {
 			.workspace(mockWorkspace)
 			.name("COMKET_BE")
 			.description("Some Descriptions")
-			.visibility(true)
+			.isPublic(true)
 			.state(ProjectState.ACTIVE)
 			.build();
 
@@ -145,7 +145,7 @@ public class ProjectServiceTest {
 			.workspace(mockWorkspace)
 			.name("Project1")
 			.description("")
-			.visibility(true)
+			.isPublic(true)
 			.state(ProjectState.ACTIVE)
 			.build();
 
@@ -154,7 +154,7 @@ public class ProjectServiceTest {
 			.workspace(mockWorkspace)
 			.name("Project2")
 			.description("")
-			.visibility(true)
+			.isPublic(true)
 			.state(ProjectState.ACTIVE)
 			.build();
 
@@ -163,7 +163,7 @@ public class ProjectServiceTest {
 			.workspace(mockWorkspace)
 			.name("Project3")
 			.description("")
-			.visibility(true)
+			.isPublic(true)
 			.state(ProjectState.ACTIVE)
 			.build();
 
@@ -172,7 +172,7 @@ public class ProjectServiceTest {
 		member.setNickname("MINION");
 
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
-		when(projectRepository.findAllByWorkspaceAndVisibilityTrue(mockWorkspace))
+		when(projectRepository.findAllByWorkspaceAndIsPublicTrue(mockWorkspace))
 			.thenReturn(List.of(savedProject1, savedProject2, savedProject3));
 
 		// when

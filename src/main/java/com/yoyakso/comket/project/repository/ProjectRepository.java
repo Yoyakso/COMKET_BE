@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Size;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
-	List<Project> findAllByWorkspaceAndVisibilityTrue(Workspace workspace);
+	List<Project> findAllByWorkspaceAndIsPublicTrue(Workspace workspace);
 
 	boolean existsByName(@NotNull @Size(min = 2, max = 100) String name);
 }

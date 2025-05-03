@@ -19,12 +19,16 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "project")
 public class Project {
 
@@ -46,7 +50,7 @@ public class Project {
 	private String description;
 
 	@NotNull
-	private Boolean visibility;
+	private Boolean isPublic;
 
 	private ProjectState state;
 
@@ -60,8 +64,8 @@ public class Project {
 		this.state = state;
 	}
 
-	public void updateProjectVisibility(Boolean state) {
-		this.visibility = state;
+	public void updateProjectPublicity(Boolean state) {
+		this.isPublic = state;
 	}
 
 	public void updateName(String name) {

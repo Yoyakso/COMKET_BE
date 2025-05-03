@@ -43,7 +43,7 @@ public class ProjectMember {
 	private Member member;
 
 	@Column(nullable = false)
-	private boolean isActive;
+	private Boolean isActive;
 
 	@Column(nullable = false, length = 20)
 	private String positionType; // "OWNER", "MEMBER", "ADMIN"
@@ -58,4 +58,7 @@ public class ProjectMember {
 		this.isActive = state;
 	}
 
+	public void updatePositionType(String positionType) {
+		this.positionType = positionType;
+	}
 }

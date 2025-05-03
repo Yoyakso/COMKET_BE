@@ -1,6 +1,7 @@
 package com.yoyakso.comket.project.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -8,6 +9,8 @@ import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.dto.ProjectCreateRequest;
 import com.yoyakso.comket.project.dto.ProjectInfoResponse;
+import com.yoyakso.comket.project.dto.ProjectMemberResponse;
+import com.yoyakso.comket.project.dto.ProjectMemberUpdateRequest;
 import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.project.enums.ProjectState;
 import com.yoyakso.comket.project.repository.ProjectRepository;
@@ -48,7 +51,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.name(request.getName())
 			.description(request.getDescription())
 			.state(ProjectState.ACTIVE) // 초기 상태 예: ACTIVE
-			.visibility(request.getIsPublic())
+			.isPublic(request.getIsPublic())
 			.build();
 
 		Project savedProject = projectRepository.save(project);
@@ -72,7 +75,7 @@ public class ProjectServiceImpl implements ProjectService {
 			member.getId());
 
 		// 프로젝트 멤버가 존재하지 않거나 비활성화된 경우, 또는 ADMIN, OWNER가 아닌 경우
-		if (projectMember == null || !projectMember.isActive() ||
+		if (projectMember == null || !projectMember.getIsActive() ||
 			(!projectMember.getPositionType().equals("ADMIN") && !projectMember.getPositionType()
 				.equals("OWNER"))) {
 			throw new CustomException("PROJECT_AUTHORIZATION_FAILED", "프로젝트에 대한 권한이 없습니다.");
@@ -83,13 +86,12 @@ public class ProjectServiceImpl implements ProjectService {
 			throw new CustomException("PROJECT_NAME_DUPLICATE", "프로젝트 이름이 중복되었습니다.");
 		}
 
-		Project project = Project.builder()
-			.workspace(workSpace)
-			.name(request.getName())
-			.description(request.getDescription())
-			.state(ProjectState.ACTIVE) // 초기 상태 예: ACTIVE
-			.visibility(request.getIsPublic())
-			.build();
+		Project project = projectRepository.findById(projectId)
+			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
+
+		project.updateName(request.getName());
+		project.updateDescription(request.getDescription());
+		project.updateProjectPublicity(request.getIsPublic());
 
 		Project savedProject = projectRepository.save(project);
 
@@ -100,7 +102,8 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
-	public void deleteProject(String workSpaceName, Long projectId, Member member) {
+	public void patchProjectState(String workSpaceName, Long projectId, Member member,
+		ProjectState state) {
 		// 워크스페이스 조회
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
@@ -109,7 +112,7 @@ public class ProjectServiceImpl implements ProjectService {
 			member.getId());
 
 		// 프로젝트 멤버가 존재하지 않거나 비활성화된 경우, 또는 ADMIN, OWNER가 아닌 경우
-		if (projectMember == null || !projectMember.isActive() ||
+		if (projectMember == null || !projectMember.getIsActive() ||
 			(!projectMember.getPositionType().equals("ADMIN") && !projectMember.getPositionType()
 				.equals("OWNER"))) {
 			throw new CustomException("PROJECT_AUTHORIZATION_FAILED", "프로젝트에 대한 권한이 없습니다.");
@@ -118,7 +121,7 @@ public class ProjectServiceImpl implements ProjectService {
 		Project project = projectRepository.findById(projectId)
 			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
 
-		project.updateState(ProjectState.DELETED);// SoftDelete
+		project.updateState(state);
 		projectRepository.save(project);
 	}
 
@@ -132,7 +135,7 @@ public class ProjectServiceImpl implements ProjectService {
 			member.getId());
 
 		// 프로젝트 멤버가 아닐 경우
-		if (projectMember == null || !projectMember.isActive()) {
+		if (projectMember == null || !projectMember.getIsActive()) {
 			throw new CustomException("NOT_PROJECT_MEMBER", "이미 프로젝트 멤버가 아닙니다.");
 		}
 
@@ -146,7 +149,7 @@ public class ProjectServiceImpl implements ProjectService {
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
-		List<Project> projects = projectRepository.findAllByWorkspaceAndVisibilityTrue(workSpace);
+		List<Project> projects = projectRepository.findAllByWorkspaceAndIsPublicTrue(workSpace);
 
 		return projects.stream()
 			.map(project -> new ProjectInfoResponse(project.getId(), project.getName()))
@@ -164,5 +167,94 @@ public class ProjectServiceImpl implements ProjectService {
 		return projects.stream()
 			.map(project -> new ProjectInfoResponse(project.getId(), project.getName()))
 			.toList();
+	}
+
+	@Override
+	public List<ProjectMemberResponse> getProjectMembers(String workSpaceName, Long projectId) {
+		// 워크스페이스 조회
+		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
+			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
+
+		List<ProjectMember> projectMembers = projectMemberRepository.findAllByProjectIdWithMember(projectId);
+
+		return projectMembers.stream()
+			.map(pm -> {
+				Member member = pm.getMember();
+				return ProjectMemberResponse.builder()
+					.name(member.getRealName())
+					.email(member.getEmail())
+					.positionType(pm.getPositionType())
+					.isActive(pm.getIsActive())
+					.build();
+			})
+			.collect(Collectors.toList());
+	}
+
+	@Override
+	public ProjectMemberResponse patchProjectMembersPosition(
+		String workSpaceName,
+		Long projectId,
+		Member member,
+		ProjectMemberUpdateRequest request
+	) {
+		// 워크스페이스 조회
+		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
+			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
+
+		// API 사용 유저 권한 검증
+		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
+			member.getId());
+
+		// 프로젝트 멤버가 존재하지 않거나 비활성화된 경우, 또는 ADMIN, OWNER가 아닌 경우
+		if (updateRequester == null || !updateRequester.getIsActive() ||
+			(!updateRequester.getPositionType().equals("ADMIN") && !updateRequester.getPositionType()
+				.equals("OWNER"))) {
+			throw new CustomException("PROJECT_AUTHORIZATION_FAILED", "프로젝트에 대한 권한이 없습니다.");
+		}
+
+		// 변경 대상 검증
+		ProjectMember projectMember = projectMemberRepository.findById(request.getProjectMemberId())
+			.orElseThrow(() -> new CustomException("PROJECTMEMBER_NOT_FOUND", "프로젝트 멤버를 찾을 수 없습니다."));
+
+		projectMember.updatePositionType(request.getPositionType());
+		ProjectMember updatedProjectMember = projectMemberRepository.save(projectMember);
+		Member updatedMember = updatedProjectMember.getMember();
+
+		return ProjectMemberResponse.builder()
+			.name(updatedMember.getRealName())
+			.email(updatedMember.getEmail())
+			.isActive(updatedProjectMember.getIsActive())
+			.positionType(updatedProjectMember.getPositionType())
+			.build();
+	}
+
+	@Override
+	public void deleteProjectMember(
+		String workSpaceName,
+		Long projectId,
+		Member member,
+		Long projectMemberId
+	) {
+		// 워크스페이스 조회
+		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
+			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
+
+		// API 사용 유저 권한 검증
+		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
+			member.getId());
+
+		// 프로젝트 멤버가 존재하지 않거나 비활성화된 경우, 또는 ADMIN, OWNER가 아닌 경우
+		if (updateRequester == null || !updateRequester.getIsActive() ||
+			(!updateRequester.getPositionType().equals("ADMIN") && !updateRequester.getPositionType()
+				.equals("OWNER"))) {
+			throw new CustomException("PROJECT_AUTHORIZATION_FAILED", "프로젝트에 대한 권한이 없습니다.");
+		}
+
+		// 변경 대상 검증
+		ProjectMember projectMember = projectMemberRepository.findById(projectMemberId)
+			.orElseThrow(() -> new CustomException("PROJECTMEMBER_NOT_FOUND", "프로젝트 멤버를 찾을 수 없습니다."));
+
+		projectMember.updateIsActive(false);
+		projectMemberRepository.save(projectMember);
 	}
 }
