@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import com.yoyakso.comket.exception.CustomException;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
@@ -41,23 +43,23 @@ public class EmailService {
 	public void verifyVerificationCode(String email, String code) {
 		// 이메일이 존재하는지 검증
 		if (!verificationCodes.containsKey(email)) {
-			throw new IllegalStateException("해당 이메일의 인증 요청이 존재하지 않습니다.");
+			throw new CustomException("EMAIL_REQUEST_NOT_FOUND", "해당 이메일의 인증 요청이 존재하지 않습니다.");
 		}
 		// 인증 번호가 만료되었는지 검증
 		long issuedTime = verificationTimestamps.getOrDefault(email, 0L);
 		if (System.currentTimeMillis() - issuedTime > authCodeExpirationMillis) {
 			verificationCodes.remove(email);
 			verificationTimestamps.remove(email);
-			throw new IllegalStateException("인증 번호가 만료되었습니다.");
+			throw new CustomException("EMAIL_CODE_EXPIRED", "인증 번호가 만료되었습니다.");
 		}
 
 		// 인증 번호가 일치하는지 검증
 		String storedCode = verificationCodes.get(email);
 		if (storedCode == null) {
-			throw new IllegalStateException("인증 번호가 존재하지 않습니다.");
+			throw new CustomException("EMAIL_CODE_NOT_FOUND", "인증 번호가 존재하지 않습니다.");
 		}
 		if (!storedCode.equals(code)) {
-			throw new IllegalStateException("인증 번호가 일치하지 않습니다.");
+			throw new CustomException("EMAIL_CODE_MISMATCH", "인증 번호가 일치하지 않습니다.");
 		}
 		verificationCodes.remove(email);
 		verificationTimestamps.remove(email);
@@ -78,7 +80,7 @@ public class EmailService {
 			// 이메일 전송
 			emailSender.send(message);
 		} catch (MessagingException e) {
-			throw new IllegalStateException("이메일 전송에 실패했습니다.", e);
+			throw new CustomException("EMAIL_SEND_ERROR", "이메일 전송에 실패했습니다.");
 		}
 	}
 
