@@ -74,7 +74,6 @@ public class ProjectServiceTest {
 
 		Member member = new Member();
 		member.setId(1L);
-		member.setNickname("MINION");
 
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
 		when(projectRepository.save(any(Project.class))).thenReturn(savedProject);
@@ -101,7 +100,6 @@ public class ProjectServiceTest {
 		// member mock
 		Member member = new Member();
 		member.setId(1L);
-		member.setNickname("MINION");
 
 		// 업데이트 리쿼스트 mock
 		ProjectCreateRequest updateRequest = new ProjectCreateRequest(
@@ -169,7 +167,6 @@ public class ProjectServiceTest {
 
 		Member member = new Member();
 		member.setId(1L);
-		member.setNickname("MINION");
 
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
 		when(projectRepository.findAllByWorkspaceAndIsPublicTrue(mockWorkspace))

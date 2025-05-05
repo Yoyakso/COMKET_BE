@@ -15,6 +15,8 @@ import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.dto.MemberRegisterResponse;
 import com.yoyakso.comket.member.dto.MemberUpdateRequest;
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.repository.MemberRepository;
+import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.util.JwtTokenProvider;
 
 class MemberServiceTest {
@@ -50,7 +52,6 @@ class MemberServiceTest {
 	@Test
 	void testRegisterMember_Success() {
 		when(memberRepository.existsByEmail(testMember.getEmail())).thenReturn(false);
-		when(memberRepository.existsByNickname(testMember.getNickname())).thenReturn(false);
 		when(passwordEncoder.encode(testMember.getPassword())).thenReturn("encodedPassword");
 		when(jwtTokenProvider.createToken(testMember.getEmail())).thenReturn("jwtToken");
 		when(memberRepository.save(any(Member.class))).thenAnswer(invocation -> {
@@ -64,7 +65,6 @@ class MemberServiceTest {
 		assertNotNull(response);
 		assertEquals(1L, response.getMemberId());
 		assertEquals("test@example.com", response.getEmail());
-		assertEquals("testUser", response.getNickname());
 		assertEquals("jwtToken", response.getToken());
 	}
 
@@ -96,29 +96,14 @@ class MemberServiceTest {
 	@Test
 	void testUpdateMember_Success() {
 		MemberUpdateRequest updateRequest = new MemberUpdateRequest();
-		updateRequest.setNickname("updatedNickname");
 		updateRequest.setRealName("Updated Real Name");
 
-		when(memberRepository.existsByNickname(updateRequest.getNickname())).thenReturn(false);
 		when(memberRepository.save(any(Member.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		Member updatedMember = memberService.updateMember(testMember, updateRequest);
 
 		assertNotNull(updatedMember);
-		assertEquals("updatedNickname", updatedMember.getNickname());
 		assertEquals("Updated Real Name", updatedMember.getRealName());
-	}
-
-	@Test
-	void testUpdateMember_NicknameDuplicate() {
-		MemberUpdateRequest updateRequest = new MemberUpdateRequest();
-		updateRequest.setNickname("duplicateNickname");
-
-		when(memberRepository.existsByNickname(updateRequest.getNickname())).thenReturn(true);
-
-		CustomException exception = assertThrows(CustomException.class,
-			() -> memberService.updateMember(testMember, updateRequest));
-		assertEquals("NICKNAME_DUPLICATE", exception.getCode());
 	}
 
 	@Test
@@ -129,7 +114,6 @@ class MemberServiceTest {
 
 		assertNotNull(foundMember);
 		assertEquals(testMember.getEmail(), foundMember.getEmail());
-		assertEquals(testMember.getNickname(), foundMember.getNickname());
 	}
 
 	@Test
@@ -144,7 +128,6 @@ class MemberServiceTest {
 	private Member createTestMember() {
 		Member member = new Member();
 		member.setEmail("test@example.com");
-		member.setNickname("testUser");
 		member.setPassword("password");
 		return member;
 	}

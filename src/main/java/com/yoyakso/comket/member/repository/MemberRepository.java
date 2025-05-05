@@ -1,4 +1,4 @@
-package com.yoyakso.comket.member;
+package com.yoyakso.comket.member.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -8,6 +8,4 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 	Member findByEmail(String email);
 
 	boolean existsByEmail(String email);
-
-	boolean existsByNickname(String nickname);
 }

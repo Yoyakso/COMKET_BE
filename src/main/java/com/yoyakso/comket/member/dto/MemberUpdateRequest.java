@@ -7,7 +7,6 @@ import lombok.Data;
 @Data
 public class MemberUpdateRequest {
 	private String email;
-	private String nickname;
 
 	@JsonProperty("real_name")
 	private String realName;

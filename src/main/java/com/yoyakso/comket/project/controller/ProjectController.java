@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.yoyakso.comket.exception.CustomException;
-import com.yoyakso.comket.member.MemberService;
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.project.dto.ProjectCreateRequest;
 import com.yoyakso.comket.project.dto.ProjectInfoResponse;
 import com.yoyakso.comket.project.dto.ProjectMemberResponse;

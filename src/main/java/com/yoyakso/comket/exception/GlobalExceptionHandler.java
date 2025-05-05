@@ -50,4 +50,26 @@ public class GlobalExceptionHandler {
 		error.put("error", "Invalid request body format");
 		return ResponseEntity.badRequest().body(error);
 	}
+
+	@ExceptionHandler(IllegalArgumentException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
+		Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+		logger.error("IllegalArgumentException occurred: {}", ex.getMessage(), ex);
+
+		Map<String, String> errorResponse = new HashMap<>();
+		errorResponse.put("message", ex.getMessage() != null ? ex.getMessage() : "잘못된 형식의 요청입니다.");
+		errorResponse.put("code", "INVALID_REQUEST");
+
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	}
+
+	@ExceptionHandler(CustomException.class)
+	public ResponseEntity<Map<String, String>> handleCustomException(CustomException e) {
+		Map<String, String> errorResponse = Map.of(
+			"code", e.getCode(),
+			"message", e.getMessage()
+		);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	}
 }
