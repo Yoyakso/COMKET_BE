@@ -10,4 +10,7 @@ public class MemberUpdateRequest {
 
 	@JsonProperty("real_name")
 	private String realName;
+
+	@JsonProperty("profile_file_id")
+	private Long profileFileId;
 }

@@ -1,5 +1,7 @@
 package com.yoyakso.comket.file.dto;
 
+import com.yoyakso.comket.file.enums.FileCategory;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,5 +14,6 @@ public class FileUploadResponse {
 	private String fileUrl;
 	private String fileName;
 	private String fileType;
+	private FileCategory category;
 	private Long fileSize;
 }

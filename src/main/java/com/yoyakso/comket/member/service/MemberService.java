@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.file.entity.File;
+import com.yoyakso.comket.file.enums.FileCategory;
 import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.dto.MemberInfoResponse;
 import com.yoyakso.comket.member.dto.MemberRegisterRequest;
@@ -60,6 +61,7 @@ public class MemberService {
 		String profileFileUrl = null;
 		if (memberRegisterRequest.getProfileFileId() != null) {
 			File profileFile = fileService.getFileById(memberRegisterRequest.getProfileFileId());
+			fileService.validateFileCategory(profileFile, FileCategory.MEMBER_PROFILE);
 			member.setProfileFile(profileFile);
 			profileFileUrl = fileService.getFileUrlByPath(profileFile.getFilePath());
 		}
@@ -81,6 +83,11 @@ public class MemberService {
 	public Member updateMember(Member member, MemberUpdateRequest updateRequest) {
 		if (updateRequest.getRealName() != null) {
 			member.setRealName(updateRequest.getRealName());
+		}
+		if (updateRequest.getProfileFileId() != null) {
+			File profileFile = fileService.getFileById(updateRequest.getProfileFileId());
+			fileService.validateFileCategory(profileFile, FileCategory.MEMBER_PROFILE);
+			member.setProfileFile(profileFile);
 		}
 		return memberRepository.save(member);
 	}

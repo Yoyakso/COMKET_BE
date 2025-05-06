@@ -2,6 +2,8 @@ package com.yoyakso.comket.file.entity;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.yoyakso.comket.file.enums.FileCategory;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,9 +13,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,6 +40,9 @@ public class File {
 
 	@Column(nullable = false, length = 100)
 	private Long fileSize;
+
+	@Column(nullable = true, length = 100)
+	private FileCategory fileCategory;
 
 	@CreationTimestamp
 	private String uploadDate;

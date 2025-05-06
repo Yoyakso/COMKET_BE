@@ -66,8 +66,7 @@ public class WorkspaceController {
 		@RequestBody WorkspaceUpdateRequest workspaceUpdateRequest,
 		HttpServletRequest request) {
 		Member authenticatedMember = getAuthenticatedMember(request);
-		Workspace updatedWorkspace = workspaceService.updateWorkspace(authenticatedMember, id,
-			Workspace.fromRequest(workspaceUpdateRequest));
+		Workspace updatedWorkspace = workspaceService.updateWorkspace(authenticatedMember, id, workspaceUpdateRequest);
 		return ResponseEntity.ok(workspaceService.toResponse(updatedWorkspace));
 	}
 

@@ -71,6 +71,7 @@ public class FileService {
 
 	public File uploadProfile(MultipartFile multipartFile, FileCategory fileCategory) {
 		File uploadFile = upload(multipartFile, fileCategory.getDirectoryName(), null); // s3에 업로드
+		uploadFile.setFileCategory(fileCategory); // 카테고리 설정
 		return fileRepository.save(uploadFile); // DB에 저장
 	}
 
@@ -83,4 +84,11 @@ public class FileService {
 			.orElseThrow(() -> new CustomException("FILE_NOT_FOUND", "파일을 찾을 수 없습니다."));
 	}
 
+	public void validateFileCategory(File file, FileCategory fileCategory) {
+		if (file == null)
+			return;
+		if (file.getFileCategory() != fileCategory) {
+			throw new CustomException("FILE_CATEGORY_MISMATCH", "파일 카테고리가 일치하지 않습니다.");
+		}
+	}
 }

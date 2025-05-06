@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.file.entity.File;
+import com.yoyakso.comket.file.enums.FileCategory;
 import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.dto.ProjectCreateRequest;
@@ -48,12 +49,10 @@ public class ProjectServiceImpl implements ProjectService {
 		if (projectRepository.existsByName(request.getName())) {
 			throw new CustomException("PROJECT_NAME_DUPLICATE", "프로젝트 이름이 중복되었습니다.");
 		}
-		System.out.println("request.getProfileFileId() = " + request.getProfileFileId());
 		File profileFile =
 			request.getProfileFileId() != null ? fileService.getFileById(request.getProfileFileId()) : null;
+		fileService.validateFileCategory(profileFile, FileCategory.PROJECT_PROFILE);
 		String profileFileUrl = profileFile != null ? fileService.getFileUrlByPath(profileFile.getFilePath()) : null;
-
-		System.out.println("profileFileUrl = " + profileFileUrl);
 
 		Project project = Project.builder()
 			.workspace(workSpace)
@@ -84,6 +83,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 		File profileFile =
 			request.getProfileFileId() != null ? fileService.getFileById(request.getProfileFileId()) : null;
+		fileService.validateFileCategory(profileFile, FileCategory.PROJECT_PROFILE);
 		String profileFileUrl = profileFile != null ? fileService.getFileUrlByPath(profileFile.getFilePath()) : null;
 
 		ProjectMember projectMember = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,

@@ -7,10 +7,12 @@ import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.file.entity.File;
+import com.yoyakso.comket.file.enums.FileCategory;
 import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.workspace.dto.WorkspaceInfoResponse;
 import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
+import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.enums.Visibility;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
@@ -30,6 +32,7 @@ public class WorkspaceService {
 		Workspace workspace = Workspace.fromRequest(workspaceRegisterRequest);
 		if (workspaceRegisterRequest.getProfileFileId() != null) {
 			File profileFile = fileService.getFileById(workspaceRegisterRequest.getProfileFileId());
+			fileService.validateFileCategory(profileFile, FileCategory.WORKSPACE_PROFILE);
 			workspace.setProfileFile(profileFile);
 		}
 		validateWorkspaceNameUniqueness(workspace.getName());
@@ -48,8 +51,14 @@ public class WorkspaceService {
 		return workspaceRepository.findAll();
 	}
 
-	public Workspace updateWorkspace(Member member, Long id, Workspace workspace) {
+	public Workspace updateWorkspace(Member member, Long id, WorkspaceUpdateRequest workspaceUpdateRequest) {
+		Workspace workspace = Workspace.fromRequest(workspaceUpdateRequest);
 		Workspace originalWorkspace = findWorkspaceById(id);
+		if (workspaceUpdateRequest.getProfileFileId() != null) {
+			File profileFile = fileService.getFileById(workspaceUpdateRequest.getProfileFileId());
+			fileService.validateFileCategory(profileFile, FileCategory.WORKSPACE_PROFILE);
+			workspace.setProfileFile(profileFile);
+		}
 		validateUpdatePermission(member, id);
 		validateWorkspaceNameUniquenessForUpdate(workspace.getName(), originalWorkspace.getName());
 		updateWorkspaceDetails(originalWorkspace, workspace);
