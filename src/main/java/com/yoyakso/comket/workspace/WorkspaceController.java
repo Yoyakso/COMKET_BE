@@ -37,9 +37,8 @@ public class WorkspaceController {
 	public ResponseEntity<WorkspaceInfoResponse> createWorkspace(
 		@RequestBody WorkspaceRegisterRequest workspaceRegisterRequest, HttpServletRequest request) {
 		Member authenticatedMember = getAuthenticatedMember(request);
-		Workspace workspace = Workspace.fromRequest(workspaceRegisterRequest);
-		Workspace createdWorkspace = workspaceService.registerWorkspace(workspace, authenticatedMember);
-		return ResponseEntity.ok(toResponse(createdWorkspace));
+		Workspace createdWorkspace = workspaceService.registerWorkspace(workspaceRegisterRequest, authenticatedMember);
+		return ResponseEntity.ok(workspaceService.toResponse(createdWorkspace));
 	}
 
 	@GetMapping
@@ -50,7 +49,7 @@ public class WorkspaceController {
 		List<Workspace> workspaces = includePublic
 			? workspaceService.getPublicWorkspaces()
 			: workspaceService.getWorkspacesByMember(authenticatedMember);
-		return ResponseEntity.ok(workspaces.stream().map(this::toResponse).toList());
+		return ResponseEntity.ok(workspaces.stream().map(workspaceService::toResponse).toList());
 	}
 
 	@GetMapping("/{id}")
@@ -58,7 +57,7 @@ public class WorkspaceController {
 	public ResponseEntity<WorkspaceInfoResponse> getWorkspaceById(HttpServletRequest request, @PathVariable Long id) {
 		Member authenticatedMember = getAuthenticatedMember(request);
 		Workspace workspace = workspaceService.getWorkspaceById(id, authenticatedMember);
-		return ResponseEntity.ok(toResponse(workspace));
+		return ResponseEntity.ok(workspaceService.toResponse(workspace));
 	}
 
 	@PatchMapping("/{id}")
@@ -69,7 +68,7 @@ public class WorkspaceController {
 		Member authenticatedMember = getAuthenticatedMember(request);
 		Workspace updatedWorkspace = workspaceService.updateWorkspace(authenticatedMember, id,
 			Workspace.fromRequest(workspaceUpdateRequest));
-		return ResponseEntity.ok(toResponse(updatedWorkspace));
+		return ResponseEntity.ok(workspaceService.toResponse(updatedWorkspace));
 	}
 
 	@DeleteMapping("/{id}")
@@ -90,14 +89,4 @@ public class WorkspaceController {
 		return member;
 	}
 
-	private WorkspaceInfoResponse toResponse(Workspace workspace) {
-		return WorkspaceInfoResponse.builder()
-			.id(workspace.getId())
-			.name(workspace.getName())
-			.description(workspace.getDescription())
-			.visibility(workspace.getVisibility())
-			.createdAt(workspace.getCreatedAt().toString())
-			.updatedAt(workspace.getUpdatedAt().toString())
-			.build();
-	}
 }

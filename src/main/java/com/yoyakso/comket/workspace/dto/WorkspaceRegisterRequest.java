@@ -1,5 +1,6 @@
 package com.yoyakso.comket.workspace.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yoyakso.comket.workspace.enums.Visibility;
 
 import jakarta.validation.constraints.NotNull;
@@ -18,4 +19,7 @@ public class WorkspaceRegisterRequest {
 
 	@NotNull(message = "visibility is required")
 	private Visibility visibility;
+
+	@JsonProperty("profile_file_id")
+	private Long profileFileId;
 }

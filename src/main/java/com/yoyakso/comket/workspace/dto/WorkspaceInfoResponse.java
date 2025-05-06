@@ -12,7 +12,7 @@ public class WorkspaceInfoResponse {
 	private Long id;
 	private String name;
 	private String description;
-	// private String imageUrl;
+	private String profileFileUrl;
 	private Visibility visibility;
 	private String createdAt;
 	private String updatedAt;

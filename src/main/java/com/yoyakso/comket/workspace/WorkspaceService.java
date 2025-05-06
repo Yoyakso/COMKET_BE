@@ -6,7 +6,11 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.file.entity.File;
+import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.workspace.dto.WorkspaceInfoResponse;
+import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.enums.Visibility;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
@@ -20,8 +24,14 @@ public class WorkspaceService {
 
 	private final WorkspaceRepository workspaceRepository;
 	private final WorkspaceMemberService workspaceMemberService;
+	private final FileService fileService;
 
-	public Workspace registerWorkspace(Workspace workspace, Member member) {
+	public Workspace registerWorkspace(WorkspaceRegisterRequest workspaceRegisterRequest, Member member) {
+		Workspace workspace = Workspace.fromRequest(workspaceRegisterRequest);
+		if (workspaceRegisterRequest.getProfileFileId() != null) {
+			File profileFile = fileService.getFileById(workspaceRegisterRequest.getProfileFileId());
+			workspace.setProfileFile(profileFile);
+		}
 		validateWorkspaceNameUniqueness(workspace.getName());
 		Workspace savedWorkspace = workspaceRepository.save(workspace);
 		workspaceMemberService.createWorkspaceMember(savedWorkspace, member, true, "ADMIN");
@@ -114,5 +124,23 @@ public class WorkspaceService {
 		originalWorkspace.setDescription(updatedWorkspace.getDescription());
 		originalWorkspace.setVisibility(updatedWorkspace.getVisibility());
 		originalWorkspace.setUpdatedAt(updatedWorkspace.getUpdatedAt());
+	}
+
+	public WorkspaceInfoResponse toResponse(Workspace workspace) {
+		String profileFileUrl = null;
+		if (workspace.getProfileFile() != null) {
+			File profileFile = fileService.getFileById(workspace.getProfileFile().getId());
+			profileFileUrl = fileService.getFileUrlByPath(profileFile.getFilePath());
+		}
+
+		return WorkspaceInfoResponse.builder()
+			.id(workspace.getId())
+			.name(workspace.getName())
+			.description(workspace.getDescription())
+			.visibility(workspace.getVisibility())
+			.profileFileUrl(profileFileUrl)
+			.createdAt(workspace.getCreatedAt().toString())
+			.updatedAt(workspace.getUpdatedAt().toString())
+			.build();
 	}
 }

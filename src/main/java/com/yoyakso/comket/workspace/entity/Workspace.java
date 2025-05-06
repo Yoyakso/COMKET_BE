@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.yoyakso.comket.file.entity.File;
 import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
 import com.yoyakso.comket.workspace.enums.Visibility;
@@ -16,6 +17,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -54,6 +57,10 @@ public class Workspace {
 
 	@Column(updatable = true)
 	private boolean isDeleted;
+
+	@OneToOne
+	@JoinColumn(name = "profile_file_id", referencedColumnName = "id", nullable = true)
+	private File profileFile;
 
 	@CreationTimestamp
 	private LocalDateTime createdAt;
