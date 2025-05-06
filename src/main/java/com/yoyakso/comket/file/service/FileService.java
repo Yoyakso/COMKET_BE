@@ -69,8 +69,8 @@ public class FileService {
 		}
 	}
 
-	public File uploadProfile(MultipartFile multipartFile, FileCategory fileCategory, Long id) {
-		File uploadFile = upload(multipartFile, fileCategory.getDirectoryName(), id.toString()); // s3에 업로드
+	public File uploadProfile(MultipartFile multipartFile, FileCategory fileCategory) {
+		File uploadFile = upload(multipartFile, fileCategory.getDirectoryName(), null); // s3에 업로드
 		return fileRepository.save(uploadFile); // DB에 저장
 	}
 
@@ -78,8 +78,8 @@ public class FileService {
 		return fileUrl + "/" + filePath;
 	}
 
-	public File getFileById(String fileId) {
-		return fileRepository.findById(Long.valueOf(fileId))
+	public File getFileById(Long fileId) {
+		return fileRepository.findById(fileId)
 			.orElseThrow(() -> new CustomException("FILE_NOT_FOUND", "파일을 찾을 수 없습니다."));
 	}
 

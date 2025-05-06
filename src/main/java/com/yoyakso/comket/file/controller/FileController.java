@@ -22,8 +22,8 @@ public class FileController {
 	private final FileService fileService;
 
 	@PostMapping("/upload/profile")
-	public ResponseEntity<FileUploadResponse> upload(MultipartFile multipartFile, FileCategory fileCategory, Long id) {
-		File file = fileService.uploadProfile(multipartFile, fileCategory, id);
+	public ResponseEntity<FileUploadResponse> upload(MultipartFile multipartFile, FileCategory fileCategory) {
+		File file = fileService.uploadProfile(multipartFile, fileCategory);
 		String fileUrl = fileService.getFileUrlByPath(file.getFilePath());
 
 		return ResponseEntity.ok(FileUploadResponse.builder()
@@ -50,7 +50,7 @@ public class FileController {
 	}
 
 	@GetMapping("/download")
-	public ResponseEntity<FileDownloadResponse> download(String fileId) {
+	public ResponseEntity<FileDownloadResponse> download(Long fileId) {
 		File file = fileService.getFileById(fileId);
 		String fileUrl = fileService.getFileUrlByPath(file.getFilePath());
 

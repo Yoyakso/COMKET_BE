@@ -2,6 +2,7 @@ package com.yoyakso.comket.member.entity;
 
 import java.time.LocalDateTime;
 
+import com.yoyakso.comket.file.entity.File;
 import com.yoyakso.comket.member.dto.MemberRegisterRequest;
 
 import jakarta.persistence.Column;
@@ -9,6 +10,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
@@ -41,6 +44,11 @@ public class Member {
 
 	@Column(updatable = false)
 	private LocalDateTime createdAt;
+
+	// profile 정보
+	@OneToOne
+	@JoinColumn(name = "profile_file_id", referencedColumnName = "id", nullable = true)
+	private File profileFile;
 
 	public Member(String realName, String email, String password) {
 		this.realName = realName;

@@ -4,6 +4,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.file.entity.File;
+import com.yoyakso.comket.file.service.FileService;
+import com.yoyakso.comket.member.dto.MemberInfoResponse;
+import com.yoyakso.comket.member.dto.MemberRegisterRequest;
 import com.yoyakso.comket.member.dto.MemberRegisterResponse;
 import com.yoyakso.comket.member.dto.MemberUpdateRequest;
 import com.yoyakso.comket.member.entity.Member;
@@ -21,6 +25,7 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final FileService fileService;
 
 	public Member findByEmail(String email) {
 		return memberRepository.findByEmail(email);
@@ -45,9 +50,18 @@ public class MemberService {
 		memberRepository.delete(member);
 	}
 
-	public MemberRegisterResponse registerMember(Member member) {
-		if (memberRepository.existsByEmail(member.getEmail())) {
+	public MemberRegisterResponse registerMember(MemberRegisterRequest memberRegisterRequest) {
+		if (memberRepository.existsByEmail(memberRegisterRequest.getEmail())) {
 			throw new CustomException("EMAIL_DUPLICATE", "이미 사용 중인 이메일입니다.");
+		}
+		Member member = Member.fromRequest(memberRegisterRequest);
+
+		// profileFileId로 File 엔티티 조회 및 설정
+		String profileFileUrl = null;
+		if (memberRegisterRequest.getProfileFileId() != null) {
+			File profileFile = fileService.getFileById(memberRegisterRequest.getProfileFileId());
+			member.setProfileFile(profileFile);
+			profileFileUrl = fileService.getFileUrlByPath(profileFile.getFilePath());
 		}
 
 		member.setPassword(passwordEncoder.encode(member.getPassword()));
@@ -60,6 +74,7 @@ public class MemberService {
 			.email(member.getEmail())
 			.realName(member.getRealName())
 			.token(token)
+			.profileFileUrl(profileFileUrl)
 			.build();
 	}
 
@@ -87,11 +102,26 @@ public class MemberService {
 	public Member getAuthenticatedMember(HttpServletRequest request) {
 		String token = jwtTokenProvider.getTokenFromHeader(request);
 		if (token == null) {
-			return null; // 토큰이 없을 경우
+			throw new CustomException("TOKEN_NOT_FOUND", "토큰이 없습니다.");
 		}
 
 		String email = jwtTokenProvider.parseToken(token).getSubject();
 		Member member = memberRepository.findByEmail(email);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
 		return member;
+	}
+
+	public MemberInfoResponse buildMemberInfoResponse(Member member) {
+		String profileFileUrl = member.getProfileFile() != null
+			? fileService.getFileUrlByPath(member.getProfileFile().getFilePath())
+			: null;
+
+		return MemberInfoResponse.builder()
+			.email(member.getEmail())
+			.realName(member.getRealName())
+			.profileFileUrl(profileFileUrl)
+			.build();
 	}
 }

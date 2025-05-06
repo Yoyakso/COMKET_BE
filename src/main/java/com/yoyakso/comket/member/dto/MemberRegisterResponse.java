@@ -10,4 +10,5 @@ public class MemberRegisterResponse {
 	private String email;
 	private String realName;
 	private String token;
+	private String profileFileUrl;
 }

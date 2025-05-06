@@ -12,6 +12,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.member.dto.MemberRegisterRequest;
 import com.yoyakso.comket.member.dto.MemberRegisterResponse;
 import com.yoyakso.comket.member.dto.MemberUpdateRequest;
 import com.yoyakso.comket.member.entity.Member;
@@ -34,10 +35,12 @@ class MemberServiceTest {
 	private MemberService memberService;
 
 	private Member testMember;
+	private MemberRegisterRequest testMemberRegisterRequest;
 
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
+		testMemberRegisterRequest = createTestMemberRegisterRequest();
 		testMember = createTestMember();
 	}
 
@@ -60,19 +63,27 @@ class MemberServiceTest {
 			return savedMember;
 		});
 
-		MemberRegisterResponse response = memberService.registerMember(testMember);
+		MemberRegisterRequest request = new MemberRegisterRequest();
+		request.setEmail(testMember.getEmail());
+		request.setPassword(testMember.getPassword());
+		request.setRealName(testMember.getRealName());
+		request.setProfileFileId(null); // 프로필 파일 ID 없음
+
+		MemberRegisterResponse response = memberService.registerMember(request);
 
 		assertNotNull(response);
 		assertEquals(1L, response.getMemberId());
 		assertEquals("test@example.com", response.getEmail());
 		assertEquals("jwtToken", response.getToken());
+		assertNull(response.getProfileFileUrl()); // 프로필 파일 URL이 null인지 확인
 	}
 
 	@Test
 	void testRegisterMember_EmailDuplicate() {
-		when(memberRepository.existsByEmail(testMember.getEmail())).thenReturn(true);
+		when(memberRepository.existsByEmail(testMemberRegisterRequest.getEmail())).thenReturn(true);
 
-		CustomException exception = assertThrows(CustomException.class, () -> memberService.registerMember(testMember));
+		CustomException exception = assertThrows(CustomException.class,
+			() -> memberService.registerMember(testMemberRegisterRequest));
 		assertEquals("EMAIL_DUPLICATE", exception.getCode());
 	}
 
@@ -130,5 +141,14 @@ class MemberServiceTest {
 		member.setEmail("test@example.com");
 		member.setPassword("password");
 		return member;
+	}
+
+	private MemberRegisterRequest createTestMemberRegisterRequest() {
+		MemberRegisterRequest request = new MemberRegisterRequest();
+		request.setEmail("test@exmaple.com");
+		request.setPassword("password");
+		request.setRealName("Test User");
+		request.setProfileFileId(null); // 프로필 파일 ID 없음
+		return request;
 	}
 }

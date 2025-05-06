@@ -34,8 +34,7 @@ public class MemberController {
 	@Operation(summary = "회원가입", description = "새로운 회원을 등록합니다.")
 	public ResponseEntity<MemberRegisterResponse> registerMember(
 		@Valid @RequestBody MemberRegisterRequest memberRegisterRequest) {
-		Member member = Member.fromRequest(memberRegisterRequest);
-		MemberRegisterResponse response = memberService.registerMember(member);
+		MemberRegisterResponse response = memberService.registerMember(memberRegisterRequest);
 		return ResponseEntity.ok(response);
 
 	}
@@ -44,17 +43,9 @@ public class MemberController {
 	@GetMapping("/members/me")
 	@Operation(summary = "회원 정보 조회", description = "현재 로그인한 회원의 정보를 조회합니다.")
 	public ResponseEntity<MemberInfoResponse> getMember(HttpServletRequest request) {
-
 		Member member = memberService.getAuthenticatedMember(request);
-		if (member == null) {
-			return ResponseEntity.notFound().build(); // 회원 정보가 없을 경우
-		}
-
-		MemberInfoResponse response = new MemberInfoResponse(
-			member.getEmail(),
-			member.getRealName()
-		);
-		return ResponseEntity.ok(response);
+		MemberInfoResponse memberInfoResponse = memberService.buildMemberInfoResponse(member);
+		return ResponseEntity.ok(memberInfoResponse);
 	}
 
 	//회원 정보 수정
@@ -63,17 +54,9 @@ public class MemberController {
 	public ResponseEntity<MemberInfoResponse> updateMember(HttpServletRequest request,
 		@Valid @RequestBody MemberUpdateRequest updateRequest) {
 		Member member = memberService.getAuthenticatedMember(request);
-		if (member == null) {
-			return ResponseEntity.notFound().build(); // 회원 정보가 없을 경우
-		}
-
 		Member updatedMember = memberService.updateMember(member, updateRequest);
-
-		MemberInfoResponse response = new MemberInfoResponse(
-			updatedMember.getEmail(),
-			updatedMember.getRealName()
-		);
-		return ResponseEntity.ok(response);
+		MemberInfoResponse memberInfoResponse = memberService.buildMemberInfoResponse(updatedMember);
+		return ResponseEntity.ok(memberInfoResponse);
 	}
 
 	// 회원 탈퇴
