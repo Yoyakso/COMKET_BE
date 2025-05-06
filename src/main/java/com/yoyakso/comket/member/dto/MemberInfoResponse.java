@@ -7,7 +7,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class MemberInfoResponse {
 	private String email;
-	private String nickname;
 	private String realName;
 
 }

@@ -42,7 +42,6 @@ class WorkspaceServiceTest {
 
 		Member member = new Member();
 		member.setId(1L);
-		member.setNickname("Test User");
 
 		Workspace workspace = new Workspace();
 		workspace.setName(name);
@@ -85,7 +84,6 @@ class WorkspaceServiceTest {
 
 		Member member = new Member();
 		member.setId(1L);
-		member.setNickname("Test User");
 
 		Workspace workspace = new Workspace();
 		workspace.setId(1L);

@@ -39,10 +39,6 @@ public class Member {
 	@Size(min = 8)
 	private String password;
 
-	@NotNull
-	@Size(min = 2, max = 50)
-	private String nickname;
-
 	@Column(updatable = false)
 	private LocalDateTime createdAt;
 
@@ -61,7 +57,6 @@ public class Member {
 	public static Member fromRequest(MemberRegisterRequest memberRegisterRequest) {
 		Member member = new Member();
 		member.setEmail(memberRegisterRequest.getEmail());
-		member.setNickname(memberRegisterRequest.getNickname());
 		member.setPassword(memberRegisterRequest.getPassword());
 		member.setRealName(memberRegisterRequest.getRealName());
 		return member;
