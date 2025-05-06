@@ -10,4 +10,5 @@ import lombok.Getter;
 public class ProjectInfoResponse {
 	private Long projectId;
 	private String projectName;
+	private String profileFileUrl;
 }

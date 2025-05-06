@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.file.entity.File;
+import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.dto.ProjectCreateRequest;
 import com.yoyakso.comket.project.dto.ProjectInfoResponse;
@@ -31,6 +33,7 @@ public class ProjectServiceImpl implements ProjectService {
 	private final WorkspaceRepository workspaceRepository;
 	private final ProjectMemberService projectMemberService;
 	private final ProjectMemberRepository projectMemberRepository;
+	private final FileService fileService;
 
 	@Override
 	public ProjectInfoResponse createProject(String workSpaceName, ProjectCreateRequest request,
@@ -45,6 +48,12 @@ public class ProjectServiceImpl implements ProjectService {
 		if (projectRepository.existsByName(request.getName())) {
 			throw new CustomException("PROJECT_NAME_DUPLICATE", "프로젝트 이름이 중복되었습니다.");
 		}
+		System.out.println("request.getProfileFileId() = " + request.getProfileFileId());
+		File profileFile =
+			request.getProfileFileId() != null ? fileService.getFileById(request.getProfileFileId()) : null;
+		String profileFileUrl = profileFile != null ? fileService.getFileUrlByPath(profileFile.getFilePath()) : null;
+
+		System.out.println("profileFileUrl = " + profileFileUrl);
 
 		Project project = Project.builder()
 			.workspace(workSpace)
@@ -52,6 +61,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.description(request.getDescription())
 			.state(ProjectState.ACTIVE) // 초기 상태 예: ACTIVE
 			.isPublic(request.getIsPublic())
+			.profileFile(profileFile)
 			.build();
 
 		Project savedProject = projectRepository.save(project);
@@ -61,6 +71,7 @@ public class ProjectServiceImpl implements ProjectService {
 		return ProjectInfoResponse.builder()
 			.projectId(savedProject.getId())
 			.projectName(savedProject.getName())
+			.profileFileUrl(profileFileUrl)
 			.build();
 	}
 
@@ -70,6 +81,10 @@ public class ProjectServiceImpl implements ProjectService {
 		// 워크스페이스 조회
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
+
+		File profileFile =
+			request.getProfileFileId() != null ? fileService.getFileById(request.getProfileFileId()) : null;
+		String profileFileUrl = profileFile != null ? fileService.getFileUrlByPath(profileFile.getFilePath()) : null;
 
 		ProjectMember projectMember = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
 			member.getId());
@@ -92,12 +107,13 @@ public class ProjectServiceImpl implements ProjectService {
 		project.updateName(request.getName());
 		project.updateDescription(request.getDescription());
 		project.updateProjectPublicity(request.getIsPublic());
-
+		project.updateProfileFile(profileFile);
 		Project savedProject = projectRepository.save(project);
 
 		return ProjectInfoResponse.builder()
 			.projectId(savedProject.getId())
 			.projectName(savedProject.getName())
+			.profileFileUrl(profileFileUrl)
 			.build();
 	}
 
@@ -152,7 +168,12 @@ public class ProjectServiceImpl implements ProjectService {
 		List<Project> projects = projectRepository.findAllByWorkspaceAndIsPublicTrue(workSpace);
 
 		return projects.stream()
-			.map(project -> new ProjectInfoResponse(project.getId(), project.getName()))
+			.map(project -> {
+				String profileFileUrl = project.getProfileFile() != null
+					? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
+					: null;
+				return new ProjectInfoResponse(project.getId(), project.getName(), profileFileUrl);
+			})
 			.toList();
 	}
 
@@ -165,7 +186,12 @@ public class ProjectServiceImpl implements ProjectService {
 		List<Project> projects = projectMemberService.getProjectListByMemberId(member);
 
 		return projects.stream()
-			.map(project -> new ProjectInfoResponse(project.getId(), project.getName()))
+			.map(project -> {
+				String profileFileUrl = project.getProfileFile() != null
+					? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
+					: null;
+				return new ProjectInfoResponse(project.getId(), project.getName(), profileFileUrl);
+			})
 			.toList();
 	}
 
