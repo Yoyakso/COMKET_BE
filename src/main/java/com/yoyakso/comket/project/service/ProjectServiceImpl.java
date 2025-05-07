@@ -21,9 +21,9 @@ import com.yoyakso.comket.projectMember.entity.ProjectMember;
 import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
-import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -253,7 +253,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.map(pm -> {
 				Member member = pm.getMember();
 				return ProjectMemberResponse.builder()
-					.userId(pm.getId())
+					.memberId(pm.getId())
 					.name(member.getRealName())
 					.email(member.getEmail())
 					.positionType(pm.getPositionType())
@@ -294,7 +294,7 @@ public class ProjectServiceImpl implements ProjectService {
 		Member updatedMember = updatedProjectMember.getMember();
 
 		return ProjectMemberResponse.builder()
-			.userId(updatedMember.getId())
+			.memberId(updatedMember.getId())
 			.name(updatedMember.getRealName())
 			.email(updatedMember.getEmail())
 			.isActive(updatedProjectMember.getIsActive())
