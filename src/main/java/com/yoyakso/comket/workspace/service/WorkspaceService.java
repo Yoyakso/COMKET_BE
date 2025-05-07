@@ -1,4 +1,4 @@
-package com.yoyakso.comket.workspace;
+package com.yoyakso.comket.workspace.service;
 
 import java.util.List;
 import java.util.Random;
@@ -18,6 +18,7 @@ import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.enums.WorkspaceState;
+import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
 import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;

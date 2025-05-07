@@ -1,4 +1,4 @@
-package com.yoyakso.comket.workspace;
+package com.yoyakso.comket.workspace.repository;
 
 import java.util.Optional;
 

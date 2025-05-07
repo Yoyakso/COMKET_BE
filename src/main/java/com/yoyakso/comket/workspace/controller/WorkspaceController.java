@@ -1,4 +1,4 @@
-package com.yoyakso.comket.workspace;
+package com.yoyakso.comket.workspace.controller;
 
 import java.util.List;
 
@@ -22,6 +22,7 @@ import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoUpdateRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
 import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspace.service.WorkspaceService;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -115,7 +116,8 @@ public class WorkspaceController {
 	@PatchMapping("/{workspaceId}/members")
 	public ResponseEntity<WorkspaceMemberInfoResponse> updateWorkspaceMember(
 		@PathVariable Long workspaceId,
-		@RequestBody WorkspaceMemberInfoUpdateRequest workspaceMemberInfoUpdateRequest, HttpServletRequest request) {
+		@Valid @RequestBody WorkspaceMemberInfoUpdateRequest workspaceMemberInfoUpdateRequest,
+		HttpServletRequest request) {
 		Member authenticatedMember = getAuthenticatedMember(request);
 		WorkspaceMember updatedWorkspaceMember = workspaceService.updateWorkspaceMember(workspaceId,
 			workspaceMemberInfoUpdateRequest, authenticatedMember);
