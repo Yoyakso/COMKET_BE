@@ -12,9 +12,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
 import com.yoyakso.comket.workspace.entity.Workspace;
-import com.yoyakso.comket.workspace.enums.Visibility;
+import com.yoyakso.comket.workspace.enums.WorkspaceState;
+import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
+import com.yoyakso.comket.workspace.service.WorkspaceService;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
@@ -38,36 +41,42 @@ class WorkspaceServiceTest {
 		// given
 		String name = "New Workspace";
 		String description = "This is a new workspace.";
-		Visibility visibility = Visibility.PUBLIC;
+		Boolean isPublic = true;
 
 		Member member = new Member();
 		member.setId(1L);
 
+		WorkspaceRegisterRequest workspaceRegisterRequest = WorkspaceRegisterRequest.builder()
+			.name(name)
+			.description(description)
+			.isPublic(isPublic)
+			.build();
+
 		Workspace workspace = new Workspace();
 		workspace.setName(name);
 		workspace.setDescription(description);
-		workspace.setVisibility(visibility);
+		workspace.setIsPublic(isPublic);
 
 		Workspace savedWorkspace = new Workspace();
 		savedWorkspace.setId(1L);
 		savedWorkspace.setName(name);
 		savedWorkspace.setDescription(description);
-		savedWorkspace.setVisibility(visibility);
+		savedWorkspace.setIsPublic(isPublic);
 
 		when(workspaceRepository.existsByName(name)).thenReturn(false);
-		when(workspaceRepository.save(workspace)).thenReturn(savedWorkspace);
+		when(workspaceRepository.save(any(Workspace.class))).thenReturn(savedWorkspace);
 
 		// when
-		Workspace result = workspaceService.registerWorkspace(workspace, member);
+		Workspace result = workspaceService.registerWorkspace(workspaceRegisterRequest, member);
 
 		// then
 		assertNotNull(result);
 		assertEquals(savedWorkspace.getId(), result.getId());
 		assertEquals(name, result.getName());
 		assertEquals(description, result.getDescription());
-		assertEquals(visibility, result.getVisibility());
+		assertEquals(isPublic, result.getIsPublic());
 		verify(workspaceRepository).existsByName(name);
-		verify(workspaceRepository).save(workspace);
+		verify(workspaceRepository).save(any(Workspace.class));
 		verifyNoMoreInteractions(workspaceRepository);
 	}
 
@@ -76,11 +85,13 @@ class WorkspaceServiceTest {
 		// given
 		String initialName = "Initial Workspace Name";
 		String initialDescription = "Initial Workspace Description";
-		Visibility initialVisibility = Visibility.PRIVATE;
+		Boolean initalIsPublic = false;
+		WorkspaceState initialState = WorkspaceState.ACTIVE;
 
 		String updatedName = "Updated Workspace Name";
 		String updatedDescription = "Updated Workspace Description";
-		Visibility updatedVisibility = Visibility.PUBLIC;
+		Boolean updatedIsPublic = true;
+		WorkspaceState updatedState = WorkspaceState.INACTIVE;
 
 		Member member = new Member();
 		member.setId(1L);
@@ -89,12 +100,15 @@ class WorkspaceServiceTest {
 		workspace.setId(1L);
 		workspace.setName(initialName);
 		workspace.setDescription(initialDescription);
-		workspace.setVisibility(initialVisibility);
+		workspace.setIsPublic(initalIsPublic);
+		workspace.setState(initialState);
 
-		WorkspaceUpdateRequest request = new WorkspaceUpdateRequest();
-		request.setName(updatedName);
-		request.setDescription(updatedDescription);
-		request.setVisibility(updatedVisibility);
+		WorkspaceUpdateRequest request = WorkspaceUpdateRequest.builder()
+			.name(updatedName)
+			.description(updatedDescription)
+			.isPublic(updatedIsPublic)
+			.state(updatedState)
+			.build();
 
 		// Mock 생성 및 권한 검증 로직
 		when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
@@ -107,12 +121,13 @@ class WorkspaceServiceTest {
 		when(workspaceRepository.save(any(Workspace.class))).thenReturn(workspace);
 
 		// when
-		workspaceService.updateWorkspace(member, workspace.getId(), Workspace.fromRequest(request));
+		workspaceService.updateWorkspace(member, workspace.getId(), request);
 
 		// then
 		assertEquals(updatedName, workspace.getName());
 		assertEquals(updatedDescription, workspace.getDescription());
-		assertEquals(updatedVisibility, workspace.getVisibility());
+		assertEquals(updatedIsPublic, workspace.getIsPublic());
+		assertEquals(updatedState, workspace.getState());
 		verify(workspaceRepository).findById(workspace.getId());
 		verify(workspaceRepository).save(workspace);
 		verify(workspaceMemberService).getWorkspaceMemberByWorkspaceIdAndMemberId(workspace.getId(), member.getId());

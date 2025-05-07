@@ -20,8 +20,8 @@ import com.yoyakso.comket.project.repository.ProjectRepository;
 import com.yoyakso.comket.projectMember.entity.ProjectMember;
 import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
-import com.yoyakso.comket.workspace.WorkspaceRepository;
 import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
