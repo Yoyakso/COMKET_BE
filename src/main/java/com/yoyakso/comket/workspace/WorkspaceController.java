@@ -62,6 +62,22 @@ public class WorkspaceController {
 		return ResponseEntity.ok(workspaceService.toResponse(workspace));
 	}
 
+	@GetMapping("/slug/{slug}")
+	public ResponseEntity<WorkspaceInfoResponse> getWorkspaceBySlug(HttpServletRequest request,
+		@PathVariable String slug) {
+		Member authenticatedMember = getAuthenticatedMember(request);
+		Workspace workspace = workspaceService.getWorkspaceBySlug(slug, authenticatedMember);
+		return ResponseEntity.ok(workspaceService.toResponse(workspace));
+	}
+
+	@GetMapping("/inviteCode/{inviteCode}")
+	public ResponseEntity<WorkspaceInfoResponse> getWorkspaceByInviteCode(HttpServletRequest request,
+		@PathVariable String inviteCode) {
+		Member authenticatedMember = getAuthenticatedMember(request);
+		Workspace workspace = workspaceService.getWorkspaceByInviteCode(inviteCode, authenticatedMember);
+		return ResponseEntity.ok(workspaceService.toResponse(workspace));
+	}
+
 	@PatchMapping("/{id}")
 	@Operation(summary = "워크스페이스 수정 API", description = "워크스페이스의 정보를 수정하는 API")
 	public ResponseEntity<WorkspaceInfoResponse> updateWorkspace(@PathVariable Long id,
@@ -79,7 +95,7 @@ public class WorkspaceController {
 		workspaceService.deleteWorkspace(id, authenticatedMember);
 		return ResponseEntity.noContent().build();
 	}
-
+	
 	// --- Private Helper Methods ---
 
 	private Member getAuthenticatedMember(HttpServletRequest request) {

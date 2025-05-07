@@ -90,6 +90,22 @@ public class WorkspaceService {
 			.collect(Collectors.toList());
 	}
 
+	public Workspace getWorkspaceBySlug(String slug, Member member) {
+		Workspace workspace = workspaceRepository.findBySlug(slug)
+			.filter(ws -> !ws.getState().equals(WorkspaceState.DELETED))
+			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스 정보를 찾을 수 없습니다."));
+		validateWorkspaceAccess(workspace, member);
+		return workspace;
+	}
+
+	public Workspace getWorkspaceByInviteCode(String inviteCode, Member member) {
+		Workspace workspace = workspaceRepository.findByInviteCode(inviteCode)
+			.filter(ws -> !ws.getState().equals(WorkspaceState.DELETED))
+			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스 정보를 찾을 수 없습니다."));
+		validateWorkspaceAccess(workspace, member);
+		return workspace;
+	}
+
 	// --- Private Helper Methods ---
 
 	private Workspace findWorkspaceById(Long id) {
@@ -181,4 +197,5 @@ public class WorkspaceService {
 			.updatedAt(workspace.getUpdatedAt().toString())
 			.build();
 	}
+
 }
