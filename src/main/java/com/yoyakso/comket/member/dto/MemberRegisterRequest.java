@@ -12,5 +12,10 @@ public class MemberRegisterRequest {
 	private String realName;
 	@JsonProperty("profile_file_id")
 	private Long profileFileId;
-	// private int position;
+	@JsonProperty("department")
+	private String department;
+	@JsonProperty("role")
+	private String role;
+	@JsonProperty("responsibility")
+	private String responsibility;
 }

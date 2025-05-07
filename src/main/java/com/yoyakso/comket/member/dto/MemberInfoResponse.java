@@ -10,5 +10,8 @@ import lombok.Data;
 public class MemberInfoResponse {
 	private String email;
 	private String realName;
+	private String department;
+	private String role;
+	private String responsibility;
 	private String profileFileUrl;
 }
