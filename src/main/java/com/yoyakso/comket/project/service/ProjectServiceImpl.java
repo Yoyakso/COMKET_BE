@@ -76,7 +76,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.projectDescription(savedProject.getDescription())
 			.isPublic(savedProject.getIsPublic())
 			.createTime(savedProject.getCreateTime())
-			.profileFileUrl(savedProject.getProfileFile().getFilePath())
+			.profileFileUrl(profileFileUrl)
 			.build();
 	}
 
@@ -122,7 +122,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.projectDescription(savedProject.getDescription())
 			.isPublic(savedProject.getIsPublic())
 			.createTime(savedProject.getCreateTime())
-			.profileFileUrl(savedProject.getProfileFile().getFilePath())
+			.profileFileUrl(profileFileUrl)
 			.build();
 	}
 
@@ -176,6 +176,10 @@ public class ProjectServiceImpl implements ProjectService {
 
 		Project project = projectRepository.findById(projectId)
 			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
+		
+		String profileFileUrl = project.getProfileFile() != null
+			? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
+			: null;
 
 		return ProjectInfoResponse.builder()
 			.projectId(project.getId())
@@ -183,7 +187,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.projectDescription(project.getDescription())
 			.isPublic(project.getIsPublic())
 			.createTime(project.getCreateTime())
-			.profileFileUrl(project.getProfileFile().getFilePath())
+			.profileFileUrl(profileFileUrl)
 			.build();
 	}
 

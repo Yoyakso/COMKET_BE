@@ -26,6 +26,9 @@ import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
+import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
+import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
+import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import jakarta.transaction.Transactional;
 
@@ -51,6 +54,9 @@ public class ProjectServiceTest {
 
 	@Mock
 	private ProjectMemberRepository projectMemberRepository;
+
+	@Mock
+	private WorkspaceMemberService workspaceMemberService; // 추가
 
 	@Test
 	void testCreateProject() {
@@ -174,10 +180,19 @@ public class ProjectServiceTest {
 		Member member = new Member();
 		member.setId(1L);
 
+		WorkspaceMember mockWorkspaceMember = WorkspaceMember.builder()
+			.id(1L)
+			.workspace(mockWorkspace)
+			.member(member)
+			.state(WorkspaceMemberState.ACTIVE)
+			.positionType("Developer")
+			.build();
+
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
+		when(workspaceMemberService.getWorkspaceMemberById(mockWorkspaceMember.getId()))
+			.thenReturn(mockWorkspaceMember);
 		when(projectRepository.findAllByWorkspaceAndIsPublicTrue(mockWorkspace))
 			.thenReturn(List.of(savedProject1, savedProject2, savedProject3));
-
 		// when
 		List<ProjectInfoResponse> response = projectService.getAllProjects(mockWorkspace.getName(), member);
 
