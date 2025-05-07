@@ -19,6 +19,8 @@ public interface ProjectService {
 	ProjectInfoResponse updateProject(String workSpaceName, Long projectId, ProjectCreateRequest request,
 		Member member);
 
+	ProjectInfoResponse getProject(String workSpaceName, Long projectId, Member member);
+
 	void patchProjectState(String workSpaceName, Long projectId, Member member, ProjectState state);
 
 	void exitProject(String workSpaceName, Long projectId, Member member);

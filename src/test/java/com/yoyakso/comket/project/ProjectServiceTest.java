@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.annotation.Rollback;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.dto.ProjectCreateRequest;
 import com.yoyakso.comket.project.dto.ProjectInfoResponse;
@@ -23,8 +24,11 @@ import com.yoyakso.comket.project.repository.ProjectRepository;
 import com.yoyakso.comket.project.service.ProjectServiceImpl;
 import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
-import com.yoyakso.comket.workspace.WorkspaceRepository;
 import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
+import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
+import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
+import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import jakarta.transaction.Transactional;
 
@@ -43,10 +47,16 @@ public class ProjectServiceTest {
 	private WorkspaceRepository workspaceRepository;
 
 	@Mock
+	private FileService fileService;
+
+	@Mock
 	private ProjectMemberService projectMemberService;
 
 	@Mock
 	private ProjectMemberRepository projectMemberRepository;
+
+	@Mock
+	private WorkspaceMemberService workspaceMemberService; // 추가
 
 	@Test
 	void testCreateProject() {
@@ -60,7 +70,8 @@ public class ProjectServiceTest {
 		ProjectCreateRequest request = new ProjectCreateRequest(
 			"COMKET_BE",
 			"COMKET Backend Team Project",
-			true
+			true,
+			null
 		);
 
 		Project savedProject = Project.builder()
@@ -74,7 +85,6 @@ public class ProjectServiceTest {
 
 		Member member = new Member();
 		member.setId(1L);
-		member.setNickname("MINION");
 
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
 		when(projectRepository.save(any(Project.class))).thenReturn(savedProject);
@@ -101,13 +111,13 @@ public class ProjectServiceTest {
 		// member mock
 		Member member = new Member();
 		member.setId(1L);
-		member.setNickname("MINION");
 
 		// 업데이트 리쿼스트 mock
 		ProjectCreateRequest updateRequest = new ProjectCreateRequest(
 			"COMKET_BE",
 			"COMKET Backend Team Project",
-			true
+			true,
+			null
 		);
 
 		// 이미 존재하는 프로젝트
@@ -169,12 +179,20 @@ public class ProjectServiceTest {
 
 		Member member = new Member();
 		member.setId(1L);
-		member.setNickname("MINION");
+
+		WorkspaceMember mockWorkspaceMember = WorkspaceMember.builder()
+			.id(1L)
+			.workspace(mockWorkspace)
+			.member(member)
+			.state(WorkspaceMemberState.ACTIVE)
+			.positionType("Developer")
+			.build();
 
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
+		when(workspaceMemberService.getWorkspaceMemberById(mockWorkspaceMember.getId()))
+			.thenReturn(mockWorkspaceMember);
 		when(projectRepository.findAllByWorkspaceAndIsPublicTrue(mockWorkspace))
 			.thenReturn(List.of(savedProject1, savedProject2, savedProject3));
-
 		// when
 		List<ProjectInfoResponse> response = projectService.getAllProjects(mockWorkspace.getName(), member);
 

@@ -1,4 +1,4 @@
-package com.yoyakso.comket.member;
+package com.yoyakso.comket.member.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,10 +14,12 @@ import com.yoyakso.comket.member.dto.MemberRegisterRequest;
 import com.yoyakso.comket.member.dto.MemberRegisterResponse;
 import com.yoyakso.comket.member.dto.MemberUpdateRequest;
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.util.JwtTokenProvider;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -31,9 +33,8 @@ public class MemberController {
 	@PostMapping("/auth/register")
 	@Operation(summary = "회원가입", description = "새로운 회원을 등록합니다.")
 	public ResponseEntity<MemberRegisterResponse> registerMember(
-		@RequestBody MemberRegisterRequest memberRegisterRequest) {
-		Member member = Member.fromRequest(memberRegisterRequest);
-		MemberRegisterResponse response = memberService.registerMember(member);
+		@Valid @RequestBody MemberRegisterRequest memberRegisterRequest) {
+		MemberRegisterResponse response = memberService.registerMember(memberRegisterRequest);
 		return ResponseEntity.ok(response);
 
 	}
@@ -42,38 +43,20 @@ public class MemberController {
 	@GetMapping("/members/me")
 	@Operation(summary = "회원 정보 조회", description = "현재 로그인한 회원의 정보를 조회합니다.")
 	public ResponseEntity<MemberInfoResponse> getMember(HttpServletRequest request) {
-
 		Member member = memberService.getAuthenticatedMember(request);
-		if (member == null) {
-			return ResponseEntity.notFound().build(); // 회원 정보가 없을 경우
-		}
-
-		MemberInfoResponse response = new MemberInfoResponse(
-			member.getEmail(),
-			member.getNickname(),
-			member.getRealName()
-		);
-		return ResponseEntity.ok(response);
+		MemberInfoResponse memberInfoResponse = memberService.buildMemberInfoResponse(member);
+		return ResponseEntity.ok(memberInfoResponse);
 	}
 
 	//회원 정보 수정
 	@PatchMapping("/members/me")
 	@Operation(summary = "회원 정보 수정", description = "현재 로그인한 회원의 정보를 수정합니다.")
 	public ResponseEntity<MemberInfoResponse> updateMember(HttpServletRequest request,
-		@RequestBody MemberUpdateRequest updateRequest) {
+		@Valid @RequestBody MemberUpdateRequest updateRequest) {
 		Member member = memberService.getAuthenticatedMember(request);
-		if (member == null) {
-			return ResponseEntity.notFound().build(); // 회원 정보가 없을 경우
-		}
-
 		Member updatedMember = memberService.updateMember(member, updateRequest);
-
-		MemberInfoResponse response = new MemberInfoResponse(
-			updatedMember.getEmail(),
-			updatedMember.getNickname(),
-			updatedMember.getRealName()
-		);
-		return ResponseEntity.ok(response);
+		MemberInfoResponse memberInfoResponse = memberService.buildMemberInfoResponse(updatedMember);
+		return ResponseEntity.ok(memberInfoResponse);
 	}
 
 	// 회원 탈퇴

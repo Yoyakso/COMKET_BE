@@ -1,6 +1,6 @@
 package com.yoyakso.comket.workspace.dto;
 
-import com.yoyakso.comket.workspace.enums.Visibility;
+import com.yoyakso.comket.workspace.enums.WorkspaceState;
 
 import lombok.Builder;
 import lombok.Data;
@@ -12,11 +12,12 @@ public class WorkspaceInfoResponse {
 	private Long id;
 	private String name;
 	private String description;
-	// private String imageUrl;
-	private Visibility visibility;
+	private WorkspaceState state;
+	private Boolean isPublic;
+	private String profileFileUrl;
+	private String slug;
+	private String inviteCode;
 	private String createdAt;
 	private String updatedAt;
 	private int memberCount;
-	private boolean isOwner;
-	private boolean isMember;
 }

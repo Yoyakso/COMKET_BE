@@ -13,7 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import com.yoyakso.comket.member.MemberService;
+import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.oauth2.dto.GoogleDetailResponse;
 import com.yoyakso.comket.oauth2.dto.GoogleLoginResponse;
 import com.yoyakso.comket.oauth2.dto.GoogleTokenResponse;

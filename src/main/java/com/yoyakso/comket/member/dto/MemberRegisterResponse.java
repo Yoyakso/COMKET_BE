@@ -8,7 +8,7 @@ import lombok.Data;
 public class MemberRegisterResponse {
 	private Long memberId;
 	private String email;
-	private String nickname;
 	private String realName;
 	private String token;
+	private String profileFileUrl;
 }

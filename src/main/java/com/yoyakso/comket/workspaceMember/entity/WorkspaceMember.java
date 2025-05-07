@@ -3,9 +3,11 @@ package com.yoyakso.comket.workspaceMember.entity;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -44,12 +46,15 @@ public class WorkspaceMember {
 	private Member member;
 
 	@Column(nullable = false)
-	private boolean isActive;
+	private WorkspaceMemberState state;
 
 	@Column(nullable = false, length = 20)
 	private String positionType; // "OWNER", "MEMBER", "ADMIN"
 
 	@CreationTimestamp
 	private LocalDateTime createdAt;
+
+	@UpdateTimestamp
+	private LocalDateTime updatedAt;
 
 }

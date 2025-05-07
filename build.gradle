@@ -37,9 +37,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web-services'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 //	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0' // Swagger
@@ -54,11 +51,7 @@ dependencies {
 
     implementation 'org.openapitools:jackson-databind-nullable'
     implementation 'com.sun.mail:jakarta.mail:2.0.1'
-    implementation("com.amazonaws:aws-java-sdk-s3:1.12.174")
-
-    //env 적용
-    implementation 'io.github.cdimascio:java-dotenv:5.2.2'
-
+    
     // JwtWebToken
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
@@ -79,6 +72,16 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 //    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.mockito:mockito-core:5.4.0'
+
+    //Email
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    //thymeleaf(for email service)
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+
+    //AWS
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter:3.1.1'
+    implementation "software.amazon.awssdk:s3:2.13.0"
 }
 
 tasks.withType(Test).configureEach {

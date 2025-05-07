@@ -12,9 +12,12 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.member.dto.MemberRegisterRequest;
 import com.yoyakso.comket.member.dto.MemberRegisterResponse;
 import com.yoyakso.comket.member.dto.MemberUpdateRequest;
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.repository.MemberRepository;
+import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.util.JwtTokenProvider;
 
 class MemberServiceTest {
@@ -32,10 +35,12 @@ class MemberServiceTest {
 	private MemberService memberService;
 
 	private Member testMember;
+	private MemberRegisterRequest testMemberRegisterRequest;
 
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
+		testMemberRegisterRequest = createTestMemberRegisterRequest();
 		testMember = createTestMember();
 	}
 
@@ -50,7 +55,6 @@ class MemberServiceTest {
 	@Test
 	void testRegisterMember_Success() {
 		when(memberRepository.existsByEmail(testMember.getEmail())).thenReturn(false);
-		when(memberRepository.existsByNickname(testMember.getNickname())).thenReturn(false);
 		when(passwordEncoder.encode(testMember.getPassword())).thenReturn("encodedPassword");
 		when(jwtTokenProvider.createToken(testMember.getEmail())).thenReturn("jwtToken");
 		when(memberRepository.save(any(Member.class))).thenAnswer(invocation -> {
@@ -59,20 +63,27 @@ class MemberServiceTest {
 			return savedMember;
 		});
 
-		MemberRegisterResponse response = memberService.registerMember(testMember);
+		MemberRegisterRequest request = new MemberRegisterRequest();
+		request.setEmail(testMember.getEmail());
+		request.setPassword(testMember.getPassword());
+		request.setRealName(testMember.getRealName());
+		request.setProfileFileId(null); // 프로필 파일 ID 없음
+
+		MemberRegisterResponse response = memberService.registerMember(request);
 
 		assertNotNull(response);
 		assertEquals(1L, response.getMemberId());
 		assertEquals("test@example.com", response.getEmail());
-		assertEquals("testUser", response.getNickname());
 		assertEquals("jwtToken", response.getToken());
+		assertNull(response.getProfileFileUrl()); // 프로필 파일 URL이 null인지 확인
 	}
 
 	@Test
 	void testRegisterMember_EmailDuplicate() {
-		when(memberRepository.existsByEmail(testMember.getEmail())).thenReturn(true);
+		when(memberRepository.existsByEmail(testMemberRegisterRequest.getEmail())).thenReturn(true);
 
-		CustomException exception = assertThrows(CustomException.class, () -> memberService.registerMember(testMember));
+		CustomException exception = assertThrows(CustomException.class,
+			() -> memberService.registerMember(testMemberRegisterRequest));
 		assertEquals("EMAIL_DUPLICATE", exception.getCode());
 	}
 
@@ -96,29 +107,14 @@ class MemberServiceTest {
 	@Test
 	void testUpdateMember_Success() {
 		MemberUpdateRequest updateRequest = new MemberUpdateRequest();
-		updateRequest.setNickname("updatedNickname");
 		updateRequest.setRealName("Updated Real Name");
 
-		when(memberRepository.existsByNickname(updateRequest.getNickname())).thenReturn(false);
 		when(memberRepository.save(any(Member.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		Member updatedMember = memberService.updateMember(testMember, updateRequest);
 
 		assertNotNull(updatedMember);
-		assertEquals("updatedNickname", updatedMember.getNickname());
 		assertEquals("Updated Real Name", updatedMember.getRealName());
-	}
-
-	@Test
-	void testUpdateMember_NicknameDuplicate() {
-		MemberUpdateRequest updateRequest = new MemberUpdateRequest();
-		updateRequest.setNickname("duplicateNickname");
-
-		when(memberRepository.existsByNickname(updateRequest.getNickname())).thenReturn(true);
-
-		CustomException exception = assertThrows(CustomException.class,
-			() -> memberService.updateMember(testMember, updateRequest));
-		assertEquals("NICKNAME_DUPLICATE", exception.getCode());
 	}
 
 	@Test
@@ -129,7 +125,6 @@ class MemberServiceTest {
 
 		assertNotNull(foundMember);
 		assertEquals(testMember.getEmail(), foundMember.getEmail());
-		assertEquals(testMember.getNickname(), foundMember.getNickname());
 	}
 
 	@Test
@@ -144,8 +139,16 @@ class MemberServiceTest {
 	private Member createTestMember() {
 		Member member = new Member();
 		member.setEmail("test@example.com");
-		member.setNickname("testUser");
 		member.setPassword("password");
 		return member;
+	}
+
+	private MemberRegisterRequest createTestMemberRegisterRequest() {
+		MemberRegisterRequest request = new MemberRegisterRequest();
+		request.setEmail("test@exmaple.com");
+		request.setPassword("password");
+		request.setRealName("Test User");
+		request.setProfileFileId(null); // 프로필 파일 ID 없음
+		return request;
 	}
 }

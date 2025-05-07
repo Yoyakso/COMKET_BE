@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.yoyakso.comket.file.entity.File;
 import com.yoyakso.comket.project.enums.ProjectState;
 import com.yoyakso.comket.workspace.entity.Workspace;
 
@@ -16,6 +17,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -54,6 +56,10 @@ public class Project {
 
 	private ProjectState state;
 
+	@OneToOne
+	@JoinColumn(name = "profile_file_id", referencedColumnName = "id", nullable = true)
+	private File profileFile;
+
 	@CreationTimestamp
 	private LocalDateTime createTime;
 
@@ -74,5 +80,9 @@ public class Project {
 
 	public void updateDescription(String description) {
 		this.description = description;
+	}
+
+	public void updateProfileFile(File profileFile) {
+		this.profileFile = profileFile;
 	}
 }

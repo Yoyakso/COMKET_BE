@@ -1,12 +1,18 @@
-package com.yoyakso.comket.member;
+package com.yoyakso.comket.member.service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.file.entity.File;
+import com.yoyakso.comket.file.enums.FileCategory;
+import com.yoyakso.comket.file.service.FileService;
+import com.yoyakso.comket.member.dto.MemberInfoResponse;
+import com.yoyakso.comket.member.dto.MemberRegisterRequest;
 import com.yoyakso.comket.member.dto.MemberRegisterResponse;
 import com.yoyakso.comket.member.dto.MemberUpdateRequest;
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.repository.MemberRepository;
 import com.yoyakso.comket.oauth2.dto.GoogleDetailResponse;
 import com.yoyakso.comket.oauth2.dto.GoogleLoginResponse;
 import com.yoyakso.comket.util.JwtTokenProvider;
@@ -20,6 +26,7 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final FileService fileService;
 
 	public Member findByEmail(String email) {
 		return memberRepository.findByEmail(email);
@@ -31,7 +38,6 @@ public class MemberService {
 		} else {
 			Member existingMember = memberRepository.findById(member.getId())
 				.orElseThrow(() -> new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다."));
-			existingMember.setNickname(member.getNickname());
 			existingMember.setRealName(member.getRealName());
 			memberRepository.save(existingMember);
 		}
@@ -45,13 +51,19 @@ public class MemberService {
 		memberRepository.delete(member);
 	}
 
-	public MemberRegisterResponse registerMember(Member member) {
-		if (memberRepository.existsByEmail(member.getEmail())) {
+	public MemberRegisterResponse registerMember(MemberRegisterRequest memberRegisterRequest) {
+		if (memberRepository.existsByEmail(memberRegisterRequest.getEmail())) {
 			throw new CustomException("EMAIL_DUPLICATE", "이미 사용 중인 이메일입니다.");
 		}
+		Member member = Member.fromRequest(memberRegisterRequest);
 
-		if (memberRepository.existsByNickname(member.getNickname())) {
-			throw new CustomException("NICKNAME_DUPLICATE", "이미 사용 중인 닉네임입니다.");
+		// profileFileId로 File 엔티티 조회 및 설정
+		String profileFileUrl = null;
+		if (memberRegisterRequest.getProfileFileId() != null) {
+			File profileFile = fileService.getFileById(memberRegisterRequest.getProfileFileId());
+			fileService.validateFileCategory(profileFile, FileCategory.MEMBER_PROFILE);
+			member.setProfileFile(profileFile);
+			profileFileUrl = fileService.getFileUrlByPath(profileFile.getFilePath());
 		}
 
 		member.setPassword(passwordEncoder.encode(member.getPassword()));
@@ -62,21 +74,20 @@ public class MemberService {
 		return MemberRegisterResponse.builder()
 			.memberId(member.getId())
 			.email(member.getEmail())
-			.nickname(member.getNickname())
 			.realName(member.getRealName())
 			.token(token)
+			.profileFileUrl(profileFileUrl)
 			.build();
 	}
 
 	public Member updateMember(Member member, MemberUpdateRequest updateRequest) {
-		if (updateRequest.getNickname() != null) {
-			if (memberRepository.existsByNickname(updateRequest.getNickname())) {
-				throw new CustomException("NICKNAME_DUPLICATE", "이미 사용 중인 닉네임입니다.");
-			}
-			member.setNickname(updateRequest.getNickname());
-		}
 		if (updateRequest.getRealName() != null) {
 			member.setRealName(updateRequest.getRealName());
+		}
+		if (updateRequest.getProfileFileId() != null) {
+			File profileFile = fileService.getFileById(updateRequest.getProfileFileId());
+			fileService.validateFileCategory(profileFile, FileCategory.MEMBER_PROFILE);
+			member.setProfileFile(profileFile);
 		}
 		return memberRepository.save(member);
 	}
@@ -92,20 +103,32 @@ public class MemberService {
 
 		String token = jwtTokenProvider.createToken(member.getEmail());
 
-		return new GoogleLoginResponse(token, member.getNickname());
+		return new GoogleLoginResponse(token, member.getRealName());
 	}
 
 	public Member getAuthenticatedMember(HttpServletRequest request) {
 		String token = jwtTokenProvider.getTokenFromHeader(request);
 		if (token == null) {
-			return null; // 토큰이 없을 경우
+			throw new CustomException("TOKEN_NOT_FOUND", "토큰이 없습니다.");
 		}
 
 		String email = jwtTokenProvider.parseToken(token).getSubject();
 		Member member = memberRepository.findByEmail(email);
 		if (member == null) {
-			return null; // 회원 정보가 없을 경우
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
 		return member;
+	}
+
+	public MemberInfoResponse buildMemberInfoResponse(Member member) {
+		String profileFileUrl = member.getProfileFile() != null
+			? fileService.getFileUrlByPath(member.getProfileFile().getFilePath())
+			: null;
+
+		return MemberInfoResponse.builder()
+			.email(member.getEmail())
+			.realName(member.getRealName())
+			.profileFileUrl(profileFileUrl)
+			.build();
 	}
 }

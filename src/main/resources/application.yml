@@ -41,6 +41,40 @@ spring:
   devtools:
     restart:
       enabled: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: "${MAIL_APP_PASSWORD}"
+    properties:
+      mail:
+        smtp:
+          auth: true # SMTP 서버에 인증 필요한 경우 true로 설정 Gmail은 요구함
+          starttls:
+            enable: true # SMTP 서버가 TLS를 사용하여 안전한 연결을 요구하는 경우 true로 설정
+            required: true
+          connectiontimeout: 5000 # 클라이언트가 SMTP 서버에 연결을 설정하기 위해 대기하는 최대 시간 (밀리초 단위)
+          timeout: 5000 # 클라이언트가 SMTP 서버와 통신하기 위해 대기하는 최대 시간 (밀리초 단위)
+          writetimeout: 5000 # 클라이언트가 SMTP 서버에 데이터를 쓰기 위해 대기하는 최대 시간 (밀리초 단위)
+    auth-code-expiration-millis: 300000 # 인증 코드 만료 시간 = 5분 (Milliseconds)
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ap-northeast-2
+      s3:
+        bucket: ${AWS_BUCKET_NAME}
+        file-url: ${AWS_FILE_URL}
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
 jwt:
   secret: ${JWT_SECRET}
 management:
