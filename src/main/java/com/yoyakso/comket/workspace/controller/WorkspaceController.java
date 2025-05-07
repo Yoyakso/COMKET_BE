@@ -103,6 +103,7 @@ public class WorkspaceController {
 	}
 
 	@GetMapping("/{id}/members")
+	@Operation(summary = "워크스페이스 멤버 조회 API", description = "워크스페이스의 멤버를 조회하는 API")
 	public ResponseEntity<List<WorkspaceMemberInfoResponse>> getWorkspaceMembers(
 		@PathVariable Long id, HttpServletRequest request,
 		@RequestParam(required = false) List<String> positionTypes, // 여러 포지션 필터
@@ -114,6 +115,7 @@ public class WorkspaceController {
 	}
 
 	@PatchMapping("/{workspaceId}/members")
+	@Operation(summary = "워크스페이스 멤버 수정 API", description = "워크스페이스의 멤버 정보를 수정하는 API")
 	public ResponseEntity<WorkspaceMemberInfoResponse> updateWorkspaceMember(
 		@PathVariable Long workspaceId,
 		@Valid @RequestBody WorkspaceMemberInfoUpdateRequest workspaceMemberInfoUpdateRequest,
@@ -125,6 +127,7 @@ public class WorkspaceController {
 	}
 
 	@DeleteMapping("/{workspaceId}/members/{workspaceMemberId}")
+	@Operation(summary = "워크스페이스 멤버 삭제 API", description = "워크스페이스의 멤버를 삭제하는 API")
 	public ResponseEntity<Void> deleteWorkspaceMember(@PathVariable Long workspaceId,
 		@PathVariable Long workspaceMemberId, HttpServletRequest request) {
 		Member authenticatedMember = getAuthenticatedMember(request);
