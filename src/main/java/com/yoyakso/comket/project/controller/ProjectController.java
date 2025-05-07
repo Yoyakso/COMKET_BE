@@ -24,6 +24,7 @@ import com.yoyakso.comket.project.service.ProjectService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -33,11 +34,12 @@ public class ProjectController {
 	private final ProjectService projectService;
 	private final MemberService memberService;
 
+	// POST
 	@Operation(method = "POST", description = "프로젝트 생성 API")
 	@PostMapping("/{workspaceName}/project")
 	public ResponseEntity<ProjectInfoResponse> createProject(
 		@PathVariable("workspaceName") String workspaceName,
-		@RequestBody ProjectCreateRequest request,
+		@Valid @RequestBody ProjectCreateRequest request,
 		HttpServletRequest userRequest
 	) {
 		Member member = memberService.getAuthenticatedMember(userRequest);
@@ -48,69 +50,10 @@ public class ProjectController {
 		return ResponseEntity.ok(info);
 	}
 
-	@Operation(method = "PATCH", description = "프로젝트 수정 API")
-	@PatchMapping("/{workspaceName}/{projectId}/edit")
-	public ResponseEntity<ProjectInfoResponse> updateProject(
-		@PathVariable("workspaceName") String workspaceName,
-		@PathVariable("projectId") Long projectId,
-		@RequestBody ProjectCreateRequest request,
-		HttpServletRequest userRequest
-	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
-		ProjectInfoResponse info = projectService.updateProject(workspaceName, projectId, request, member);
-		return ResponseEntity.ok(info);
-	}
-
-	@Operation(method = "DELETE", description = "프로젝트 삭제 API")
-	@DeleteMapping("/{workspaceName}/{projectId}")
-	public ResponseEntity<Void> deleteProject(
-		@PathVariable("workspaceName") String workspaceName,
-		@PathVariable("projectId") Long projectId,
-		HttpServletRequest userRequest
-	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
-		projectService.patchProjectState(workspaceName, projectId, member, ProjectState.DELETED);
-		return ResponseEntity.noContent().build();
-	}
-
-	@Operation(method = "PATCH", description = "프로젝트 비활성화 API")
-	@PatchMapping("/{workspaceName}/{projectId}")
-	public ResponseEntity<ProjectInfoResponse> inActiveProject(
-		@PathVariable("workspaceName") String workspaceName,
-		@PathVariable("projectId") Long projectId,
-		HttpServletRequest userRequest
-	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
-		projectService.patchProjectState(workspaceName, projectId, member, ProjectState.INACTIVE);
-		return ResponseEntity.noContent().build();
-	}
-
-	@Operation(method = "DELETE", description = "프로젝트 회원 탈퇴 API")
-	@DeleteMapping("/{workspaceName}/{projectId}/member")
-	public ResponseEntity<Void> exitProject(
-		@PathVariable("workspaceName") String workspaceName,
-		@PathVariable("projectId") Long projectId,
-		HttpServletRequest userRequest
-	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
-		projectService.exitProject(workspaceName, projectId, member);
-		return ResponseEntity.noContent().build();
-	}
-
+	// GET
+	// 유저의 포지션에 따라 다 보이거나 퍼블릭만 보임
 	@Operation(method = "GET", description = "프로젝트 전체 조회 API")
-	@GetMapping("/{workspaceName}/projects")
+	@GetMapping("/{workspaceName}/project/all")
 	public ResponseEntity<List<ProjectInfoResponse>> getProjects(
 		@PathVariable("workspaceName") String workspaceName,
 		HttpServletRequest userRequest
@@ -123,8 +66,23 @@ public class ProjectController {
 		return ResponseEntity.ok(responses);
 	}
 
+	@Operation(method = "GET", description = "프로젝트 단건 조회 API")
+	@GetMapping("/{workspaceName}/{projectId}")
+	public ResponseEntity<ProjectInfoResponse> getProjects(
+		@PathVariable("workspaceName") String workspaceName,
+		@PathVariable Long projectId,
+		HttpServletRequest userRequest
+	) {
+		Member member = memberService.getAuthenticatedMember(userRequest);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		ProjectInfoResponse responses = projectService.getProject(workspaceName, projectId, member);
+		return ResponseEntity.ok(responses);
+	}
+
 	@Operation(method = "GET", description = "내가 속한 프로젝트 조회 API")
-	@GetMapping("/{workspaceName}/projects/member")
+	@GetMapping("/{workspaceName}/project/my")
 	public ResponseEntity<List<ProjectInfoResponse>> getAllIncludeProjects(
 		@PathVariable("workspaceName") String workspaceName,
 		HttpServletRequest userRequest
@@ -151,13 +109,45 @@ public class ProjectController {
 		return ResponseEntity.ok(responses);
 	}
 
+	// PATCH
+	@Operation(method = "PATCH", description = "프로젝트 수정 API")
+	@PatchMapping("/{workspaceName}/{projectId}/edit")
+	public ResponseEntity<ProjectInfoResponse> updateProject(
+		@PathVariable("workspaceName") String workspaceName,
+		@PathVariable("projectId") Long projectId,
+		@RequestBody ProjectCreateRequest request,
+		HttpServletRequest userRequest
+	) {
+		Member member = memberService.getAuthenticatedMember(userRequest);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		ProjectInfoResponse info = projectService.updateProject(workspaceName, projectId, request, member);
+		return ResponseEntity.ok(info);
+	}
+
+	@Operation(method = "PATCH", description = "프로젝트 비활성화 API")
+	@PatchMapping("/{workspaceName}/{projectId}/inactive")
+	public ResponseEntity<ProjectInfoResponse> inActiveProject(
+		@PathVariable("workspaceName") String workspaceName,
+		@PathVariable("projectId") Long projectId,
+		HttpServletRequest userRequest
+	) {
+		Member member = memberService.getAuthenticatedMember(userRequest);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		projectService.patchProjectState(workspaceName, projectId, member, ProjectState.INACTIVE);
+		return ResponseEntity.noContent().build();
+	}
+
 	@Operation(method = "PATCH", description = "프로젝트 멤버 관리")
-	@PatchMapping("/{workspaceName}/{projectId}/members")
+	@PatchMapping("/{workspaceName}/{projectId}/edit/members")
 	public ResponseEntity<ProjectMemberResponse> patchProjectMembers(
 		@PathVariable String workspaceName,
 		@PathVariable Long projectId,
 		HttpServletRequest userRequest,
-		ProjectMemberUpdateRequest request
+		@Valid ProjectMemberUpdateRequest request
 	) {
 		Member member = memberService.getAuthenticatedMember(userRequest);
 		if (member == null) {
@@ -168,8 +158,39 @@ public class ProjectController {
 		return ResponseEntity.ok(responses);
 	}
 
+	// DELETE
+	@Operation(method = "DELETE", description = "프로젝트 삭제 API")
+	@DeleteMapping("/{workspaceName}/{projectId}")
+	public ResponseEntity<Void> deleteProject(
+		@PathVariable("workspaceName") String workspaceName,
+		@PathVariable("projectId") Long projectId,
+		HttpServletRequest userRequest
+	) {
+		Member member = memberService.getAuthenticatedMember(userRequest);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		projectService.patchProjectState(workspaceName, projectId, member, ProjectState.DELETED);
+		return ResponseEntity.noContent().build();
+	}
+
+	@Operation(method = "DELETE", description = "프로젝트 회원 탈퇴 API")
+	@DeleteMapping("/{workspaceName}/{projectId}/exit")
+	public ResponseEntity<Void> exitProject(
+		@PathVariable("workspaceName") String workspaceName,
+		@PathVariable("projectId") Long projectId,
+		HttpServletRequest userRequest
+	) {
+		Member member = memberService.getAuthenticatedMember(userRequest);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		projectService.exitProject(workspaceName, projectId, member);
+		return ResponseEntity.noContent().build();
+	}
+
 	@Operation(method = "DELETE", description = "프로젝트 멤버 삭제")
-	@DeleteMapping("/{workspaceName}/{projectId}/members")
+	@DeleteMapping("/{workspaceName}/{projectId}/edit/members")
 	public ResponseEntity<Void> deleteProjectMembers(
 		@PathVariable String workspaceName,
 		@PathVariable Long projectId,
