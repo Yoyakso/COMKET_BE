@@ -27,10 +27,11 @@ public class OAuth2Controller {
 
 	@Operation(method = "GET", description = "구글 OAuth2 로그인 처리")
 	@GetMapping("/google/login")
-	public ResponseEntity<GoogleLoginResponse> googleLoginCallback(@RequestParam(value = "code") String code) {
-		System.out.println("CODE ==>" + code);
-		GoogleLoginResponse response = oAuth2Service.handleGoogleLogin(code);
-		System.out.println("RESPONSE =====> " + response);
+	public ResponseEntity<GoogleLoginResponse> googleLoginCallback(
+		@RequestParam(value = "code") String code,
+		@RequestParam(value = "redirect") String redirectUri
+	) {
+		GoogleLoginResponse response = oAuth2Service.handleGoogleLogin(code, redirectUri);
 		return ResponseEntity.ok(response);
 	}
 }
