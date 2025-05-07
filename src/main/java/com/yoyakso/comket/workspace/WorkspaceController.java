@@ -23,6 +23,7 @@ import com.yoyakso.comket.workspace.entity.Workspace;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -36,7 +37,7 @@ public class WorkspaceController {
 	@PostMapping
 	@Operation(summary = "워크스페이스 생성 API", description = "워크스페이스를 생성하는 API")
 	public ResponseEntity<WorkspaceInfoResponse> createWorkspace(
-		@RequestBody WorkspaceRegisterRequest workspaceRegisterRequest, HttpServletRequest request) {
+		@Valid @RequestBody WorkspaceRegisterRequest workspaceRegisterRequest, HttpServletRequest request) {
 		Member authenticatedMember = getAuthenticatedMember(request);
 		Workspace createdWorkspace = workspaceService.registerWorkspace(workspaceRegisterRequest, authenticatedMember);
 		return ResponseEntity.ok(workspaceService.toResponse(createdWorkspace));
@@ -64,7 +65,7 @@ public class WorkspaceController {
 	@PatchMapping("/{id}")
 	@Operation(summary = "워크스페이스 수정 API", description = "워크스페이스의 정보를 수정하는 API")
 	public ResponseEntity<WorkspaceInfoResponse> updateWorkspace(@PathVariable Long id,
-		@RequestBody WorkspaceUpdateRequest workspaceUpdateRequest,
+		@Valid @RequestBody WorkspaceUpdateRequest workspaceUpdateRequest,
 		HttpServletRequest request) {
 		Member authenticatedMember = getAuthenticatedMember(request);
 		Workspace updatedWorkspace = workspaceService.updateWorkspace(authenticatedMember, id, workspaceUpdateRequest);

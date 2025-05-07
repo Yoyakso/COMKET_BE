@@ -53,6 +53,9 @@ public class Workspace {
 
 	private WorkspaceState state;
 
+	@NotNull
+	private String slug;
+
 	@OneToOne
 	@JoinColumn(name = "profile_file_id", referencedColumnName = "id", nullable = true)
 	private File profileFile;
@@ -72,6 +75,7 @@ public class Workspace {
 			.description(workspaceRegisterRequest.getDescription())
 			.isPublic(workspaceRegisterRequest.getIsPublic())
 			.state(WorkspaceState.ACTIVE)
+			.slug(workspaceRegisterRequest.getSlug())
 			.build();
 	}
 
@@ -81,6 +85,7 @@ public class Workspace {
 			.description(workspaceUpdateRequest.getDescription())
 			.isPublic(workspaceUpdateRequest.getIsPublic())
 			.state(workspaceUpdateRequest.getState())
+			.slug(workspaceUpdateRequest.getSlug())
 			.build();
 	}
 }

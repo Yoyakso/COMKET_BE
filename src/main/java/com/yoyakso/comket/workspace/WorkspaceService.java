@@ -37,6 +37,7 @@ public class WorkspaceService {
 			workspace.setProfileFile(profileFile);
 		}
 		validateWorkspaceNameUniqueness(workspace.getName());
+		validateWorkspaceSlugUniqueness(workspace.getSlug());
 		workspace.setInviteCode(generateUniqueInviteCode()); // 중복 검사 후 초대 코드 설정
 		Workspace savedWorkspace = workspaceRepository.save(workspace);
 		workspaceMemberService.createWorkspaceMember(savedWorkspace, member, true, "OWNER");
@@ -63,6 +64,7 @@ public class WorkspaceService {
 		}
 		validateUpdatePermission(member, id);
 		validateWorkspaceNameUniquenessForUpdate(workspace.getName(), originalWorkspace.getName());
+		validateWorkspaceSlugUniquenessForUpdate(workspace.getSlug(), originalWorkspace.getSlug());
 		updateWorkspaceDetails(originalWorkspace, workspace);
 		return workspaceRepository.save(originalWorkspace);
 	}
@@ -130,6 +132,18 @@ public class WorkspaceService {
 		validateUpdatePermission(member, workspaceId); // 삭제 권한은 업데이트 권한과 동일
 	}
 
+	private void validateWorkspaceSlugUniqueness(String slug) {
+		if (workspaceRepository.existsBySlug(slug)) {
+			throw new CustomException("WORKSPACE_SLUG_DUPLICATE", "워크스페이스 슬러그가 중복되었습니다.");
+		}
+	}
+
+	private void validateWorkspaceSlugUniquenessForUpdate(String newSlug, String currentSlug) {
+		if (workspaceRepository.existsBySlug(newSlug) && !currentSlug.equals(newSlug)) {
+			throw new CustomException("WORKSPACE_SLUG_DUPLICATE", "워크스페이스 슬러그가 중복되었습니다.");
+		}
+	}
+
 	private void updateWorkspaceDetails(Workspace originalWorkspace, Workspace updatedWorkspace) {
 		originalWorkspace.setName(updatedWorkspace.getName());
 		originalWorkspace.setDescription(updatedWorkspace.getDescription());
@@ -162,6 +176,7 @@ public class WorkspaceService {
 			.isPublic(workspace.getIsPublic())
 			.state(workspace.getState())
 			.inviteCode(workspace.getInviteCode())
+			.slug(workspace.getSlug())
 			.createdAt(workspace.getCreatedAt().toString())
 			.updatedAt(workspace.getUpdatedAt().toString())
 			.build();

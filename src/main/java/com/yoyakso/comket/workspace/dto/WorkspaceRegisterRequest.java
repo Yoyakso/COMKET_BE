@@ -24,4 +24,7 @@ public class WorkspaceRegisterRequest {
 
 	@JsonProperty("profile_file_id")
 	private Long profileFileId;
+
+	@NotNull(message = "slug is required")
+	private String slug;
 }

@@ -15,4 +15,5 @@ public class WorkspaceUpdateRequest {
 	private WorkspaceState state;
 	@JsonProperty("profile_file_id")
 	private Long profileFileId;
+	private String slug;
 }

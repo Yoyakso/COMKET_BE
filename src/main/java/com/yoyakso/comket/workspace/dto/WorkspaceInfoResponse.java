@@ -15,6 +15,7 @@ public class WorkspaceInfoResponse {
 	private WorkspaceState state;
 	private Boolean isPublic;
 	private String profileFileUrl;
+	private String slug;
 	private String inviteCode;
 	private String createdAt;
 	private String updatedAt;
