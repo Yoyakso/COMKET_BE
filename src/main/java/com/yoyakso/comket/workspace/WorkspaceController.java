@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.workspace.dto.WorkspaceInfoResponse;
@@ -83,7 +84,7 @@ public class WorkspaceController {
 	private Member getAuthenticatedMember(HttpServletRequest request) {
 		Member member = memberService.getAuthenticatedMember(request);
 		if (member == null) {
-			throw new IllegalStateException("인증된 회원 정보를 찾을 수 없습니다.");
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
 		return member;
 	}

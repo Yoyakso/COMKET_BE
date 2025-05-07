@@ -14,7 +14,7 @@ import com.yoyakso.comket.workspace.dto.WorkspaceInfoResponse;
 import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
 import com.yoyakso.comket.workspace.entity.Workspace;
-import com.yoyakso.comket.workspace.enums.Visibility;
+import com.yoyakso.comket.workspace.enums.WorkspaceState;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
@@ -37,7 +37,7 @@ public class WorkspaceService {
 		}
 		validateWorkspaceNameUniqueness(workspace.getName());
 		Workspace savedWorkspace = workspaceRepository.save(workspace);
-		workspaceMemberService.createWorkspaceMember(savedWorkspace, member, true, "ADMIN");
+		workspaceMemberService.createWorkspaceMember(savedWorkspace, member, true, "OWNER");
 		return savedWorkspace;
 	}
 
@@ -68,10 +68,10 @@ public class WorkspaceService {
 	public void deleteWorkspace(Long id, Member member) {
 		Workspace workspace = findWorkspaceById(id);
 		validateDeletePermission(member, id);
-		if (workspace.isDeleted()) {
+		if (workspace.getState() == WorkspaceState.DELETED) {
 			throw new CustomException("WORKSPACE_ALREADY_DELETED", "이미 삭제된 워크스페이스입니다.");
 		}
-		workspace.setDeleted(true);
+		workspace.setState(WorkspaceState.DELETED);
 		workspaceRepository.save(workspace);
 	}
 
@@ -81,8 +81,8 @@ public class WorkspaceService {
 
 	public List<Workspace> getPublicWorkspaces() {
 		return workspaceRepository.findAll().stream()
-			.filter(workspace -> Visibility.PUBLIC.equals(workspace.getVisibility()))
-			.filter(workspace -> !workspace.isDeleted())
+			.filter(Workspace::getIsPublic)
+			.filter(workspace -> workspace.getState() == WorkspaceState.ACTIVE)
 			.collect(Collectors.toList());
 	}
 
@@ -90,7 +90,7 @@ public class WorkspaceService {
 
 	private Workspace findWorkspaceById(Long id) {
 		return workspaceRepository.findById(id)
-			.filter(ws -> !ws.isDeleted())
+			.filter(ws -> !ws.getState().equals(WorkspaceState.DELETED))
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스 정보를 찾을 수 없습니다."));
 	}
 
@@ -109,7 +109,7 @@ public class WorkspaceService {
 	private void validateWorkspaceAccess(Workspace workspace, Member member) {
 		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
 			workspace.getId(), member.getId());
-		if (workspace.getVisibility().equals(Visibility.PRIVATE) && workspaceMember == null) {
+		if (!workspace.getIsPublic() && workspaceMember == null) {
 			throw new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스 정보를 찾을 수 없습니다.");
 		}
 	}
@@ -131,7 +131,8 @@ public class WorkspaceService {
 	private void updateWorkspaceDetails(Workspace originalWorkspace, Workspace updatedWorkspace) {
 		originalWorkspace.setName(updatedWorkspace.getName());
 		originalWorkspace.setDescription(updatedWorkspace.getDescription());
-		originalWorkspace.setVisibility(updatedWorkspace.getVisibility());
+		originalWorkspace.setIsPublic(updatedWorkspace.getIsPublic());
+		originalWorkspace.setState(updatedWorkspace.getState());
 		originalWorkspace.setUpdatedAt(updatedWorkspace.getUpdatedAt());
 	}
 
@@ -146,8 +147,9 @@ public class WorkspaceService {
 			.id(workspace.getId())
 			.name(workspace.getName())
 			.description(workspace.getDescription())
-			.visibility(workspace.getVisibility())
 			.profileFileUrl(profileFileUrl)
+			.isPublic(workspace.getIsPublic())
+			.state(workspace.getState())
 			.createdAt(workspace.getCreatedAt().toString())
 			.updatedAt(workspace.getUpdatedAt().toString())
 			.build();

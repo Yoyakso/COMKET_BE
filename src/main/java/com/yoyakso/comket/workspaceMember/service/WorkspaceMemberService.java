@@ -1,5 +1,6 @@
 package com.yoyakso.comket.workspaceMember.service;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspace.enums.WorkspaceState;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.repository.WorkspaceMemberRepository;
 
@@ -35,7 +37,8 @@ public class WorkspaceMemberService {
 	public List<Workspace> getWorkspacesByMember(Member member) {
 		return workspaceMemberRepository.findByMember(member).stream()
 			.map(WorkspaceMember::getWorkspace)
-			.filter(workspace -> !workspace.isDeleted())
+			.filter(
+				workspace -> EnumSet.of(WorkspaceState.ACTIVE, WorkspaceState.INACTIVE).contains(workspace.getState()))
 			.collect(Collectors.toList());
 	}
 

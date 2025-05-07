@@ -60,7 +60,8 @@ public class ProjectServiceTest {
 		ProjectCreateRequest request = new ProjectCreateRequest(
 			"COMKET_BE",
 			"COMKET Backend Team Project",
-			true
+			true,
+			null
 		);
 
 		Project savedProject = Project.builder()
@@ -105,7 +106,8 @@ public class ProjectServiceTest {
 		ProjectCreateRequest updateRequest = new ProjectCreateRequest(
 			"COMKET_BE",
 			"COMKET Backend Team Project",
-			true
+			true,
+			null
 		);
 
 		// 이미 존재하는 프로젝트
