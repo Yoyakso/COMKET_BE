@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.annotation.Rollback;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.dto.ProjectCreateRequest;
 import com.yoyakso.comket.project.dto.ProjectInfoResponse;
@@ -41,6 +42,9 @@ public class ProjectServiceTest {
 
 	@Mock
 	private WorkspaceRepository workspaceRepository;
+
+	@Mock
+	private FileService fileService;
 
 	@Mock
 	private ProjectMemberService projectMemberService;

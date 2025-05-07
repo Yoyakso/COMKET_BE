@@ -19,6 +19,7 @@ import com.yoyakso.comket.workspace.enums.WorkspaceState;
 import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
 import com.yoyakso.comket.workspace.service.WorkspaceService;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
+import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
 import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 class WorkspaceServiceTest {
@@ -115,7 +116,7 @@ class WorkspaceServiceTest {
 		// 권한 부여를 위한 Mock 설정
 		when(workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(workspace.getId(), member.getId()))
 			.thenReturn(WorkspaceMember.builder()
-				.isActive(true)
+				.state(WorkspaceMemberState.ACTIVE)
 				.positionType("ADMIN")
 				.build()); // 권한 부여
 		when(workspaceRepository.save(any(Workspace.class))).thenReturn(workspace);
