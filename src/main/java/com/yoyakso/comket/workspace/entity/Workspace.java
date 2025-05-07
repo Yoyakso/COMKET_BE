@@ -8,12 +8,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import com.yoyakso.comket.file.entity.File;
 import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
-import com.yoyakso.comket.workspace.enums.Visibility;
+import com.yoyakso.comket.workspace.enums.WorkspaceState;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -51,16 +49,19 @@ public class Workspace {
 	private String description;
 
 	@NotNull
-	@Enumerated(EnumType.STRING)
-	@Column(length = 10)
-	private Visibility visibility;
+	private Boolean isPublic;
 
-	@Column(updatable = true)
-	private boolean isDeleted;
+	private WorkspaceState state;
+
+	@NotNull
+	private String slug;
 
 	@OneToOne
 	@JoinColumn(name = "profile_file_id", referencedColumnName = "id", nullable = true)
 	private File profileFile;
+
+	@NotNull
+	private String inviteCode;
 
 	@CreationTimestamp
 	private LocalDateTime createdAt;
@@ -72,8 +73,9 @@ public class Workspace {
 		return Workspace.builder()
 			.name(workspaceRegisterRequest.getName())
 			.description(workspaceRegisterRequest.getDescription())
-			.visibility(workspaceRegisterRequest.getVisibility())
-			.isDeleted(false)
+			.isPublic(workspaceRegisterRequest.getIsPublic())
+			.state(WorkspaceState.ACTIVE)
+			.slug(workspaceRegisterRequest.getSlug())
 			.build();
 	}
 
@@ -81,8 +83,9 @@ public class Workspace {
 		return Workspace.builder()
 			.name(workspaceUpdateRequest.getName())
 			.description(workspaceUpdateRequest.getDescription())
-			.visibility(workspaceUpdateRequest.getVisibility())
-			.isDeleted(false)
+			.isPublic(workspaceUpdateRequest.getIsPublic())
+			.state(workspaceUpdateRequest.getState())
+			.slug(workspaceUpdateRequest.getSlug())
 			.build();
 	}
 }

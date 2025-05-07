@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.annotation.Rollback;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.dto.ProjectCreateRequest;
 import com.yoyakso.comket.project.dto.ProjectInfoResponse;
@@ -23,8 +24,8 @@ import com.yoyakso.comket.project.repository.ProjectRepository;
 import com.yoyakso.comket.project.service.ProjectServiceImpl;
 import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
-import com.yoyakso.comket.workspace.WorkspaceRepository;
 import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -41,6 +42,9 @@ public class ProjectServiceTest {
 
 	@Mock
 	private WorkspaceRepository workspaceRepository;
+
+	@Mock
+	private FileService fileService;
 
 	@Mock
 	private ProjectMemberService projectMemberService;
@@ -60,7 +64,8 @@ public class ProjectServiceTest {
 		ProjectCreateRequest request = new ProjectCreateRequest(
 			"COMKET_BE",
 			"COMKET Backend Team Project",
-			true
+			true,
+			null
 		);
 
 		Project savedProject = Project.builder()
@@ -105,7 +110,8 @@ public class ProjectServiceTest {
 		ProjectCreateRequest updateRequest = new ProjectCreateRequest(
 			"COMKET_BE",
 			"COMKET Backend Team Project",
-			true
+			true,
+			null
 		);
 
 		// 이미 존재하는 프로젝트
