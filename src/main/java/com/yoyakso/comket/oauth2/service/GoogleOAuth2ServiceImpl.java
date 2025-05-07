@@ -45,11 +45,11 @@ public class GoogleOAuth2ServiceImpl implements OAuth2Service {
 	}
 
 	@Override
-	public GoogleLoginResponse handleGoogleLogin(String code) {
+	public GoogleLoginResponse handleGoogleLogin(String code, String redirectUri) {
 		try {
 			// 구글 토큰 요청
 			GoogleTokenRequest tokenRequest = new GoogleTokenRequest(code, googleClientId, googleClientSecret,
-				googleRedirectUri);
+				redirectUri);
 			GoogleTokenResponse googleToken = requestGoogleToken(tokenRequest);
 
 			if (googleToken == null || googleToken.getAccess_token() == null) {
