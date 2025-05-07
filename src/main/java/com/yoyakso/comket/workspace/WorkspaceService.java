@@ -65,7 +65,7 @@ public class WorkspaceService {
 			fileService.validateFileCategory(profileFile, FileCategory.WORKSPACE_PROFILE);
 			workspace.setProfileFile(profileFile);
 		}
-		validateUpdatePermission(member, id);
+		validateAdminPermission(member, originalWorkspace);
 		validateWorkspaceNameUniquenessForUpdate(workspace.getName(), originalWorkspace.getName());
 		validateWorkspaceSlugUniquenessForUpdate(workspace.getSlug(), originalWorkspace.getSlug());
 		updateWorkspaceDetails(originalWorkspace, workspace);
@@ -74,7 +74,7 @@ public class WorkspaceService {
 
 	public void deleteWorkspace(Long id, Member member) {
 		Workspace workspace = findWorkspaceById(id);
-		validateDeletePermission(member, id);
+		validateOwnerPermission(member, workspace);
 		if (workspace.getState() == WorkspaceState.DELETED) {
 			throw new CustomException("WORKSPACE_ALREADY_DELETED", "이미 삭제된 워크스페이스입니다.");
 		}
@@ -137,16 +137,6 @@ public class WorkspaceService {
 		}
 	}
 
-	private void validateUpdatePermission(Member member, Long workspaceId) {
-		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
-			workspaceId, member.getId());
-		if (workspaceMember == null || workspaceMember.getState() != WorkspaceMemberState.ACTIVE ||
-			(!"ADMIN".equals(workspaceMember.getPositionType()) && !"OWNER".equals(
-				workspaceMember.getPositionType()))) {
-			throw new CustomException("WORKSPACE_AUTHORIZATION_FAILED", "워크스페이스에 대한 권한이 없습니다.");
-		}
-	}
-
 	public WorkspaceMember validateOwnerPermission(Member member, Workspace workspace) {
 		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
 			workspace.getId(), member.getId());
@@ -169,10 +159,6 @@ public class WorkspaceService {
 			throw new CustomException("WORKSPACE_AUTHORIZATION_FAILED", "워크스페이스에 대한 권한이 없습니다.");
 		}
 		return workspaceMember;
-	}
-
-	private void validateDeletePermission(Member member, Long workspaceId) {
-		validateUpdatePermission(member, workspaceId); // 삭제 권한은 업데이트 권한과 동일
 	}
 
 	private void validateWorkspaceSlugUniqueness(String slug) {
