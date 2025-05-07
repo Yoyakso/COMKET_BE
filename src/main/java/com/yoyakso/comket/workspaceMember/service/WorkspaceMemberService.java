@@ -69,6 +69,11 @@ public class WorkspaceMemberService {
 		return workspaceMemberRepository.save(existingWorkspaceMember);
 	}
 
+	public List<WorkspaceMember> searchWorkspaceMembers(Long workspaceId, String keyword, List<String> positionTypes,
+		List<String> memberStates) {
+		return workspaceMemberRepository.searchWorkspaceMembers(workspaceId, keyword, positionTypes, memberStates);
+	}
+	
 	public List<WorkspaceMember> getWorkspaceMembersByWorkspaceId(Long id) {
 		return workspaceMemberRepository.findByWorkspaceId(id);
 	}
