@@ -71,7 +71,7 @@ class GoogleOAuth2ServiceTest {
 		Mockito.when(memberService.handleOAuth2Member(mockDetailResponse))
 			.thenReturn(mockLoginResponse);
 
-		GoogleLoginResponse response = service.handleGoogleLogin(dummyCode);
+		GoogleLoginResponse response = service.handleGoogleLogin(dummyCode, "");
 
 		// 검증
 		assertEquals("mock-jwt-token", response.getAccessToken());
