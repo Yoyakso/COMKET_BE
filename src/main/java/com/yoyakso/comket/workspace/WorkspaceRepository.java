@@ -13,4 +13,6 @@ public interface WorkspaceRepository extends JpaRepository<Workspace, Long> {
 	boolean existsByName(@NotNull @Size(min = 2, max = 100) String name);
 
 	Optional<Workspace> findByName(String name);
+
+	boolean existsByInviteCode(String inviteCode);
 }

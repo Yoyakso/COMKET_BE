@@ -57,6 +57,9 @@ public class Workspace {
 	@JoinColumn(name = "profile_file_id", referencedColumnName = "id", nullable = true)
 	private File profileFile;
 
+	@NotNull
+	private String inviteCode;
+
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 

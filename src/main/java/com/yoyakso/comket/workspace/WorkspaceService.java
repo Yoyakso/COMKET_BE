@@ -1,6 +1,7 @@
 package com.yoyakso.comket.workspace;
 
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class WorkspaceService {
 			workspace.setProfileFile(profileFile);
 		}
 		validateWorkspaceNameUniqueness(workspace.getName());
+		workspace.setInviteCode(generateUniqueInviteCode()); // 중복 검사 후 초대 코드 설정
 		Workspace savedWorkspace = workspaceRepository.save(workspace);
 		workspaceMemberService.createWorkspaceMember(savedWorkspace, member, true, "OWNER");
 		return savedWorkspace;
@@ -136,6 +138,15 @@ public class WorkspaceService {
 		originalWorkspace.setUpdatedAt(updatedWorkspace.getUpdatedAt());
 	}
 
+	private String generateUniqueInviteCode() {
+		String inviteCode;
+		Random random = new Random();
+		do {
+			inviteCode = String.format("%06d", random.nextInt(1000000)); // 6자리 숫자 생성
+		} while (workspaceRepository.existsByInviteCode(inviteCode)); // 중복 검사
+		return inviteCode;
+	}
+
 	public WorkspaceInfoResponse toResponse(Workspace workspace) {
 		String profileFileUrl = null;
 		if (workspace.getProfileFile() != null) {
@@ -150,6 +161,7 @@ public class WorkspaceService {
 			.profileFileUrl(profileFileUrl)
 			.isPublic(workspace.getIsPublic())
 			.state(workspace.getState())
+			.inviteCode(workspace.getInviteCode())
 			.createdAt(workspace.getCreatedAt().toString())
 			.updatedAt(workspace.getUpdatedAt().toString())
 			.build();

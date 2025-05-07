@@ -15,9 +15,8 @@ public class WorkspaceInfoResponse {
 	private WorkspaceState state;
 	private Boolean isPublic;
 	private String profileFileUrl;
+	private String inviteCode;
 	private String createdAt;
 	private String updatedAt;
 	private int memberCount;
-	private boolean isOwner;
-	private boolean isMember;
 }
