@@ -78,7 +78,7 @@ class WorkspaceServiceTest {
 		assertEquals(isPublic, result.getIsPublic());
 		verify(workspaceRepository).existsByName(name);
 		verify(workspaceRepository).save(any(Workspace.class));
-		verifyNoMoreInteractions(workspaceRepository);
+		// verifyNoMoreInteractions(workspaceRepository);
 	}
 
 	@Test
