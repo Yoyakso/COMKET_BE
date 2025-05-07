@@ -6,6 +6,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ProjectMemberResponse {
+	private Long userId;
 	private String name;         // Member에서 가져옴
 	private String email;        // Member에서 가져옴
 	private String positionType; // ProjectMember에서 가져옴

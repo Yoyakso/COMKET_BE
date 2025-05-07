@@ -22,6 +22,8 @@ import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.workspace.WorkspaceRepository;
 import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
+import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class ProjectServiceImpl implements ProjectService {
 	private final ProjectMemberService projectMemberService;
 	private final ProjectMemberRepository projectMemberRepository;
 	private final FileService fileService;
+	private final WorkspaceMemberService workspaceMemberService;
 
 	@Override
 	public ProjectInfoResponse createProject(String workSpaceName, ProjectCreateRequest request,
@@ -70,7 +73,10 @@ public class ProjectServiceImpl implements ProjectService {
 		return ProjectInfoResponse.builder()
 			.projectId(savedProject.getId())
 			.projectName(savedProject.getName())
-			.profileFileUrl(profileFileUrl)
+			.projectDescription(savedProject.getDescription())
+			.isPublic(savedProject.getIsPublic())
+			.createTime(savedProject.getCreateTime())
+			.profileFileUrl(savedProject.getProfileFile().getFilePath())
 			.build();
 	}
 
@@ -113,7 +119,10 @@ public class ProjectServiceImpl implements ProjectService {
 		return ProjectInfoResponse.builder()
 			.projectId(savedProject.getId())
 			.projectName(savedProject.getName())
-			.profileFileUrl(profileFileUrl)
+			.projectDescription(savedProject.getDescription())
+			.isPublic(savedProject.getIsPublic())
+			.createTime(savedProject.getCreateTime())
+			.profileFileUrl(savedProject.getProfileFile().getFilePath())
 			.build();
 	}
 
@@ -160,19 +169,50 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
+	public ProjectInfoResponse getProject(String workSpaceName, Long projectId, Member member) {
+		// 워크스페이스 조회
+		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
+			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
+
+		Project project = projectRepository.findById(projectId)
+			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
+
+		return ProjectInfoResponse.builder()
+			.projectId(project.getId())
+			.projectName(project.getName())
+			.projectDescription(project.getDescription())
+			.isPublic(project.getIsPublic())
+			.createTime(project.getCreateTime())
+			.profileFileUrl(project.getProfileFile().getFilePath())
+			.build();
+	}
+
+	@Override
 	public List<ProjectInfoResponse> getAllProjects(String workSpaceName, Member member) {
 		// 워크스페이스 조회
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
-		List<Project> projects = projectRepository.findAllByWorkspaceAndIsPublicTrue(workSpace);
+		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberById(member.getId());
+		String positionType = workspaceMember.getPositionType();
+
+		// 워크스페이스 권한에 따라 모든 프로젝트를 리턴 or 공개 프로젝트만 리턴
+		List<Project> projects = (positionType.equals("ADMIN") || positionType.equals("OWNER"))
+			? projectRepository.findAll()
+			: projectRepository.findAllByWorkspaceAndIsPublicTrue(workSpace);
 
 		return projects.stream()
 			.map(project -> {
 				String profileFileUrl = project.getProfileFile() != null
 					? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
 					: null;
-				return new ProjectInfoResponse(project.getId(), project.getName(), profileFileUrl);
+				return new ProjectInfoResponse(
+					project.getId(),
+					project.getName(),
+					project.getDescription(),
+					project.getIsPublic(),
+					project.getCreateTime(),
+					profileFileUrl);
 			})
 			.toList();
 	}
@@ -190,7 +230,13 @@ public class ProjectServiceImpl implements ProjectService {
 				String profileFileUrl = project.getProfileFile() != null
 					? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
 					: null;
-				return new ProjectInfoResponse(project.getId(), project.getName(), profileFileUrl);
+				return new ProjectInfoResponse(
+					project.getId(),
+					project.getName(),
+					project.getDescription(),
+					project.getIsPublic(),
+					project.getCreateTime(),
+					profileFileUrl);
 			})
 			.toList();
 	}
@@ -207,6 +253,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.map(pm -> {
 				Member member = pm.getMember();
 				return ProjectMemberResponse.builder()
+					.userId(pm.getId())
 					.name(member.getRealName())
 					.email(member.getEmail())
 					.positionType(pm.getPositionType())
@@ -247,6 +294,7 @@ public class ProjectServiceImpl implements ProjectService {
 		Member updatedMember = updatedProjectMember.getMember();
 
 		return ProjectMemberResponse.builder()
+			.userId(updatedMember.getId())
 			.name(updatedMember.getRealName())
 			.email(updatedMember.getEmail())
 			.isActive(updatedProjectMember.getIsActive())
