@@ -107,10 +107,12 @@ public class WorkspaceController {
 	public ResponseEntity<List<WorkspaceMemberInfoResponse>> getWorkspaceMembers(
 		@PathVariable Long id, HttpServletRequest request,
 		@RequestParam(required = false) List<String> positionTypes, // 여러 포지션 필터
-		@RequestParam(required = false) List<String> memberStates) {
+		@RequestParam(required = false) List<String> memberStates, // 여러 멤버 상태 필터
+		@RequestParam(required = false) String keyword // 검색 키워드
+	) {
 		Member authenticatedMember = getAuthenticatedMember(request);
 		List<WorkspaceMember> workspaceMembers = workspaceService.getWorkspaceMembers(id, authenticatedMember,
-			positionTypes, memberStates);
+			positionTypes, memberStates, keyword);
 		return ResponseEntity.ok(workspaceMembers.stream().map(workspaceService::toMemberInfoResponse).toList());
 	}
 

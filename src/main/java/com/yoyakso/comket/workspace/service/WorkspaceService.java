@@ -213,16 +213,12 @@ public class WorkspaceService {
 	}
 
 	public List<WorkspaceMember> getWorkspaceMembers(Long id, Member authenticatedMember, List<String> positionTypes,
-		List<String> accountStates) {
+		List<String> memberStates, String keyword) {
 		Workspace workspace = findWorkspaceById(id);
 		validateWorkspaceAccess(workspace, authenticatedMember);
 
-		return workspaceMemberService.getWorkspaceMembersByWorkspaceId(id).stream()
-			.filter(member -> positionTypes == null || positionTypes.isEmpty() || positionTypes.contains(
-				member.getPositionType())) // 포지션 필터
-			.filter(member -> accountStates == null || accountStates.isEmpty() || accountStates.contains(
-				member.getState().name())) // 계정 상태 필터
-			.collect(Collectors.toList());
+		return workspaceMemberService.searchWorkspaceMembers(id, keyword, positionTypes, memberStates);
+
 	}
 
 	public WorkspaceMemberInfoResponse toMemberInfoResponse(WorkspaceMember member) {
