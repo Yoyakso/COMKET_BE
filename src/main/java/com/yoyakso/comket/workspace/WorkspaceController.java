@@ -17,9 +17,12 @@ import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.workspace.dto.WorkspaceInfoResponse;
+import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoResponse;
+import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoUpdateRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
 import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
@@ -63,6 +66,7 @@ public class WorkspaceController {
 	}
 
 	@GetMapping("/slug/{slug}")
+	@Operation(summary = "워크스페이스 슬러그 조회 API", description = "워크스페이스의 슬러그를 통해 워크스페이스 정보를 조회하는 API")
 	public ResponseEntity<WorkspaceInfoResponse> getWorkspaceBySlug(HttpServletRequest request,
 		@PathVariable String slug) {
 		Member authenticatedMember = getAuthenticatedMember(request);
@@ -71,6 +75,7 @@ public class WorkspaceController {
 	}
 
 	@GetMapping("/inviteCode/{inviteCode}")
+	@Operation(summary = "워크스페이스 초대 코드 조회 API", description = "워크스페이스의 초대 코드를 통해 워크스페이스 정보를 조회하는 API")
 	public ResponseEntity<WorkspaceInfoResponse> getWorkspaceByInviteCode(HttpServletRequest request,
 		@PathVariable String inviteCode) {
 		Member authenticatedMember = getAuthenticatedMember(request);
@@ -95,7 +100,35 @@ public class WorkspaceController {
 		workspaceService.deleteWorkspace(id, authenticatedMember);
 		return ResponseEntity.noContent().build();
 	}
-	
+
+	@GetMapping("/{id}/members")
+	public ResponseEntity<List<WorkspaceMemberInfoResponse>> getWorkspaceMembers(
+		@PathVariable Long id, HttpServletRequest request,
+		@RequestParam(required = false) List<String> positionTypes, // 여러 포지션 필터
+		@RequestParam(required = false) List<String> memberStates) {
+		Member authenticatedMember = getAuthenticatedMember(request);
+		List<WorkspaceMember> workspaceMembers = workspaceService.getWorkspaceMembers(id, authenticatedMember,
+			positionTypes, memberStates);
+		return ResponseEntity.ok(workspaceMembers.stream().map(workspaceService::toMemberInfoResponse).toList());
+	}
+
+	@PatchMapping("/{workspaceId}/members")
+	public ResponseEntity<WorkspaceMemberInfoResponse> updateWorkspaceMember(
+		@PathVariable Long workspaceId,
+		@RequestBody WorkspaceMemberInfoUpdateRequest workspaceMemberInfoUpdateRequest, HttpServletRequest request) {
+		Member authenticatedMember = getAuthenticatedMember(request);
+		WorkspaceMember updatedWorkspaceMember = workspaceService.updateWorkspaceMember(workspaceId,
+			workspaceMemberInfoUpdateRequest, authenticatedMember);
+		return ResponseEntity.ok(workspaceService.toMemberInfoResponse(updatedWorkspaceMember));
+	}
+
+	@DeleteMapping("/{workspaceId}/members/{workspaceMemberId}")
+	public ResponseEntity<Void> deleteWorkspaceMember(@PathVariable Long workspaceId,
+		@PathVariable Long workspaceMemberId, HttpServletRequest request) {
+		Member authenticatedMember = getAuthenticatedMember(request);
+		workspaceService.deleteWorkspaceMember(workspaceId, workspaceMemberId, authenticatedMember);
+		return ResponseEntity.noContent().build();
+	}
 	// --- Private Helper Methods ---
 
 	private Member getAuthenticatedMember(HttpServletRequest request) {

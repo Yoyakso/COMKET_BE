@@ -7,10 +7,12 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.enums.WorkspaceState;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
+import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
 import com.yoyakso.comket.workspaceMember.repository.WorkspaceMemberRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -22,12 +24,13 @@ public class WorkspaceMemberService {
 
 	private final WorkspaceMemberRepository workspaceMemberRepository;
 
-	public void createWorkspaceMember(Workspace workspace, Member member, boolean isActive, String positionType) {
+	public void createWorkspaceMember(Workspace workspace, Member member, WorkspaceMemberState state,
+		String positionType) {
 		// 워크스페이스 멤버 생성
 		WorkspaceMember workspaceMember = WorkspaceMember.builder()
 			.workspace(workspace)
 			.member(member)
-			.isActive(isActive)
+			.state(state)
 			.positionType(positionType)
 			.build();
 		// 워크스페이스 멤버 저장
@@ -44,26 +47,29 @@ public class WorkspaceMemberService {
 
 	public WorkspaceMember getWorkspaceMemberById(Long id) {
 		return workspaceMemberRepository.findById(id)
-			.orElseThrow(() -> new IllegalArgumentException("WorkspaceMember not found with id: " + id));
+			.orElseThrow(() -> new CustomException("CANNOT_FOUND_WORKSPACEMEMBER", "워크스페이스 멤버를 찾을 수 없습니다."));
 	}
 
 	public WorkspaceMember getWorkspaceMemberByWorkspaceIdAndMemberId(Long workspaceId, Long memberId) {
 		return workspaceMemberRepository.findByWorkspaceIdAndMemberId(workspaceId, memberId)
-			.orElseThrow(() -> new IllegalArgumentException(
-				"WorkspaceMember not found with workspaceId: " + workspaceId + " and memberId: " + memberId));
+			.orElseThrow(() -> new CustomException("CANNOT_FOUND_WORKSPACEMEMBER", "워크스페이스 멤버를 찾을 수 없습니다."));
 	}
 
 	public List<WorkspaceMember> getAllWorkspaceMembers() {
 		return workspaceMemberRepository.findAll();
 	}
 
-	public WorkspaceMember updateWorkspaceMember(Long id, WorkspaceMember updatedWorkspaceMember) {
-		WorkspaceMember existingWorkspaceMember = workspaceMemberRepository.findById(id)
-			.orElseThrow(() -> new IllegalArgumentException("WorkspaceMember not found with id: " + id));
+	public WorkspaceMember updateWorkspaceMember(WorkspaceMember updatedWorkspaceMember) {
+		WorkspaceMember existingWorkspaceMember = workspaceMemberRepository.findById(updatedWorkspaceMember.getId())
+			.orElseThrow(() -> new CustomException("CANNOT_FOUND_WORKSPACEMEMBER", "워크스페이스 멤버를 찾을 수 없습니다."));
 		existingWorkspaceMember.setWorkspace(updatedWorkspaceMember.getWorkspace());
 		existingWorkspaceMember.setMember(updatedWorkspaceMember.getMember());
-		existingWorkspaceMember.setActive(updatedWorkspaceMember.isActive());
+		existingWorkspaceMember.setState(updatedWorkspaceMember.getState());
 		existingWorkspaceMember.setPositionType(updatedWorkspaceMember.getPositionType());
 		return workspaceMemberRepository.save(existingWorkspaceMember);
+	}
+
+	public List<WorkspaceMember> getWorkspaceMembersByWorkspaceId(Long id) {
+		return workspaceMemberRepository.findByWorkspaceId(id);
 	}
 }
