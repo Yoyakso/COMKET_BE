@@ -135,4 +135,12 @@ public class MemberService {
 		return memberRepository.findById(targetMemberId)
 			.orElseThrow(() -> new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다."));
 	}
+
+	public Member getMemberByEmail(String email) {
+		Member member = memberRepository.findByEmail(email);
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		return member;
+	}
 }
