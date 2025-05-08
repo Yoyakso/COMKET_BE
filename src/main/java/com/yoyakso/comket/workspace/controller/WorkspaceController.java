@@ -17,6 +17,7 @@ import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.workspace.dto.WorkspaceInfoResponse;
+import com.yoyakso.comket.workspace.dto.WorkspaceMemberCreateRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoResponse;
 import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoUpdateRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
@@ -100,6 +101,19 @@ public class WorkspaceController {
 		Member authenticatedMember = getAuthenticatedMember(request);
 		workspaceService.deleteWorkspace(id, authenticatedMember);
 		return ResponseEntity.noContent().build();
+	}
+
+	@PostMapping("/{id}/members")
+	@Operation(summary = "워크스페이스 멤버 초대 API", description = "워크스페이스에 멤버를 초대하는 API")
+	public ResponseEntity<List<WorkspaceMemberInfoResponse>> inviteWorkspaceMember(
+		@PathVariable Long id,
+		@Valid @RequestBody WorkspaceMemberCreateRequest workspaceMemberCreateRequest,
+		HttpServletRequest request
+	) {
+		Member authenticatedMember = getAuthenticatedMember(request);
+		List<WorkspaceMemberInfoResponse> invitedWorkspaceMemberInfo = workspaceService.inviteWorkspaceMember(id,
+			workspaceMemberCreateRequest, authenticatedMember);
+		return ResponseEntity.ok(invitedWorkspaceMemberInfo);
 	}
 
 	@GetMapping("/{id}/members")
