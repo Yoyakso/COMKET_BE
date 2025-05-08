@@ -11,6 +11,7 @@ import com.yoyakso.comket.file.entity.File;
 import com.yoyakso.comket.file.enums.FileCategory;
 import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.workspace.dto.WorkspaceInfoResponse;
 import com.yoyakso.comket.workspace.dto.WorkspaceMemberCreateRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoResponse;
@@ -32,6 +33,7 @@ public class WorkspaceService {
 
 	private final WorkspaceRepository workspaceRepository;
 	private final WorkspaceMemberService workspaceMemberService;
+	private final MemberService memberService;
 	private final FileService fileService;
 
 	public Workspace registerWorkspace(WorkspaceRegisterRequest workspaceRegisterRequest, Member member) {
@@ -235,30 +237,42 @@ public class WorkspaceService {
 	}
 
 	public WorkspaceMember updateWorkspaceMember(Long workspaceId, WorkspaceMemberInfoUpdateRequest request,
-		Member member) {
-		WorkspaceMember controlMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(workspaceId,
-			member.getId());
-		if (controlMember == null) {
-			throw new CustomException("WORKSPACE_MEMBER_NOT_FOUND", "워크스페이스 멤버를 찾을 수 없습니다.");
-		}
-		WorkspaceMember targetMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(workspaceId,
-			member.getId());
-		if (targetMember == null) {
-			throw new CustomException("WORKSPACE_MEMBER_NOT_FOUND", "워크스페이스 멤버를 찾을 수 없습니다.");
-		}
-		validateUpperCasePermission(controlMember, targetMember);
-		targetMember.setPositionType(request.getPositionType());
-		targetMember.setState(request.getState());
-		return workspaceMemberService.updateWorkspaceMember(targetMember);
+		Member controlMember) {
+		// 수정 당사자 정보 조회
+		WorkspaceMember controlWorkspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
+			workspaceId,
+			controlMember.getId()
+		);
+		// 수정 대상자 정보 조회
+		Member targetMember = memberService.getMemberByEmail(request.getWorkspaceMemberEmail());
+		WorkspaceMember targetWorkspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
+			workspaceId,
+			targetMember.getId()
+		);
+		// 권한 체크
+		validateUpperCasePermission(controlWorkspaceMember, targetWorkspaceMember);
+		// 수정 요청 정보로 멤버 정보 업데이트
+		targetWorkspaceMember.setPositionType(request.getPositionType());
+		targetWorkspaceMember.setState(request.getState());
+		return workspaceMemberService.updateWorkspaceMember(targetWorkspaceMember);
 	}
 
-	public void deleteWorkspaceMember(Long workspaceId, Long workspaceMemberId, Member member) {
-		WorkspaceMember controlMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(workspaceId,
-			member.getId());
-		WorkspaceMember targetMember = workspaceMemberService.getWorkspaceMemberById(workspaceMemberId);
-		validateUpperCasePermission(controlMember, targetMember);
-		targetMember.setState(WorkspaceMemberState.DELETED);
-		workspaceMemberService.updateWorkspaceMember(targetMember);
+	public void deleteWorkspaceMember(Long workspaceId, Member controlMember, Member targetMember) {
+		// 수정 당사자 정보 조회
+		WorkspaceMember controlWorkspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
+			workspaceId,
+			controlMember.getId()
+		);
+		// 수정 대상자 정보 조회
+		WorkspaceMember targetWorkspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
+			workspaceId,
+			targetMember.getId()
+		);
+		// 권한 체크
+		validateUpperCasePermission(controlWorkspaceMember, targetWorkspaceMember);
+		// 수정 요청 정보로 멤버 정보 업데이트
+		targetWorkspaceMember.setState(WorkspaceMemberState.DELETED);
+		workspaceMemberService.updateWorkspaceMember(targetWorkspaceMember);
 	}
 
 	public List<WorkspaceMemberInfoResponse> inviteWorkspaceMember(Long id,
