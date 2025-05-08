@@ -12,13 +12,13 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.jwt.JwtTokenProvider;
 import com.yoyakso.comket.member.dto.MemberRegisterRequest;
 import com.yoyakso.comket.member.dto.MemberRegisterResponse;
 import com.yoyakso.comket.member.dto.MemberUpdateRequest;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.repository.MemberRepository;
 import com.yoyakso.comket.member.service.MemberService;
-import com.yoyakso.comket.util.JwtTokenProvider;
 
 class MemberServiceTest {
 
