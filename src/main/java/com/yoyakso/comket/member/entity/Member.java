@@ -42,6 +42,15 @@ public class Member {
 	@Size(min = 8)
 	private String password;
 
+	// 소속
+	private String department;
+
+	// 직책
+	private String role;
+
+	// 직무
+	private String responsibility;
+
 	@Column(updatable = false)
 	private LocalDateTime createdAt;
 
@@ -67,6 +76,9 @@ public class Member {
 		member.setEmail(memberRegisterRequest.getEmail());
 		member.setPassword(memberRegisterRequest.getPassword());
 		member.setRealName(memberRegisterRequest.getRealName());
+		member.setDepartment(memberRegisterRequest.getDepartment());
+		member.setRole(memberRegisterRequest.getRole());
+		member.setResponsibility(memberRegisterRequest.getResponsibility());
 		return member;
 	}
 

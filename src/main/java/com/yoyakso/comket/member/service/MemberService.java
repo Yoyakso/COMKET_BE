@@ -75,6 +75,9 @@ public class MemberService {
 			.memberId(member.getId())
 			.email(member.getEmail())
 			.realName(member.getRealName())
+			.department(member.getDepartment())
+			.role(member.getRole())
+			.responsibility(member.getResponsibility())
 			.token(token)
 			.profileFileUrl(profileFileUrl)
 			.build();
@@ -128,6 +131,9 @@ public class MemberService {
 		return MemberInfoResponse.builder()
 			.email(member.getEmail())
 			.realName(member.getRealName())
+			.department(member.getDepartment())
+			.role(member.getRole())
+			.responsibility(member.getResponsibility())
 			.profileFileUrl(profileFileUrl)
 			.build();
 	}
