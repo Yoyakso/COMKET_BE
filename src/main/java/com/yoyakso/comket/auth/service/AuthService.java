@@ -1,4 +1,4 @@
-package com.yoyakso.comket.oauth2.service;
+package com.yoyakso.comket.auth.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -6,34 +6,59 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.yoyakso.comket.auth.dto.GoogleDetailRequest;
+import com.yoyakso.comket.auth.dto.GoogleDetailResponse;
+import com.yoyakso.comket.auth.dto.GoogleLoginResponse;
+import com.yoyakso.comket.auth.dto.GoogleTokenRequest;
+import com.yoyakso.comket.auth.dto.GoogleTokenResponse;
+import com.yoyakso.comket.auth.dto.LoginRequest;
+import com.yoyakso.comket.auth.dto.LoginResponse;
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.jwt.JwtTokenProvider;
+import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.repository.MemberRepository;
 import com.yoyakso.comket.member.service.MemberService;
-import com.yoyakso.comket.oauth2.dto.GoogleDetailRequest;
-import com.yoyakso.comket.oauth2.dto.GoogleDetailResponse;
-import com.yoyakso.comket.oauth2.dto.GoogleLoginResponse;
-import com.yoyakso.comket.oauth2.dto.GoogleTokenRequest;
-import com.yoyakso.comket.oauth2.dto.GoogleTokenResponse;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class GoogleOAuth2ServiceImpl implements OAuth2Service {
+public class AuthService {
 
 	private final RestTemplate restTemplate;
 	private final MemberService memberService;
+	private final MemberRepository memberRepository;
+	private final PasswordEncoder passwordEncoder;
+	private final JwtTokenProvider jwtTokenProvider;
 	@Value("${google.oauth2_client_id}")
 	private String googleClientId;
 	@Value("${google.oauth2_client_secret}")
 	private String googleClientSecret;
 
-	@Override
+	public LoginResponse login(LoginRequest loginRequest) {
+		Member member = memberRepository.findByEmail(loginRequest.getEmail());
+
+		if (member == null || !passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
+			throw new CustomException("LOGIN_VALIDATE_FAILED", "로그인 정보가 정확하지 않습니다.");
+		}
+
+		String token = jwtTokenProvider.createToken(member.getEmail());
+
+		return LoginResponse.builder()
+			.userId(member.getId())
+			.accessToken(token)
+			.name(member.getRealName())
+			.email(member.getEmail())
+			.build();
+	}
+
 	public GoogleLoginResponse handleGoogleLogin(String code, String redirectUri) {
 		try {
 			// 구글 토큰 요청

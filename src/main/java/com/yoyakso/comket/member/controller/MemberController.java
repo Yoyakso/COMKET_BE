@@ -29,7 +29,7 @@ public class MemberController {
 	private final JwtTokenProvider jwtTokenProvider;
 
 	//회원가입
-	@PostMapping("/auth/register")
+	@PostMapping("/members/register")
 	@Operation(summary = "회원가입", description = "새로운 회원을 등록합니다.")
 	public ResponseEntity<MemberRegisterResponse> registerMember(
 		@Valid @RequestBody MemberRegisterRequest memberRegisterRequest
