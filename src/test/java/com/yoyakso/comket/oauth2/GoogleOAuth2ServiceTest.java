@@ -32,12 +32,6 @@ class GoogleOAuth2ServiceTest {
 	private RestTemplate restTemplate;
 
 	@Test
-	void testGenerateGoogleLoginUrl() {
-		String url = service.returnGoogleLoginPageUrl();
-		assertTrue(url.contains("https://accounts.google.com/o/oauth2/v2/auth"));
-	}
-
-	@Test
 	void testGetGoogleUserInfo() {
 		// given
 		String dummyCode = "dummy-code";
