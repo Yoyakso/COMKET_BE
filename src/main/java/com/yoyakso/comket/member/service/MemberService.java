@@ -131,4 +131,9 @@ public class MemberService {
 			.profileFileUrl(profileFileUrl)
 			.build();
 	}
+
+	public Member getMemberById(Long targetMemberId) {
+		return memberRepository.findById(targetMemberId)
+			.orElseThrow(() -> new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다."));
+	}
 }

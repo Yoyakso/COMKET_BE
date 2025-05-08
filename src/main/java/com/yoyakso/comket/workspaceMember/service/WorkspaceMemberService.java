@@ -9,6 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.service.MemberService;
+import com.yoyakso.comket.workspace.dto.WorkspaceMemberCreateRequest;
+import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoResponse;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.enums.WorkspaceState;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
@@ -23,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 public class WorkspaceMemberService {
 
 	private final WorkspaceMemberRepository workspaceMemberRepository;
+
+	private final MemberService memberService;
 
 	public void createWorkspaceMember(Workspace workspace, Member member, WorkspaceMemberState state,
 		String positionType) {
@@ -73,8 +78,70 @@ public class WorkspaceMemberService {
 		List<String> memberStates) {
 		return workspaceMemberRepository.searchWorkspaceMembers(workspaceId, keyword, positionTypes, memberStates);
 	}
-	
+
 	public List<WorkspaceMember> getWorkspaceMembersByWorkspaceId(Long id) {
 		return workspaceMemberRepository.findByWorkspaceId(id);
+	}
+
+	public List<WorkspaceMemberInfoResponse> inviteMembersToWorkspace(Workspace workspace,
+		WorkspaceMemberCreateRequest workspaceMemberCreateRequest) {
+		List<Long> memberIdList = validateMemberIdList(workspaceMemberCreateRequest.getMemberIdList());
+		List<Long> newMemberIds = filterNewMemberIds(workspace.getId(), memberIdList);
+		createWorkspaceMembers(workspace, newMemberIds, workspaceMemberCreateRequest);
+		return buildResponse(workspace.getId(), newMemberIds);
+	}
+
+	private List<Long> validateMemberIdList(List<Long> memberIdList) {
+		if (memberIdList == null || memberIdList.isEmpty()) {
+			throw new CustomException("INVALID_MEMBER_LIST", "초대할 멤버 ID 리스트가 비어 있습니다.");
+		}
+		return memberIdList;
+	}
+
+	private List<Long> filterNewMemberIds(Long workspaceId, List<Long> memberIdList) {
+		List<Long> existingMemberIds = getWorkspaceMembersByWorkspaceId(workspaceId).stream()
+			.filter(workspaceMember -> workspaceMember.getState() != WorkspaceMemberState.DELETED)
+			.map(workspaceMember -> workspaceMember.getMember().getId())
+			.toList();
+
+		List<Long> newMemberIds = memberIdList.stream()
+			.filter(memberId -> !existingMemberIds.contains(memberId))
+			.toList();
+
+		if (newMemberIds.isEmpty()) {
+			throw new CustomException("MEMBER_ALREADY_INVITED", "이미 초대된 멤버가 있습니다.");
+		}
+		return newMemberIds;
+	}
+
+	private void createWorkspaceMembers(Workspace workspace, List<Long> newMemberIds,
+		WorkspaceMemberCreateRequest workspaceMemberCreateRequest) {
+		for (Long memberId : newMemberIds) {
+			Member member = memberService.getMemberById(memberId);
+			if (member == null) {
+				throw new CustomException("CANNOT_FOUND_MEMBER", "멤버를 찾을 수 없습니다.");
+			}
+			WorkspaceMember workspaceMember = WorkspaceMember.builder()
+				.workspace(workspace)
+				.member(member)
+				.state(workspaceMemberCreateRequest.getState())
+				.positionType(workspaceMemberCreateRequest.getPositionType())
+				.build();
+			workspaceMemberRepository.save(workspaceMember);
+		}
+	}
+
+	private List<WorkspaceMemberInfoResponse> buildResponse(Long workspaceId, List<Long> newMemberIds) {
+		return workspaceMemberRepository.findByWorkspaceId(workspaceId).stream()
+			.filter(workspaceMember -> newMemberIds.contains(workspaceMember.getMember().getId()))
+			.filter(workspaceMember -> workspaceMember.getState() == WorkspaceMemberState.ACTIVE)
+			.map(workspaceMember -> WorkspaceMemberInfoResponse.builder()
+				.workspaceMemberid(workspaceMember.getId())
+				.name(workspaceMember.getMember().getRealName())
+				.email(workspaceMember.getMember().getEmail())
+				.positionType(workspaceMember.getPositionType())
+				.state(workspaceMember.getState())
+				.build())
+			.toList();
 	}
 }

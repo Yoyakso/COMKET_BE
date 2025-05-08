@@ -12,6 +12,7 @@ import com.yoyakso.comket.file.enums.FileCategory;
 import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.workspace.dto.WorkspaceInfoResponse;
+import com.yoyakso.comket.workspace.dto.WorkspaceMemberCreateRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoResponse;
 import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoUpdateRequest;
 import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
@@ -223,7 +224,7 @@ public class WorkspaceService {
 
 	public WorkspaceMemberInfoResponse toMemberInfoResponse(WorkspaceMember member) {
 		return WorkspaceMemberInfoResponse.builder()
-			.id(member.getId())
+			.workspaceMemberid(member.getId())
 			.name(member.getMember().getRealName())
 			.email(member.getMember().getEmail())
 			.positionType(member.getPositionType())
@@ -258,6 +259,14 @@ public class WorkspaceService {
 		validateUpperCasePermission(controlMember, targetMember);
 		targetMember.setState(WorkspaceMemberState.DELETED);
 		workspaceMemberService.updateWorkspaceMember(targetMember);
+	}
+
+	public List<WorkspaceMemberInfoResponse> inviteWorkspaceMember(Long id,
+		WorkspaceMemberCreateRequest workspaceMemberCreateRequest, Member member) {
+		Workspace workspace = findWorkspaceById(id);
+		validateAdminPermission(member, workspace);
+
+		return workspaceMemberService.inviteMembersToWorkspace(workspace, workspaceMemberCreateRequest);
 	}
 
 	private void validateUpperCasePermission(WorkspaceMember controllerMember, WorkspaceMember targetMember) {
