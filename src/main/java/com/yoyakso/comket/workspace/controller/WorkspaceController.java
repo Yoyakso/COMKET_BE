@@ -105,10 +105,9 @@ public class WorkspaceController {
 	@Operation(summary = "워크스페이스 멤버 초대 API", description = "워크스페이스에 멤버를 초대하는 API")
 	public ResponseEntity<List<WorkspaceMemberInfoResponse>> inviteWorkspaceMember(
 		@PathVariable Long id,
-		@Valid @RequestBody WorkspaceMemberCreateRequest workspaceMemberCreateRequest,
-		HttpServletRequest request
+		@Valid @RequestBody WorkspaceMemberCreateRequest workspaceMemberCreateRequest
 	) {
-		Member authenticatedMember = getAuthenticatedMember(request);
+		Member authenticatedMember = memberService.getAuthenticatedMember();
 		List<WorkspaceMemberInfoResponse> invitedWorkspaceMemberInfo = workspaceService.inviteWorkspaceMember(id,
 			workspaceMemberCreateRequest, authenticatedMember);
 		return ResponseEntity.ok(invitedWorkspaceMemberInfo);
