@@ -1,4 +1,4 @@
-package com.yoyakso.comket.oauth2.dto;
+package com.yoyakso.comket.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,5 +6,5 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class GoogleDetailRequest {
-    private String accessToken;
+	private String accessToken;
 }
