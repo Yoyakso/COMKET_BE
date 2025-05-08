@@ -1,4 +1,4 @@
-package com.yoyakso.comket.oauth2.dto;
+package com.yoyakso.comket.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

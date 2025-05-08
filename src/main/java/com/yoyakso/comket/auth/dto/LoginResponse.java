@@ -1,5 +1,10 @@
-package com.yoyakso.comket.login.dto;
+package com.yoyakso.comket.auth.dto;
 
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
 public class LoginResponse {
 	private Long userId;
 	private String name;

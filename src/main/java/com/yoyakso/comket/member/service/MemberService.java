@@ -3,6 +3,8 @@ package com.yoyakso.comket.member.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.yoyakso.comket.auth.dto.GoogleDetailResponse;
+import com.yoyakso.comket.auth.dto.GoogleLoginResponse;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.file.entity.File;
 import com.yoyakso.comket.file.enums.FileCategory;
@@ -14,8 +16,6 @@ import com.yoyakso.comket.member.dto.MemberRegisterResponse;
 import com.yoyakso.comket.member.dto.MemberUpdateRequest;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.repository.MemberRepository;
-import com.yoyakso.comket.oauth2.dto.GoogleDetailResponse;
-import com.yoyakso.comket.oauth2.dto.GoogleLoginResponse;
 
 import lombok.RequiredArgsConstructor;
 

@@ -1,4 +1,4 @@
-package com.yoyakso.comket.oauth2;
+package com.yoyakso.comket.auth;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -13,17 +13,17 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import com.yoyakso.comket.auth.dto.GoogleDetailResponse;
+import com.yoyakso.comket.auth.dto.GoogleLoginResponse;
+import com.yoyakso.comket.auth.dto.GoogleTokenResponse;
+import com.yoyakso.comket.auth.service.AuthService;
 import com.yoyakso.comket.member.service.MemberService;
-import com.yoyakso.comket.oauth2.dto.GoogleDetailResponse;
-import com.yoyakso.comket.oauth2.dto.GoogleLoginResponse;
-import com.yoyakso.comket.oauth2.dto.GoogleTokenResponse;
-import com.yoyakso.comket.oauth2.service.GoogleOAuth2ServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class GoogleOAuth2ServiceTest {
 
 	@InjectMocks
-	private GoogleOAuth2ServiceImpl service;
+	private AuthService service;
 
 	@Mock
 	private MemberService memberService;
