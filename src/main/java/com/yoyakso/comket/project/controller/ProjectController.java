@@ -23,7 +23,6 @@ import com.yoyakso.comket.project.enums.ProjectState;
 import com.yoyakso.comket.project.service.ProjectService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
@@ -39,10 +38,9 @@ public class ProjectController {
 	@PostMapping("/{workspaceName}/project")
 	public ResponseEntity<ProjectInfoResponse> createProject(
 		@PathVariable("workspaceName") String workspaceName,
-		@Valid @RequestBody ProjectCreateRequest request,
-		HttpServletRequest userRequest
+		@Valid @RequestBody ProjectCreateRequest request
 	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
+		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
@@ -55,10 +53,9 @@ public class ProjectController {
 	@Operation(method = "GET", description = "프로젝트 전체 조회 API")
 	@GetMapping("/{workspaceName}/project/all")
 	public ResponseEntity<List<ProjectInfoResponse>> getProjects(
-		@PathVariable("workspaceName") String workspaceName,
-		HttpServletRequest userRequest
+		@PathVariable("workspaceName") String workspaceName
 	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
+		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
@@ -70,10 +67,9 @@ public class ProjectController {
 	@GetMapping("/{workspaceName}/{projectId}")
 	public ResponseEntity<ProjectInfoResponse> getProjects(
 		@PathVariable("workspaceName") String workspaceName,
-		@PathVariable Long projectId,
-		HttpServletRequest userRequest
+		@PathVariable Long projectId
 	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
+		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
@@ -84,10 +80,9 @@ public class ProjectController {
 	@Operation(method = "GET", description = "내가 속한 프로젝트 조회 API")
 	@GetMapping("/{workspaceName}/project/my")
 	public ResponseEntity<List<ProjectInfoResponse>> getAllIncludeProjects(
-		@PathVariable("workspaceName") String workspaceName,
-		HttpServletRequest userRequest
+		@PathVariable("workspaceName") String workspaceName
 	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
+		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
@@ -99,10 +94,9 @@ public class ProjectController {
 	@GetMapping("/{workspaceName}/{projectId}/members")
 	public ResponseEntity<List<ProjectMemberResponse>> getProjectMembers(
 		@PathVariable String workspaceName,
-		@PathVariable Long projectId,
-		HttpServletRequest userRequest
+		@PathVariable Long projectId
 	) {
-		if (memberService.getAuthenticatedMember(userRequest) == null) {
+		if (memberService.getAuthenticatedMember() == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
 		List<ProjectMemberResponse> responses = projectService.getProjectMembers(workspaceName, projectId);
@@ -115,10 +109,9 @@ public class ProjectController {
 	public ResponseEntity<ProjectInfoResponse> updateProject(
 		@PathVariable("workspaceName") String workspaceName,
 		@PathVariable("projectId") Long projectId,
-		@RequestBody ProjectCreateRequest request,
-		HttpServletRequest userRequest
+		@RequestBody ProjectCreateRequest request
 	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
+		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
@@ -130,10 +123,9 @@ public class ProjectController {
 	@PatchMapping("/{workspaceName}/{projectId}/inactive")
 	public ResponseEntity<ProjectInfoResponse> inActiveProject(
 		@PathVariable("workspaceName") String workspaceName,
-		@PathVariable("projectId") Long projectId,
-		HttpServletRequest userRequest
+		@PathVariable("projectId") Long projectId
 	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
+		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
@@ -146,10 +138,9 @@ public class ProjectController {
 	public ResponseEntity<ProjectMemberResponse> patchProjectMembers(
 		@PathVariable String workspaceName,
 		@PathVariable Long projectId,
-		HttpServletRequest userRequest,
 		@Valid ProjectMemberUpdateRequest request
 	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
+		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
@@ -163,10 +154,9 @@ public class ProjectController {
 	@DeleteMapping("/{workspaceName}/{projectId}")
 	public ResponseEntity<Void> deleteProject(
 		@PathVariable("workspaceName") String workspaceName,
-		@PathVariable("projectId") Long projectId,
-		HttpServletRequest userRequest
+		@PathVariable("projectId") Long projectId
 	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
+		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
@@ -178,10 +168,9 @@ public class ProjectController {
 	@DeleteMapping("/{workspaceName}/{projectId}/exit")
 	public ResponseEntity<Void> exitProject(
 		@PathVariable("workspaceName") String workspaceName,
-		@PathVariable("projectId") Long projectId,
-		HttpServletRequest userRequest
+		@PathVariable("projectId") Long projectId
 	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
+		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
@@ -194,10 +183,9 @@ public class ProjectController {
 	public ResponseEntity<Void> deleteProjectMembers(
 		@PathVariable String workspaceName,
 		@PathVariable Long projectId,
-		HttpServletRequest userRequest,
 		Long projectMemberId
 	) {
-		Member member = memberService.getAuthenticatedMember(userRequest);
+		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
