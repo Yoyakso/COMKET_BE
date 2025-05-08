@@ -99,13 +99,12 @@ public class MemberService {
 		Member member = memberRepository.findByEmail(googleUserInfo.getEmail());
 
 		if (member == null) {
-			// 회원가입 페이지로 유도
-			throw new CustomException("OAUTH2_SIGNUP_REQUIRED", "회원가입이 필요한 사용자입니다.");
+			return new GoogleLoginResponse(null, null, googleUserInfo.getEmail());
 		}
 
 		String token = jwtTokenProvider.createToken(member.getEmail());
 
-		return new GoogleLoginResponse(token, member.getRealName());
+		return new GoogleLoginResponse(token, member.getRealName(), member.getEmail());
 	}
 
 	public Member getAuthenticatedMember() {
