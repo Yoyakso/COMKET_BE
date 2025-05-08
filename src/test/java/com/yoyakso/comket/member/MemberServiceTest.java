@@ -121,7 +121,7 @@ class MemberServiceTest {
 	void testFindByEmail_Success() {
 		when(memberRepository.findByEmail(testMember.getEmail())).thenReturn(testMember);
 
-		Member foundMember = memberService.findByEmail(testMember.getEmail());
+		Member foundMember = memberService.getMemberByEmail(testMember.getEmail());
 
 		assertNotNull(foundMember);
 		assertEquals(testMember.getEmail(), foundMember.getEmail());

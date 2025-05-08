@@ -133,20 +133,21 @@ public class WorkspaceController {
 		@PathVariable Long workspaceId,
 		@Valid @RequestBody WorkspaceMemberInfoUpdateRequest workspaceMemberInfoUpdateRequest
 	) {
-		Member authenticatedMember = memberService.getAuthenticatedMember();
+		Member controlMember = memberService.getAuthenticatedMember();
 		WorkspaceMember updatedWorkspaceMember = workspaceService.updateWorkspaceMember(workspaceId,
-			workspaceMemberInfoUpdateRequest, authenticatedMember);
+			workspaceMemberInfoUpdateRequest, controlMember);
 		return ResponseEntity.ok(workspaceService.toMemberInfoResponse(updatedWorkspaceMember));
 	}
 
-	@DeleteMapping("/{workspaceId}/members/{workspaceMemberId}")
+	@DeleteMapping("/{workspaceId}/members")
 	@Operation(summary = "워크스페이스 멤버 삭제 API", description = "워크스페이스의 멤버를 삭제하는 API")
 	public ResponseEntity<Void> deleteWorkspaceMember(
 		@PathVariable Long workspaceId,
-		@PathVariable Long workspaceMemberId
+		@RequestParam String targetMemberEmail
 	) {
-		Member authenticatedMember = memberService.getAuthenticatedMember();
-		workspaceService.deleteWorkspaceMember(workspaceId, workspaceMemberId, authenticatedMember);
+		Member controllMember = memberService.getAuthenticatedMember();
+		Member targetMember = memberService.getMemberByEmail(targetMemberEmail);
+		workspaceService.deleteWorkspaceMember(workspaceId, controllMember, targetMember);
 		return ResponseEntity.noContent().build();
 	}
 }

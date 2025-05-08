@@ -9,8 +9,8 @@ import lombok.Data;
 @Data
 @Builder
 public class WorkspaceMemberInfoUpdateRequest {
-	@JsonProperty("workspace_member_id")
-	private Long workspaceMemberId;
+	@JsonProperty("workspace_member_email")
+	private String workspaceMemberEmail;
 
 	@JsonProperty("position_type")
 	private String positionType;
