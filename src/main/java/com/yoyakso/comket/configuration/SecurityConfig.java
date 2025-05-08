@@ -43,6 +43,7 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
 		config.addAllowedOrigin("https://comket.co.kr"); // 프론트엔드 주소
+		config.addAllowedOrigin("http://localhost:3333"); // 로컬 개발 환경 주소
 		config.addAllowedMethod("*");
 		config.addAllowedHeader("*");
 		config.setAllowCredentials(true);
