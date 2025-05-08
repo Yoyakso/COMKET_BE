@@ -9,6 +9,9 @@ public class MemberRegisterResponse {
 	private Long memberId;
 	private String email;
 	private String realName;
+	private String department;
+	private String role;
+	private String responsibility;
 	private String token;
 	private String profileFileUrl;
 }

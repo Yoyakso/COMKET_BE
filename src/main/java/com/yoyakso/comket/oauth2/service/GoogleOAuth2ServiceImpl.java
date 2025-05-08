@@ -32,17 +32,6 @@ public class GoogleOAuth2ServiceImpl implements OAuth2Service {
 	private String googleClientId;
 	@Value("${google.oauth2_client_secret}")
 	private String googleClientSecret;
-	@Value("${google.oauth2_redirect_uri}")
-	private String googleRedirectUri;
-
-	@Override
-	public String returnGoogleLoginPageUrl() {
-		return "https://accounts.google.com/o/oauth2/v2/auth?client_id=" + googleClientId
-			+ "&redirect_uri=" + googleRedirectUri
-			+ "&response_type=code"
-			+ "&scope=email%20profile%20openid"
-			+ "&access_type=offline";
-	}
 
 	@Override
 	public GoogleLoginResponse handleGoogleLogin(String code, String redirectUri) {

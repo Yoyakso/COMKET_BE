@@ -7,6 +7,7 @@ import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.file.entity.File;
 import com.yoyakso.comket.file.enums.FileCategory;
 import com.yoyakso.comket.file.service.FileService;
+import com.yoyakso.comket.jwt.JwtTokenProvider;
 import com.yoyakso.comket.member.dto.MemberInfoResponse;
 import com.yoyakso.comket.member.dto.MemberRegisterRequest;
 import com.yoyakso.comket.member.dto.MemberRegisterResponse;
@@ -15,9 +16,7 @@ import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.repository.MemberRepository;
 import com.yoyakso.comket.oauth2.dto.GoogleDetailResponse;
 import com.yoyakso.comket.oauth2.dto.GoogleLoginResponse;
-import com.yoyakso.comket.util.JwtTokenProvider;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -75,6 +74,9 @@ public class MemberService {
 			.memberId(member.getId())
 			.email(member.getEmail())
 			.realName(member.getRealName())
+			.department(member.getDepartment())
+			.role(member.getRole())
+			.responsibility(member.getResponsibility())
 			.token(token)
 			.profileFileUrl(profileFileUrl)
 			.build();
@@ -106,13 +108,8 @@ public class MemberService {
 		return new GoogleLoginResponse(token, member.getRealName());
 	}
 
-	public Member getAuthenticatedMember(HttpServletRequest request) {
-		String token = jwtTokenProvider.getTokenFromHeader(request);
-		if (token == null) {
-			throw new CustomException("TOKEN_NOT_FOUND", "토큰이 없습니다.");
-		}
-
-		String email = jwtTokenProvider.parseToken(token).getSubject();
+	public Member getAuthenticatedMember() {
+		String email = jwtTokenProvider.getEmail();
 		Member member = memberRepository.findByEmail(email);
 		if (member == null) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
@@ -128,7 +125,15 @@ public class MemberService {
 		return MemberInfoResponse.builder()
 			.email(member.getEmail())
 			.realName(member.getRealName())
+			.department(member.getDepartment())
+			.role(member.getRole())
+			.responsibility(member.getResponsibility())
 			.profileFileUrl(profileFileUrl)
 			.build();
+	}
+
+	public Member getMemberById(Long targetMemberId) {
+		return memberRepository.findById(targetMemberId)
+			.orElseThrow(() -> new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다."));
 	}
 }

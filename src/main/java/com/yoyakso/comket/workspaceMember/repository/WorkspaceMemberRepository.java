@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
+import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
 
 public interface WorkspaceMemberRepository extends JpaRepository<WorkspaceMember, Long> {
 	Optional<WorkspaceMember> findByWorkspaceIdAndMemberId(Long workspaceId, Long memberId);
@@ -29,4 +30,6 @@ public interface WorkspaceMemberRepository extends JpaRepository<WorkspaceMember
 		@Param("memberStates") List<String> memberStates
 	);
 
+	List<WorkspaceMember> findAllByWorkspaceIdAndMemberIdInAndState(Long workspaceId, List<Long> memberIds,
+		WorkspaceMemberState state);
 }

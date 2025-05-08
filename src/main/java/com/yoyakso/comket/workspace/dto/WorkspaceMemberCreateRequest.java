@@ -1,5 +1,7 @@
 package com.yoyakso.comket.workspace.dto;
 
+import java.util.List;
+
 import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
 
 import lombok.Builder;
@@ -7,13 +9,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class WorkspaceMemberInfoResponse {
-	private Long workspaceMemberid;
-	private String name;
-	private String email;
-	private String profileFileUrl;
+public class WorkspaceMemberCreateRequest {
+	private List<Long> memberIdList;
 	private String positionType;
 	private WorkspaceMemberState state;
-	private String createdAt;
-	private String updatedAt;
 }

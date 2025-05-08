@@ -11,7 +11,6 @@ spring:
 --- # 운영 환경에 대한 설정
 --- # 라이브 서버 환경에 대한 설정
 google:
-  oauth2_redirect_uri: https://comket.co.kr/oauth/google
   oauth2_client_id: ${GOOGLE_OAUTH2_CLIENT_ID}
   oauth2_client_secret: ${GOOGLE_OAUTH2_CLIENT_SECRET}
 

@@ -11,6 +11,12 @@ public class MemberUpdateRequest {
 	@JsonProperty("real_name")
 	private String realName;
 
+	private String department;
+
+	private String role;
+
+	private String responsibility;
+
 	@JsonProperty("profile_file_id")
 	private Long profileFileId;
 }
