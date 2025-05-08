@@ -9,4 +9,5 @@ public class GoogleLoginResponse {
 	private String accessToken;
 	// private String refreshToken;
 	private String name;
+	private String email;
 }
