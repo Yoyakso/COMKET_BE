@@ -44,7 +44,11 @@ class GoogleOAuth2ServiceTest {
 		mockDetailResponse.setName("Test User");
 
 		// 최종 로그인 응답 Mock
-		GoogleLoginResponse mockLoginResponse = new GoogleLoginResponse("mock-jwt-token", "Test User");
+		GoogleLoginResponse mockLoginResponse = new GoogleLoginResponse(
+			"mock-jwt-token",
+			"Test User",
+			"test@test.com"
+		);
 
 		// when - 토큰 요청 Mock
 		Mockito.when(restTemplate.postForEntity(
