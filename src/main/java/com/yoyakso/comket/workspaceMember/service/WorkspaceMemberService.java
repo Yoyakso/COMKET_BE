@@ -44,9 +44,11 @@ public class WorkspaceMemberService {
 
 	public List<Workspace> getWorkspacesByMember(Member member) {
 		return workspaceMemberRepository.findByMember(member).stream()
-			.map(WorkspaceMember::getWorkspace)
 			.filter(
-				workspace -> EnumSet.of(WorkspaceState.ACTIVE, WorkspaceState.INACTIVE).contains(workspace.getState()))
+				workspaceMember -> workspaceMember.getState() == WorkspaceMemberState.ACTIVE) // WorkspaceMember 상태 필터링
+			.map(WorkspaceMember::getWorkspace)
+			.filter(workspace -> EnumSet.of(WorkspaceState.ACTIVE, WorkspaceState.INACTIVE)
+				.contains(workspace.getState())) // Workspace 상태 필터링
 			.collect(Collectors.toList());
 	}
 
