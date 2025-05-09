@@ -19,5 +19,4 @@ public class WorkspaceInfoResponse {
 	private String inviteCode;
 	private String createdAt;
 	private String updatedAt;
-	private int memberCount;
 }
