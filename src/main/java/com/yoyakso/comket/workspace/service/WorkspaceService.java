@@ -134,14 +134,20 @@ public class WorkspaceService {
 	}
 
 	private void validateWorkspaceAccess(Workspace workspace, Member member) {
-		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
-			workspace.getId(), member.getId());
-		if (!workspace.getIsPublic() && workspaceMember == null) {
+		// 워크스페이스가 비공식적이거나 비공식적 멤버가 아닌 경우
+		if (workspace.getState() != WorkspaceState.ACTIVE ||
+			(!workspace.getIsPublic() && !isActiveWorkspaceMember(workspace.getId(), member.getId()))) {
 			throw new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스 정보를 찾을 수 없습니다.");
 		}
 	}
 
-	public WorkspaceMember validateOwnerPermission(Member member, Workspace workspace) {
+	private boolean isActiveWorkspaceMember(Long workspaceId, Long memberId) {
+		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(workspaceId,
+			memberId);
+		return workspaceMember != null && workspaceMember.getState() == WorkspaceMemberState.ACTIVE;
+	}
+
+	public void validateOwnerPermission(Member member, Workspace workspace) {
 		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
 			workspace.getId(), member.getId());
 		if (workspaceMember == null) {
@@ -151,10 +157,9 @@ public class WorkspaceService {
 			!"OWNER".equals(workspaceMember.getPositionType())) {
 			throw new CustomException("WORKSPACE_AUTHORIZATION_FAILED", "워크스페이스에 대한 권한이 없습니다.");
 		}
-		return workspaceMember;
 	}
 
-	public WorkspaceMember validateAdminPermission(Member member, Workspace workspace) {
+	public void validateAdminPermission(Member member, Workspace workspace) {
 		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
 			workspace.getId(), member.getId());
 		// ADMIN부터 기본적인 멤버설정 가능
@@ -162,7 +167,6 @@ public class WorkspaceService {
 			"MEMBER".equals(workspaceMember.getPositionType())) {
 			throw new CustomException("WORKSPACE_AUTHORIZATION_FAILED", "워크스페이스에 대한 권한이 없습니다.");
 		}
-		return workspaceMember;
 	}
 
 	private void validateWorkspaceSlugUniqueness(String slug) {
