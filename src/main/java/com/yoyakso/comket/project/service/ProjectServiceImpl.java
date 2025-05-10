@@ -176,7 +176,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 		Project project = projectRepository.findById(projectId)
 			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
-		
+
 		String profileFileUrl = project.getProfileFile() != null
 			? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
 			: null;
@@ -202,7 +202,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 		// 워크스페이스 권한에 따라 모든 프로젝트를 리턴 or 공개 프로젝트만 리턴
 		List<Project> projects = (positionType.equals("ADMIN") || positionType.equals("OWNER"))
-			? projectRepository.findAll()
+			? projectRepository.findAllByWorkspace(workSpace)
 			: projectRepository.findAllByWorkspaceAndIsPublicTrue(workSpace);
 
 		return projects.stream()
@@ -244,6 +244,14 @@ public class ProjectServiceImpl implements ProjectService {
 			})
 			.toList();
 	}
+
+	// @Override
+	// public List<ProjectMemberResponse> inviteProjectMembers(String workSpaceName, Long projectId, Member member) {
+	// 	// 워크스페이스 조회
+	// 	Workspace workSpace = workspaceRepository.findByName(workSpaceName)
+	// 		.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
+	//
+	// }
 
 	@Override
 	public List<ProjectMemberResponse> getProjectMembers(String workSpaceName, Long projectId) {
@@ -334,5 +342,36 @@ public class ProjectServiceImpl implements ProjectService {
 
 		projectMember.updateIsActive(false);
 		projectMemberRepository.save(projectMember);
+	}
+
+	// private methods
+	// public ProjectMember validateAdminPermission(Member member, Project project) {
+	// 	ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
+	// 		member.getId());
+	//
+	// 	String positionType = updateRequester.getPositionType();
+	// 	if (updateRequester == null || !updateRequester.getIsActive() || (positionType.equals("MEMBER"))) {
+	// 		throw new CustomException("PROJECT_AUTHORIZATION_FAILED", "프로젝트에 대한 권한이 없습니다.");
+	// 	}
+	//
+	// 	return updateRequester;
+	// }
+
+	private void validateUpperCasePermission(WorkspaceMember controllerMember, WorkspaceMember targetMember) {
+		// OWNER는 모든 멤버의 포지션과 상태를 변경할 수 있다.
+		if ("OWNER".equals(controllerMember.getPositionType())) {
+			return;
+		}
+		// ADMIN은 ADMIN과 MEMBER의 포지션과 상태를 변경할 수 있다.
+		if ("ADMIN".equals(controllerMember.getPositionType()) &&
+			("ADMIN".equals(targetMember.getPositionType()) || "MEMBER".equals(targetMember.getPositionType()))) {
+			return;
+		}
+		// MEMBER는 자신의 포지션과 상태만 변경할 수 있다.
+		if ("MEMBER".equals(controllerMember.getPositionType()) &&
+			controllerMember.getId().equals(targetMember.getId())) {
+			return;
+		}
+		throw new CustomException("WORKSPACE_AUTHORIZATION_FAILED", "워크스페이스에 대한 권한이 없습니다.");
 	}
 }
