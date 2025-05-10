@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.dto.ProjectCreateRequest;
 import com.yoyakso.comket.project.dto.ProjectInfoResponse;
+import com.yoyakso.comket.project.dto.ProjectMemberInviteRequest;
 import com.yoyakso.comket.project.dto.ProjectMemberResponse;
 import com.yoyakso.comket.project.dto.ProjectMemberUpdateRequest;
 import com.yoyakso.comket.project.enums.ProjectState;
@@ -35,4 +36,7 @@ public interface ProjectService {
 
 	ProjectMemberResponse patchProjectMembersPosition(String workSpaceName, Long projectId, Member member,
 		ProjectMemberUpdateRequest request);
+
+	List<ProjectMemberResponse> inviteProjectMembers(String workSpaceName, Long projectId, Member member,
+		ProjectMemberInviteRequest request);
 }

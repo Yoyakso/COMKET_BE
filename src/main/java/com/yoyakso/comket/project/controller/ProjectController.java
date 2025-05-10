@@ -17,6 +17,7 @@ import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.project.dto.ProjectCreateRequest;
 import com.yoyakso.comket.project.dto.ProjectInfoResponse;
+import com.yoyakso.comket.project.dto.ProjectMemberInviteRequest;
 import com.yoyakso.comket.project.dto.ProjectMemberResponse;
 import com.yoyakso.comket.project.dto.ProjectMemberUpdateRequest;
 import com.yoyakso.comket.project.enums.ProjectState;
@@ -46,6 +47,24 @@ public class ProjectController {
 		}
 		ProjectInfoResponse info = projectService.createProject(workspaceName, request, member);
 		return ResponseEntity.ok(info);
+	}
+
+	@Operation(method = "POST", description = "프로젝트 멤버 추가 API")
+	@PostMapping("/{workspaceName}/{projectId}/members")
+	public ResponseEntity<List<ProjectMemberResponse>> inviteProjectMember(
+		@PathVariable String workspaceName,
+		@PathVariable Long projectId,
+		@Valid @RequestBody ProjectMemberInviteRequest request
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		List<ProjectMemberResponse> invitedProjectMemberInfo = projectService.inviteProjectMembers(
+			workspaceName,
+			projectId,
+			member,
+			request
+		);
+
+		return ResponseEntity.ok(invitedProjectMemberInfo);
 	}
 
 	// GET
