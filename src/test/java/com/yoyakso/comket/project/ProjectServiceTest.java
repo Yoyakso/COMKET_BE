@@ -22,6 +22,8 @@ import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.project.enums.ProjectState;
 import com.yoyakso.comket.project.repository.ProjectRepository;
 import com.yoyakso.comket.project.service.ProjectServiceImpl;
+import com.yoyakso.comket.projectMember.entity.ProjectMember;
+import com.yoyakso.comket.projectMember.enums.ProjectMemberState;
 import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.workspace.entity.Workspace;
@@ -67,10 +69,13 @@ public class ProjectServiceTest {
 		mockWorkspace.setId(workspaceId);
 		mockWorkspace.setName("Test Workspace");
 
+		List<String> tags = List.of("COMKET", "DEV");
+
 		ProjectCreateRequest request = new ProjectCreateRequest(
 			"COMKET_BE",
 			"COMKET Backend Team Project",
 			true,
+			tags,
 			null
 		);
 
@@ -112,11 +117,14 @@ public class ProjectServiceTest {
 		Member member = new Member();
 		member.setId(1L);
 
+		List<String> tags = List.of("COMKET", "DEV");
+
 		// 업데이트 리쿼스트 mock
 		ProjectCreateRequest updateRequest = new ProjectCreateRequest(
 			"COMKET_BE",
 			"COMKET Backend Team Project",
 			true,
+			tags,
 			null
 		);
 
@@ -180,6 +188,14 @@ public class ProjectServiceTest {
 		Member member = new Member();
 		member.setId(1L);
 
+		ProjectMember mockProjectMember1 = ProjectMember.builder()
+			.id(1L)
+			.project(savedProject1)
+			.positionType("OWNER")
+			.member(member)
+			.state(ProjectMemberState.ACTIVE)
+			.build();
+
 		WorkspaceMember mockWorkspaceMember = WorkspaceMember.builder()
 			.id(1L)
 			.workspace(mockWorkspace)
@@ -193,6 +209,12 @@ public class ProjectServiceTest {
 			.thenReturn(mockWorkspaceMember);
 		when(projectRepository.findAllByWorkspaceAndIsPublicTrue(mockWorkspace))
 			.thenReturn(List.of(savedProject1, savedProject2, savedProject3));
+		when(projectMemberRepository.findByProjectIdAndPositionType(100L, "OWNER"))
+			.thenReturn(mockProjectMember1);
+		when(projectMemberRepository.findByProjectIdAndPositionType(101L, "OWNER"))
+			.thenReturn(mockProjectMember1);
+		when(projectMemberRepository.findByProjectIdAndPositionType(102L, "OWNER"))
+			.thenReturn(mockProjectMember1);
 		// when
 		List<ProjectInfoResponse> response = projectService.getAllProjects(mockWorkspace.getName(), member);
 
