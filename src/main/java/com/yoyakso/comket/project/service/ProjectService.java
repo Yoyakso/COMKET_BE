@@ -37,6 +37,9 @@ public interface ProjectService {
 	ProjectMemberResponse patchProjectMembersPosition(String workSpaceName, Long projectId, Member member,
 		ProjectMemberUpdateRequest request);
 
+	ProjectMemberResponse assignNewOwner(String workSpaceName, Long projectId, Member member,
+		Long targetMemberId);
+
 	List<ProjectMemberResponse> inviteProjectMembers(String workSpaceName, Long projectId, Member member,
 		ProjectMemberInviteRequest request);
 }

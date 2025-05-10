@@ -20,6 +20,7 @@ import com.yoyakso.comket.project.dto.ProjectInfoResponse;
 import com.yoyakso.comket.project.dto.ProjectMemberInviteRequest;
 import com.yoyakso.comket.project.dto.ProjectMemberResponse;
 import com.yoyakso.comket.project.dto.ProjectMemberUpdateRequest;
+import com.yoyakso.comket.project.dto.ProjectOwnerTransferRequest;
 import com.yoyakso.comket.project.enums.ProjectState;
 import com.yoyakso.comket.project.service.ProjectService;
 
@@ -165,6 +166,22 @@ public class ProjectController {
 		}
 		ProjectMemberResponse responses = projectService.patchProjectMembersPosition(workspaceName, projectId, member,
 			request);
+		return ResponseEntity.ok(responses);
+	}
+
+	@Operation(method = "PATCH", description = "프로젝트 소유자 권한 이전")
+	@PatchMapping("/{workspaceName}/{projectId}/edit/owner")
+	public ResponseEntity<ProjectMemberResponse> patchProjectOwners(
+		@PathVariable String workspaceName,
+		@PathVariable Long projectId,
+		@RequestBody ProjectOwnerTransferRequest request
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		if (member == null) {
+			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
+		}
+		ProjectMemberResponse responses = projectService.assignNewOwner(workspaceName, projectId, member,
+			request.getTargetMemberId());
 		return ResponseEntity.ok(responses);
 	}
 

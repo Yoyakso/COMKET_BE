@@ -175,16 +175,18 @@ public class ProjectServiceImpl implements ProjectService {
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
-		ProjectMember projectMember = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
+		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
 			member.getId());
 
 		// 프로젝트 멤버가 아닐 경우
-		if (projectMember == null || projectMember.getState() == ProjectMemberState.DELETED) {
+		if (updateRequester == null || updateRequester.getState() == ProjectMemberState.DELETED) {
 			throw new CustomException("NOT_PROJECT_MEMBER", "이미 프로젝트 멤버가 아닙니다.");
 		}
 
-		projectMember.updateMemberState(ProjectMemberState.DELETED);
-		projectMemberRepository.save(projectMember);
+		validateOwnerPermission(updateRequester);
+
+		updateRequester.updateMemberState(ProjectMemberState.DELETED);
+		projectMemberRepository.save(updateRequester);
 	}
 
 	@Override
@@ -340,6 +342,8 @@ public class ProjectServiceImpl implements ProjectService {
 		// 상위 권한 검증
 		validateUpperCasePermission(updateRequester, projectMember);
 
+		validateOwnerPermission(updateRequester);
+
 		projectMember.updatePositionType(request.getPositionType());
 		ProjectMember updatedProjectMember = projectMemberRepository.save(projectMember);
 		Member updatedMember = updatedProjectMember.getMember();
@@ -370,12 +374,53 @@ public class ProjectServiceImpl implements ProjectService {
 
 		validateAdminPermission(updateRequester.getMember(), projectId);
 
+		validateOwnerPermission(updateRequester);
+
 		// 변경 대상 검증
 		ProjectMember projectMember = projectMemberRepository.findById(projectMemberId)
 			.orElseThrow(() -> new CustomException("PROJECTMEMBER_NOT_FOUND", "프로젝트 멤버를 찾을 수 없습니다."));
 
 		projectMember.updateMemberState(ProjectMemberState.DELETED);
 		projectMemberRepository.save(projectMember);
+	}
+
+	@Override
+	public ProjectMemberResponse assignNewOwner(
+		String workSpaceName,
+		Long projectId,
+		Member member,
+		Long targetMemberId
+	) {
+		// 워크스페이스 조회
+		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
+			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
+
+		// API 사용 유저 권한 검증
+		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
+			member.getId());
+
+		// OWNER인지 검증
+		if (!updateRequester.getPositionType().equals("OWNER")) {
+			throw new CustomException("OWNER_AUTHORIZATION_FAILED", "프로젝트 소유자 권한이 없습니다.");
+		}
+
+		ProjectMember newOwner = projectMemberRepository.findById(targetMemberId)
+			.orElseThrow(() -> new CustomException("PROJECTMEMBER_NOT_FOUND", "프로젝트 멤버를 찾을 수 없습니다."));
+
+		updateRequester.updatePositionType("ADMIN");
+		projectMemberRepository.save(newOwner);
+
+		newOwner.updatePositionType("OWNER");
+		ProjectMember updatedProjectMember = projectMemberRepository.save(newOwner);
+		Member updatedMember = updatedProjectMember.getMember();
+
+		return ProjectMemberResponse.builder()
+			.memberId(updatedMember.getId())
+			.name(updatedMember.getRealName())
+			.email(updatedMember.getEmail())
+			.state(updatedProjectMember.getState())
+			.positionType(updatedProjectMember.getPositionType())
+			.build();
 	}
 
 	// ---private methods---
@@ -420,5 +465,11 @@ public class ProjectServiceImpl implements ProjectService {
 
 		Set<String> uniqueTags = new HashSet<>(originTags);
 		return new ArrayList<>(uniqueTags);
+	}
+
+	private void validateOwnerPermission(ProjectMember member) {
+		if (member.getPositionType().equals("OWNER")) {
+			throw new CustomException("OWNER_EXCEPTION", "소유자 권한 이전이 필요합니다.");
+		}
 	}
 }
