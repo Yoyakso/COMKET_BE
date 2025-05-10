@@ -1,6 +1,11 @@
 package com.yoyakso.comket.project.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -54,6 +59,9 @@ public class ProjectServiceImpl implements ProjectService {
 		if (projectRepository.existsByName(request.getName())) {
 			throw new CustomException("PROJECT_NAME_DUPLICATE", "프로젝트 이름이 중복되었습니다.");
 		}
+
+		List<String> tags = deduplicateTags(request.getTags());
+
 		File profileFile =
 			request.getProfileFileId() != null ? fileService.getFileById(request.getProfileFileId()) : null;
 		fileService.validateFileCategory(profileFile, FileCategory.PROJECT_PROFILE);
@@ -63,6 +71,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.workspace(workSpace)
 			.name(request.getName())
 			.description(request.getDescription())
+			.tags(tags)
 			.state(ProjectState.ACTIVE) // 초기 상태 예: ACTIVE
 			.isPublic(request.getIsPublic())
 			.profileFile(profileFile)
@@ -76,8 +85,10 @@ public class ProjectServiceImpl implements ProjectService {
 			.projectId(savedProject.getId())
 			.projectName(savedProject.getName())
 			.projectDescription(savedProject.getDescription())
+			.projectTag(savedProject.getTags())
 			.isPublic(savedProject.getIsPublic())
 			.createTime(savedProject.getCreateTime())
+			.adminId(member.getId())
 			.profileFileUrl(profileFileUrl)
 			.build();
 	}
@@ -104,10 +115,16 @@ public class ProjectServiceImpl implements ProjectService {
 			throw new CustomException("PROJECT_AUTHORIZATION_FAILED", "프로젝트에 대한 권한이 없습니다.");
 		}
 
-		// 수정하는 프로젝트 이름의 중복 검사
-		if (projectRepository.existsByName(request.getName())) {
+		Project originProject = projectRepository.findById(projectId)
+			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
+
+		// 수정하는 프로젝트 이름의 중복 검사, 프로젝트 수정의 경우 기존 프로젝트 이름도 중복 처리되어 비교 추가
+		if (projectRepository.existsByName(request.getName()) && (!Objects.equals(originProject.getName(),
+			request.getName()))) {
 			throw new CustomException("PROJECT_NAME_DUPLICATE", "프로젝트 이름이 중복되었습니다.");
 		}
+
+		List<String> tags = deduplicateTags(request.getTags());
 
 		Project project = projectRepository.findById(projectId)
 			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
@@ -116,14 +133,19 @@ public class ProjectServiceImpl implements ProjectService {
 		project.updateDescription(request.getDescription());
 		project.updateProjectPublicity(request.getIsPublic());
 		project.updateProfileFile(profileFile);
+		project.updateTags(tags);
 		Project savedProject = projectRepository.save(project);
+
+		ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
 
 		return ProjectInfoResponse.builder()
 			.projectId(savedProject.getId())
 			.projectName(savedProject.getName())
 			.projectDescription(savedProject.getDescription())
 			.isPublic(savedProject.getIsPublic())
+			.projectTag(savedProject.getTags())
 			.createTime(savedProject.getCreateTime())
+			.adminId(pm.getId())
 			.profileFileUrl(profileFileUrl)
 			.build();
 	}
@@ -178,10 +200,14 @@ public class ProjectServiceImpl implements ProjectService {
 			? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
 			: null;
 
+		ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
+
 		return ProjectInfoResponse.builder()
 			.projectId(project.getId())
 			.projectName(project.getName())
 			.projectDescription(project.getDescription())
+			.projectTag(project.getTags())
+			.adminId(pm.getId())
 			.isPublic(project.getIsPublic())
 			.createTime(project.getCreateTime())
 			.profileFileUrl(profileFileUrl)
@@ -207,13 +233,18 @@ public class ProjectServiceImpl implements ProjectService {
 				String profileFileUrl = project.getProfileFile() != null
 					? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
 					: null;
+				ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
+
 				return new ProjectInfoResponse(
 					project.getId(),
 					project.getName(),
 					project.getDescription(),
+					project.getTags(),
 					project.getIsPublic(),
+					pm.getId(),
 					project.getCreateTime(),
-					profileFileUrl);
+					profileFileUrl
+				);
 			})
 			.toList();
 	}
@@ -231,13 +262,19 @@ public class ProjectServiceImpl implements ProjectService {
 				String profileFileUrl = project.getProfileFile() != null
 					? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
 					: null;
+
+				ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
+
 				return new ProjectInfoResponse(
 					project.getId(),
 					project.getName(),
 					project.getDescription(),
+					project.getTags(),
 					project.getIsPublic(),
+					pm.getId(),
 					project.getCreateTime(),
-					profileFileUrl);
+					profileFileUrl
+				);
 			})
 			.toList();
 	}
@@ -373,5 +410,15 @@ public class ProjectServiceImpl implements ProjectService {
 			return;
 		}
 		throw new CustomException("PROJECT_AUTHORIZATION_FAILED", "프로젝트에 대한 권한이 없습니다.");
+	}
+
+	// Set으로 중복된 태그를 제거
+	private List<String> deduplicateTags(List<String> originTags) {
+		if (originTags == null) {
+			return Collections.emptyList();
+		}
+
+		Set<String> uniqueTags = new HashSet<>(originTags);
+		return new ArrayList<>(uniqueTags);
 	}
 }
