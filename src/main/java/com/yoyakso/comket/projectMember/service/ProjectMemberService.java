@@ -43,7 +43,7 @@ public class ProjectMemberService {
 	}
 
 	public List<Project> getProjectListByMemberId(Member member) {
-		return memberRepository.findAllProjectByMemberAndIsActiveTrue(member);
+		return memberRepository.findAllPublicProjectsByMember(member);
 	}
 
 	public List<ProjectMemberResponse> inviteMembersToProject(
