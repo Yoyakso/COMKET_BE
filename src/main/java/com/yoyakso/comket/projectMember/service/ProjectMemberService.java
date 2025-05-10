@@ -21,7 +21,7 @@ public class ProjectMemberService {
 		ProjectMember projectMember = ProjectMember.builder()
 			.project(project)
 			.member(member)
-			.isActive(true)
+			.state(ProjectMemberState.ACTIVE)
 			.positionType(positionType)
 			.build();
 

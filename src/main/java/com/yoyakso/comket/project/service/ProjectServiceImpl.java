@@ -96,7 +96,7 @@ public class ProjectServiceImpl implements ProjectService {
 			member.getId());
 
 		// 프로젝트 멤버가 존재하지 않거나 비활성화된 경우, 또는 ADMIN, OWNER가 아닌 경우
-		if (projectMember == null || !projectMember.getIsActive() ||
+		if (projectMember == null || projectMember.getState() != ProjectMemberState.ACTIVE ||
 			(!projectMember.getPositionType().equals("ADMIN") && !projectMember.getPositionType()
 				.equals("OWNER"))) {
 			throw new CustomException("PROJECT_AUTHORIZATION_FAILED", "프로젝트에 대한 권한이 없습니다.");
@@ -160,11 +160,11 @@ public class ProjectServiceImpl implements ProjectService {
 			member.getId());
 
 		// 프로젝트 멤버가 아닐 경우
-		if (projectMember == null || !projectMember.getIsActive()) {
+		if (projectMember == null || projectMember.getState() == ProjectMemberState.DELETED) {
 			throw new CustomException("NOT_PROJECT_MEMBER", "이미 프로젝트 멤버가 아닙니다.");
 		}
 
-		projectMember.updateIsActive(false);
+		projectMember.updateMemberState(ProjectMemberState.DELETED);
 		projectMemberRepository.save(projectMember);
 	}
 
@@ -269,7 +269,7 @@ public class ProjectServiceImpl implements ProjectService {
 					.name(member.getRealName())
 					.email(member.getEmail())
 					.positionType(pm.getPositionType())
-					.isActive(pm.getIsActive())
+					.state(pm.getState())
 					.build();
 			})
 			.collect(Collectors.toList());
@@ -309,7 +309,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.memberId(updatedMember.getId())
 			.name(updatedMember.getRealName())
 			.email(updatedMember.getEmail())
-			.isActive(updatedProjectMember.getIsActive())
+			.state(updatedProjectMember.getState())
 			.positionType(updatedProjectMember.getPositionType())
 			.build();
 	}
@@ -340,7 +340,7 @@ public class ProjectServiceImpl implements ProjectService {
 		ProjectMember projectMember = projectMemberRepository.findById(projectMemberId)
 			.orElseThrow(() -> new CustomException("PROJECTMEMBER_NOT_FOUND", "프로젝트 멤버를 찾을 수 없습니다."));
 
-		projectMember.updateIsActive(false);
+		projectMember.updateMemberState(ProjectMemberState.DELETED);
 		projectMemberRepository.save(projectMember);
 	}
 

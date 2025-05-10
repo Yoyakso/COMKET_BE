@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.entity.Project;
+import com.yoyakso.comket.projectMember.enums.ProjectMemberState;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -43,7 +44,7 @@ public class ProjectMember {
 	private Member member;
 
 	@Column(nullable = false)
-	private Boolean isActive;
+	private ProjectMemberState state;
 
 	@Column(nullable = false, length = 20)
 	private String positionType; // "OWNER", "MEMBER", "ADMIN"
@@ -54,8 +55,8 @@ public class ProjectMember {
 	@UpdateTimestamp
 	private LocalDateTime updatedAt;
 
-	public void updateIsActive(boolean state) {
-		this.isActive = state;
+	public void updateMemberState(ProjectMemberState state) {
+		this.state = state;
 	}
 
 	public void updatePositionType(String positionType) {
