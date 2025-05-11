@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 @Builder
 public class WorkspaceMemberCreateRequest {
-	private List<Long> memberIdList;
+	private List<String> memberEmailList;
 	private String positionType;
 	private WorkspaceMemberState state;
 }
