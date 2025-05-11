@@ -11,6 +11,7 @@ import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.project.service.ProjectService;
 import com.yoyakso.comket.ticket.dto.request.TicketCreateRequest;
+import com.yoyakso.comket.ticket.dto.request.TicketUpdateRequest;
 import com.yoyakso.comket.ticket.dto.response.TicketInfoResponse;
 import com.yoyakso.comket.ticket.entity.Ticket;
 import com.yoyakso.comket.ticket.mapper.TicketMapper;
@@ -39,18 +40,10 @@ public class TicketService {
 		ticket.setProject(project);
 
 		// 부모 티켓 정보를 가져오기
-		if (request.getParentTicketId() != null) {
-			Ticket parentTicket = getTicketById(request.getParentTicketId())
-				.orElseThrow(() -> new CustomException("CANNOT_FOUND_TICKET", "부모 티켓을 찾을 수 없습니다."));
-			ticket.setParentTicket(parentTicket);
-		}
+		setParentTicket(ticket, request.getParentTicketId());
 
 		// 담당자 정보 설정
-		if (request.getAssigneeId() != null) {
-			Member assignee = memberService.getMemberById(request.getAssigneeId());
-			projectService.validateProjectAccess(project, assignee, "티켓 담당자");
-			ticket.setAssignee(assignee);
-		}
+		setAssignee(ticket, request.getAssigneeId(), project);
 
 		// 티켓 저장
 		ticketRepository.save(ticket);
@@ -85,10 +78,52 @@ public class TicketService {
 
 		return ticket;
 	}
+
+	public Ticket updateTicket(String projectName, Long ticketId, TicketUpdateRequest request, Member member) {
+		// 프로젝트 정보를 가져오기
+		Project project = projectService.getProjectByProjectName(projectName);
+		projectService.validateProjectAccess(project, member, "티켓 수정자");
+
+		// 부모 티켓 정보를 가져오기
+		Ticket ticket = getTicketById(ticketId)
+			.orElseThrow(() -> new CustomException("CANNOT_FOUND_TICKET", "티켓을 찾을 수 없습니다."));
+
+		// 티켓이 속한 프로젝트와 요청한 프로젝트가 일치하는지 확인
+		if (!ticket.getProject().equals(project)) {
+			throw new CustomException("INVALID_PROJECT", "요청한 프로젝트와 티켓의 프로젝트가 일치하지 않습니다.");
+		}
+
+		// 티켓의 정보를 변경해주기
+		ticketMapper.updateTicketFromRequest(ticket, request);
+
+		// 부모 티켓 정보 설정
+		setParentTicket(ticket, request.getParentTicketId());
+		// 담당자 정보 설정
+		setAssignee(ticket, request.getAssigneeId(), project);
+
+		// 저장하기
+		return ticketRepository.save(ticket);
+	}
+
 	// ------private------
 
 	private Optional<Ticket> getTicketById(Long ticketId) {
 		return ticketRepository.findById(ticketId);
 	}
 
+	private void setParentTicket(Ticket ticket, Long parentTicketId) {
+		if (parentTicketId != null) {
+			Ticket parentTicket = getTicketById(parentTicketId)
+				.orElseThrow(() -> new CustomException("CANNOT_FOUND_TICKET", "부모 티켓을 찾을 수 없습니다."));
+			ticket.setParentTicket(parentTicket);
+		}
+	}
+
+	private void setAssignee(Ticket ticket, Long assigneeId, Project project) {
+		if (assigneeId != null) {
+			Member assignee = memberService.getMemberById(assigneeId);
+			projectService.validateProjectAccess(project, assignee, "티켓 담당자");
+			ticket.setAssignee(assignee);
+		}
+	}
 }
