@@ -309,7 +309,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.map(pm -> {
 				Member member = pm.getMember();
 				return ProjectMemberResponse.builder()
-					.memberId(pm.getId())
+					.projectMemberId(pm.getId())
 					.name(member.getRealName())
 					.email(member.getEmail())
 					.positionType(pm.getPositionType())
@@ -349,7 +349,7 @@ public class ProjectServiceImpl implements ProjectService {
 		Member updatedMember = updatedProjectMember.getMember();
 
 		return ProjectMemberResponse.builder()
-			.memberId(updatedMember.getId())
+			.projectMemberId(updatedMember.getId())
 			.name(updatedMember.getRealName())
 			.email(updatedMember.getEmail())
 			.state(updatedProjectMember.getState())
@@ -415,7 +415,7 @@ public class ProjectServiceImpl implements ProjectService {
 		Member updatedMember = updatedProjectMember.getMember();
 
 		return ProjectMemberResponse.builder()
-			.memberId(updatedMember.getId())
+			.projectMemberId(updatedMember.getId())
 			.name(updatedMember.getRealName())
 			.email(updatedMember.getEmail())
 			.state(updatedProjectMember.getState())

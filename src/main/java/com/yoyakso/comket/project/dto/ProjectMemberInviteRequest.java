@@ -8,6 +8,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ProjectMemberInviteRequest {
-	private List<Long> memberIdList;
+	private List<Long> workspaceMemberIdList;
 	private String positionType;
 }
