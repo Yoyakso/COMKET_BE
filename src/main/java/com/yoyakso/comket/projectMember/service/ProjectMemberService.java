@@ -21,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ProjectMemberService {
-	private final ProjectMemberRepository memberRepository;
 	private final ProjectMemberRepository projectMemberRepository;
 	private final MemberService memberService;
 	private final ProjectRepository projectRepository;
@@ -34,16 +33,16 @@ public class ProjectMemberService {
 			.positionType(positionType)
 			.build();
 
-		memberRepository.save(projectMember);
+		projectMemberRepository.save(projectMember);
 	}
 
 	public ProjectMember getProjectMemberByProjectIdAndMemberId(Long projectId, Long memberId) {
-		return memberRepository.findByProjectIdAndMemberId(projectId, memberId)
+		return projectMemberRepository.findByProjectIdAndMemberId(projectId, memberId)
 			.orElseThrow(() -> new CustomException("CANNOT_FOUND_PROJECTMEMBER", "프로젝트 멤버를 찾을 수 없습니다."));
 	}
 
 	public List<Project> getProjectListByMemberId(Member member) {
-		return memberRepository.findAllPublicProjectsByMember(member);
+		return projectMemberRepository.findAllPublicProjectsByMember(member);
 	}
 
 	public List<ProjectMemberResponse> inviteMembersToProject(
@@ -58,6 +57,8 @@ public class ProjectMemberService {
 
 		return returnInvitedMembersToProject(projectId, request.getPositionType(), newMemberIds);
 	}
+
+	// ---private method---
 
 	private List<Long> filterNewMemberIds(Long projectId, List<Long> memberIdList) {
 		List<Long> existingMemberIds = projectMemberRepository.findAllByProjectId(projectId).stream()

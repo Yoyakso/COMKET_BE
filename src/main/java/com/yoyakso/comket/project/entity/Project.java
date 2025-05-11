@@ -1,6 +1,8 @@
 package com.yoyakso.comket.project.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -9,7 +11,9 @@ import com.yoyakso.comket.file.entity.File;
 import com.yoyakso.comket.project.enums.ProjectState;
 import com.yoyakso.comket.workspace.entity.Workspace;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -51,6 +55,11 @@ public class Project {
 	@Column(length = 255)
 	private String description;
 
+	@ElementCollection // List 사용
+	@CollectionTable(name = "project_tags", joinColumns = @JoinColumn(name = "project_id"))
+	@Column(name = "tag")
+	private List<String> tags = new ArrayList<>();
+
 	@NotNull
 	private Boolean isPublic;
 
@@ -84,5 +93,9 @@ public class Project {
 
 	public void updateProfileFile(File profileFile) {
 		this.profileFile = profileFile;
+	}
+
+	public void updateTags(List<String> tags) {
+		this.tags = tags;
 	}
 }
