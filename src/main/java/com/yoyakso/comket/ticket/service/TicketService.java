@@ -1,5 +1,6 @@
 package com.yoyakso.comket.ticket.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -28,9 +29,9 @@ public class TicketService {
 
 	@Transactional
 	public TicketInfoResponse createTicket(String projectName, TicketCreateRequest request,
-		Member creator) {// 요청 DTO를 엔티티로 변환
+		Member creator) {
 
-		Ticket ticket = ticketMapper.toEntity(request, projectName, creator);
+		Ticket ticket = ticketMapper.toEntity(request, creator);
 
 		// 프로젝트 정보를 가져오기
 		Project project = projectService.getProjectByProjectName(projectName);
@@ -54,13 +55,40 @@ public class TicketService {
 		// 티켓 저장
 		ticketRepository.save(ticket);
 
-		// 저장된 티켓을 응답 DTO로 변환
 		return ticketMapper.toResponse(ticket);
 	}
 
+	// 티켓 목록 조회
+	@Transactional
+	public List<Ticket> getTickets(String projectName, Member member) {
+		// 프로젝트 정보를 가져오기
+		Project project = projectService.getProjectByProjectName(projectName);
+		projectService.validateProjectAccess(project, member, "티켓 조회자");
+		// 프로젝트에 속한 티켓 목록을 조회
+		return ticketRepository.findByProject(project);
+	}
+
+	// 티켓 상세 조회
+	public Ticket getTicket(String projectName, Long ticketId, Member member) {
+		// 프로젝트 정보를 가져오기
+		Project project = projectService.getProjectByProjectName(projectName);
+		projectService.validateProjectAccess(project, member, "티켓 조회자");
+
+		// 티켓 정보를 가져오기
+		Ticket ticket = getTicketById(ticketId)
+			.orElseThrow(() -> new CustomException("CANNOT_FOUND_TICKET", "티켓을 찾을 수 없습니다."));
+
+		// 티켓이 속한 프로젝트와 요청한 프로젝트가 일치하는지 확인
+		if (!ticket.getProject().equals(project)) {
+			throw new CustomException("INVALID_PROJECT", "요청한 프로젝트와 티켓의 프로젝트가 일치하지 않습니다.");
+		}
+
+		return ticket;
+	}
 	// ------private------
 
 	private Optional<Ticket> getTicketById(Long ticketId) {
 		return ticketRepository.findById(ticketId);
 	}
+
 }

@@ -1,6 +1,9 @@
 package com.yoyakso.comket.ticket.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +14,7 @@ import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.ticket.dto.request.TicketCreateRequest;
 import com.yoyakso.comket.ticket.dto.response.TicketInfoResponse;
+import com.yoyakso.comket.ticket.entity.Ticket;
 import com.yoyakso.comket.ticket.mapper.TicketMapper;
 import com.yoyakso.comket.ticket.service.TicketService;
 
@@ -36,4 +40,26 @@ public class TicketController {
 		return ResponseEntity.ok(info);
 	}
 
+	// 티켓 목록 조회
+	@GetMapping("")
+	public ResponseEntity<List<TicketInfoResponse>> getTickets(
+		@RequestParam("project_name") String projectName
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		List<Ticket> tickets = ticketService.getTickets(projectName, member);
+		return ResponseEntity.ok(tickets.stream()
+			.map(ticketMapper::toResponse)
+			.toList());
+	}
+
+	// 티켓 상세 조회
+	@GetMapping("/{ticketId}")
+	public ResponseEntity<TicketInfoResponse> getTicket(
+		@RequestParam("project_name") String projectName,
+		@RequestParam("ticket_id") Long ticketId
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		Ticket ticket = ticketService.getTicket(projectName, ticketId, member);
+		return ResponseEntity.ok(ticketMapper.toResponse(ticket));
+	}
 }

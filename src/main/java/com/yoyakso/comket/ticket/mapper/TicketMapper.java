@@ -1,15 +1,20 @@
 package com.yoyakso.comket.ticket.mapper;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.ticket.dto.request.TicketCreateRequest;
 import com.yoyakso.comket.ticket.dto.response.TicketInfoResponse;
 import com.yoyakso.comket.ticket.entity.Ticket;
 
 @Component
 public class TicketMapper {
-	public Ticket toEntity(TicketCreateRequest request, String projectName, Member creator) {
+	@Autowired
+	private MemberService memberService;
+
+	public Ticket toEntity(TicketCreateRequest request, Member creator) {
 		return Ticket.builder()
 			.name(request.getName())
 			.description(request.getDescription())
@@ -19,10 +24,6 @@ public class TicketMapper {
 			.startDate(request.getStartDate())
 			.endDate(request.getEndDate())
 			.creator(creator)
-			// .project(new Project(projectName))
-			// .parentTicket(
-			// 	request.getParentTicketId() != null ? Ticket.builder().id(request.getParentTicketId()).build() : null)
-			// .assignee(request.getAssigneeId() != null ? Member.builder().id(request.getAssigneeId()).build() : null)
 			.build();
 	}
 
@@ -38,8 +39,9 @@ public class TicketMapper {
 			.endDate(ticket.getEndDate())
 			.createdAt(ticket.getCreatedAt())
 			.updatedAt(ticket.getUpdatedAt())
-			.assigneeId(ticket.getAssignee() != null ? ticket.getAssignee().getId() : null)
-			.creatorId(ticket.getCreator().getId())
+			.assigneeMember(
+				ticket.getAssignee() != null ? memberService.buildMemberInfoResponse(ticket.getAssignee()) : null)
+			.creatorMember(memberService.buildMemberInfoResponse(ticket.getCreator()))
 			.parentTicketId(ticket.getParentTicket() != null ? ticket.getParentTicket().getId() : null)
 			.build();
 	}
