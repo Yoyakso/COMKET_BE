@@ -67,7 +67,7 @@ public class WorkspaceService {
 		if (workspaceUpdateRequest.getProfileFileId() != null) {
 			File profileFile = fileService.getFileById(workspaceUpdateRequest.getProfileFileId());
 			fileService.validateFileCategory(profileFile, FileCategory.WORKSPACE_PROFILE);
-			workspace.setProfileFile(profileFile);
+			originalWorkspace.setProfileFile(profileFile);
 		}
 		validateAdminPermission(member, originalWorkspace);
 		validateWorkspaceNameUniquenessForUpdate(workspace.getName(), originalWorkspace.getName());

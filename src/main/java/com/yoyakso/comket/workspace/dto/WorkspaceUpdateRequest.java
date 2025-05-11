@@ -11,6 +11,7 @@ import lombok.Data;
 public class WorkspaceUpdateRequest {
 	private String name;
 	private String description;
+	@JsonProperty("is_public")
 	private Boolean isPublic;
 	private WorkspaceState state;
 	@JsonProperty("profile_file_id")
