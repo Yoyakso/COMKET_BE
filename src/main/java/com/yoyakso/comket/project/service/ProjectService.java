@@ -10,6 +10,7 @@ import com.yoyakso.comket.project.dto.ProjectInfoResponse;
 import com.yoyakso.comket.project.dto.ProjectMemberInviteRequest;
 import com.yoyakso.comket.project.dto.ProjectMemberResponse;
 import com.yoyakso.comket.project.dto.ProjectMemberUpdateRequest;
+import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.project.enums.ProjectState;
 
 @Service
@@ -42,4 +43,8 @@ public interface ProjectService {
 
 	List<ProjectMemberResponse> inviteProjectMembers(String workSpaceName, Long projectId, Member member,
 		ProjectMemberInviteRequest request);
+
+	Project getProjectByProjectName(String projectName);
+
+	void validateProjectAccess(Project project, Member member, String target);
 }
