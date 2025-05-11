@@ -49,14 +49,13 @@ public class ProjectServiceImpl implements ProjectService {
 	@Override
 	public ProjectInfoResponse createProject(String workSpaceName, ProjectCreateRequest request,
 		Member member) {
-		//TODO: 워크스페이스-멤버에서 권한이 오너, 관리자인 경우에만 프로젝트를 생성할 수 있도록 해야함.
 
 		// 워크스페이스 조회
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
 		// 생성하는 프로젝트 이름의 중복 검사
-		if (projectRepository.existsByName(request.getName())) {
+		if (projectRepository.existsByNameAndState(request.getName(), ProjectState.ACTIVE)) {
 			throw new CustomException("PROJECT_NAME_DUPLICATE", "프로젝트 이름이 중복되었습니다.");
 		}
 
@@ -119,7 +118,8 @@ public class ProjectServiceImpl implements ProjectService {
 			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
 
 		// 수정하는 프로젝트 이름의 중복 검사, 프로젝트 수정의 경우 기존 프로젝트 이름도 중복 처리되어 비교 추가
-		if (projectRepository.existsByName(request.getName()) && (!Objects.equals(originProject.getName(),
+		if (projectRepository.existsByNameAndState(request.getName(), ProjectState.ACTIVE) && (!Objects.equals(
+			originProject.getName(),
 			request.getName()))) {
 			throw new CustomException("PROJECT_NAME_DUPLICATE", "프로젝트 이름이 중복되었습니다.");
 		}
@@ -227,8 +227,8 @@ public class ProjectServiceImpl implements ProjectService {
 
 		// 워크스페이스 권한에 따라 모든 프로젝트를 리턴 or 공개 프로젝트만 리턴
 		List<Project> projects = (positionType.equals("ADMIN") || positionType.equals("OWNER"))
-			? projectRepository.findAllByWorkspace(workSpace)
-			: projectRepository.findAllByWorkspaceAndIsPublicTrue(workSpace);
+			? projectRepository.findAllByWorkspaceAndState(workSpace, ProjectState.ACTIVE)
+			: projectRepository.findAllByWorkspaceAndIsPublicTrueAndState(workSpace, ProjectState.ACTIVE);
 
 		return projects.stream()
 			.map(project -> {

@@ -207,7 +207,7 @@ public class ProjectServiceTest {
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
 		when(workspaceMemberService.getWorkspaceMemberById(mockWorkspaceMember.getId()))
 			.thenReturn(mockWorkspaceMember);
-		when(projectRepository.findAllByWorkspaceAndIsPublicTrue(mockWorkspace))
+		when(projectRepository.findAllByWorkspaceAndIsPublicTrueAndState(mockWorkspace, ProjectState.ACTIVE))
 			.thenReturn(List.of(savedProject1, savedProject2, savedProject3));
 		when(projectMemberRepository.findByProjectIdAndPositionType(100L, "OWNER"))
 			.thenReturn(mockProjectMember1);
