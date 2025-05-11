@@ -91,6 +91,9 @@ public class MemberService {
 			fileService.validateFileCategory(profileFile, FileCategory.MEMBER_PROFILE);
 			member.setProfileFile(profileFile);
 		}
+		member.setDepartment(updateRequest.getDepartment());
+		member.setRole(updateRequest.getRole());
+		member.setResponsibility(updateRequest.getResponsibility());
 		return memberRepository.save(member);
 	}
 
