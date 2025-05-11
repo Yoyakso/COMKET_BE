@@ -15,6 +15,9 @@ import com.yoyakso.comket.project.repository.ProjectRepository;
 import com.yoyakso.comket.projectMember.entity.ProjectMember;
 import com.yoyakso.comket.projectMember.enums.ProjectMemberState;
 import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
+import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
+import com.yoyakso.comket.workspaceMember.repository.WorkspaceMemberRepository;
+import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +27,8 @@ public class ProjectMemberService {
 	private final ProjectMemberRepository projectMemberRepository;
 	private final MemberService memberService;
 	private final ProjectRepository projectRepository;
+	private final WorkspaceMemberRepository workspaceMemberRepository;
+	private final WorkspaceMemberService workspaceMemberService;
 
 	public void addProjectMember(Project project, Member member, String positionType) {
 		ProjectMember projectMember = ProjectMember.builder()
@@ -49,22 +54,28 @@ public class ProjectMemberService {
 		Long projectId,
 		ProjectMemberInviteRequest request
 	) {
-		if (request.getMemberIdList() == null || request.getMemberIdList().isEmpty()) {
+		if (request.getWorkspaceMemberIdList() == null || request.getWorkspaceMemberIdList().isEmpty()) {
 			throw new CustomException("INVALID_MEMBER_LIST", "초대할 멤버 ID 리스트가 비어 있습니다.");
 		}
 
-		List<Long> newMemberIds = filterNewMemberIds(projectId, request.getMemberIdList());
+		List<Long> newMemberIds = filterNewMemberIds(projectId, request.getWorkspaceMemberIdList());
 
 		return returnInvitedMembersToProject(projectId, request.getPositionType(), newMemberIds);
 	}
 
 	// ---private method---
 
-	private List<Long> filterNewMemberIds(Long projectId, List<Long> memberIdList) {
+	private List<Long> filterNewMemberIds(Long projectId, List<Long> WorkspaceMemberIdList) {
 		List<Long> existingMemberIds = projectMemberRepository.findAllByProjectId(projectId).stream()
 			.filter(projectMember -> projectMember.getState() != ProjectMemberState.DELETED)
 			.map(projectMember -> projectMember.getMember().getId())
 			.toList();
+
+		List<Long> memberIdList = new ArrayList<>();
+		for (Long memberId : WorkspaceMemberIdList) {
+			WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberById(memberId);
+			memberIdList.add(workspaceMember.getMember().getId());
+		}
 
 		List<Long> newMemberIds = memberIdList.stream()
 			.filter(memberId -> !existingMemberIds.contains(memberId))
@@ -102,7 +113,7 @@ public class ProjectMemberService {
 			ProjectMember newProjectMember = projectMemberRepository.save(projectMember);
 
 			ProjectMemberResponse response = ProjectMemberResponse.builder()
-				.memberId(member.getId())
+				.projectMemberId(member.getId())
 				.name(member.getRealName())
 				.email(member.getEmail())
 				.positionType(newProjectMember.getPositionType())
