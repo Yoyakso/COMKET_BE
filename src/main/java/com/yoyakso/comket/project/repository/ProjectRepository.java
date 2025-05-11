@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.yoyakso.comket.project.entity.Project;
+import com.yoyakso.comket.project.enums.ProjectState;
 import com.yoyakso.comket.workspace.entity.Workspace;
 
 import jakarta.validation.constraints.NotNull;
@@ -13,9 +14,13 @@ import jakarta.validation.constraints.Size;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
-	List<Project> findAllByWorkspaceAndIsPublicTrue(Workspace workspace);
 
-	List<Project> findAllByWorkspace(Workspace workspace);
+	List<Project> findAllByWorkspaceAndIsPublicTrueAndState(Workspace workspace, ProjectState state);
+
+	List<Project> findAllByWorkspaceAndState(Workspace workspace, ProjectState state);
 
 	boolean existsByName(@NotNull @Size(min = 2, max = 100) String name);
+
+	boolean existsByNameAndState(@NotNull @Size(min = 2, max = 100) String name, ProjectState state);
+
 }
