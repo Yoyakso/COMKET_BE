@@ -87,10 +87,10 @@ public class WorkspaceMemberService {
 
 	public List<WorkspaceMemberInfoResponse> inviteMembersToWorkspace(Workspace workspace,
 		WorkspaceMemberCreateRequest workspaceMemberCreateRequest) {
-		List<Long> memberIdList = validateMemberIdList(workspaceMemberCreateRequest.getMemberIdList());
-		List<Long> newMemberIds = filterNewMemberIds(workspace.getId(), memberIdList);
-		createWorkspaceMembers(workspace, newMemberIds, workspaceMemberCreateRequest);
-		return buildResponse(workspace.getId(), newMemberIds);
+		List<String> memberEmailList = workspaceMemberCreateRequest.getMemberEmailList();
+		List<String> newMemberEmailList = filterNewMemberEmails(workspace.getId(), memberEmailList);
+		createWorkspaceMembers(workspace, newMemberEmailList, workspaceMemberCreateRequest);
+		return buildResponse(workspace.getId(), newMemberEmailList);
 	}
 
 	private List<Long> validateMemberIdList(List<Long> memberIdList) {
@@ -100,26 +100,26 @@ public class WorkspaceMemberService {
 		return memberIdList;
 	}
 
-	private List<Long> filterNewMemberIds(Long workspaceId, List<Long> memberIdList) {
-		List<Long> existingMemberIds = getWorkspaceMembersByWorkspaceId(workspaceId).stream()
-			.filter(workspaceMember -> workspaceMember.getState() != WorkspaceMemberState.DELETED)
-			.map(workspaceMember -> workspaceMember.getMember().getId())
+	private List<String> filterNewMemberEmails(Long workspaceId, List<String> memberEmailList) {
+		List<String> existingMemberEmails = getWorkspaceMembersByWorkspaceId(workspaceId).stream()
+			.filter(workspaceMember -> workspaceMember.getState() == WorkspaceMemberState.DELETED)
+			.map(workspaceMember -> workspaceMember.getMember().getEmail()) // 이메일 추출
 			.toList();
 
-		List<Long> newMemberIds = memberIdList.stream()
-			.filter(memberId -> !existingMemberIds.contains(memberId))
+		List<String> newMemberEmails = memberEmailList.stream()
+			.filter(memberEmail -> !existingMemberEmails.contains(memberEmail)) // 이메일 비교
 			.toList();
 
-		if (newMemberIds.isEmpty()) {
+		if (newMemberEmails.isEmpty()) {
 			throw new CustomException("MEMBER_ALREADY_INVITED", "이미 초대된 멤버가 있습니다.");
 		}
-		return newMemberIds;
+		return newMemberEmails;
 	}
 
-	private void createWorkspaceMembers(Workspace workspace, List<Long> newMemberIds,
+	private void createWorkspaceMembers(Workspace workspace, List<String> newMemberEmailList,
 		WorkspaceMemberCreateRequest workspaceMemberCreateRequest) {
-		for (Long memberId : newMemberIds) {
-			Member member = memberService.getMemberById(memberId);
+		for (String memberEmail : newMemberEmailList) {
+			Member member = memberService.getMemberByEmail(memberEmail);
 			if (member == null) {
 				throw new CustomException("CANNOT_FOUND_MEMBER", "멤버를 찾을 수 없습니다.");
 			}
@@ -133,9 +133,9 @@ public class WorkspaceMemberService {
 		}
 	}
 
-	private List<WorkspaceMemberInfoResponse> buildResponse(Long workspaceId, List<Long> newMemberIds) {
+	private List<WorkspaceMemberInfoResponse> buildResponse(Long workspaceId, List<String> newMemberEmailList) {
 		return workspaceMemberRepository.findByWorkspaceId(workspaceId).stream()
-			.filter(workspaceMember -> newMemberIds.contains(workspaceMember.getMember().getId()))
+			.filter(workspaceMember -> newMemberEmailList.contains(workspaceMember.getMember().getEmail()))
 			.filter(workspaceMember -> workspaceMember.getState() == WorkspaceMemberState.ACTIVE)
 			.map(workspaceMember -> WorkspaceMemberInfoResponse.builder()
 				.workspaceMemberid(workspaceMember.getId())
