@@ -3,6 +3,7 @@ package com.yoyakso.comket.ticket.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -76,5 +77,29 @@ public class TicketController {
 		Member member = memberService.getAuthenticatedMember();
 		Ticket ticket = ticketService.updateTicket(projectName, ticketId, request, member);
 		return ResponseEntity.ok(ticketMapper.toResponse(ticket));
+	}
+
+	// 티켓 삭제
+	@DeleteMapping("/{ticket_id}")
+	public ResponseEntity<Void> deleteTicket(
+		@RequestParam("project_name") String projectName,
+		@PathVariable("ticket_id") Long ticketId
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		ticketService.deleteTicket(projectName, ticketId, member);
+		return ResponseEntity.noContent().build();
+	}
+
+	// 티켓 검색
+	@GetMapping("/search")
+	public ResponseEntity<List<TicketInfoResponse>> searchTickets(
+		@RequestParam("project_name") String projectName,
+		@RequestParam("query") String query
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		List<Ticket> tickets = ticketService.searchTickets(projectName, query, member);
+		return ResponseEntity.ok(tickets.stream()
+			.map(ticketMapper::toResponse)
+			.toList());
 	}
 }

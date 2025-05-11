@@ -95,4 +95,8 @@ public class Ticket {
 	@JoinColumn(name = "creator_member_id", nullable = false)
 	private Member creator;
 
+	//삭제 여부
+	//티켓은 삭제여부만 존재하기에 isDeleted로 명명
+	private boolean isDeleted = false;
+
 }
