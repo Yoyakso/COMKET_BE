@@ -31,4 +31,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 		@Param("endDate") LocalDate endDate,
 		@Param("keyword") String keyword
 	);
+
+	Long countByParentTicket(Ticket t);
 }

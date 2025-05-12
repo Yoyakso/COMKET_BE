@@ -22,6 +22,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -100,4 +101,6 @@ public class Ticket {
 	//티켓은 삭제여부만 존재하기에 isDeleted로 명명
 	private boolean isDeleted = false;
 
+	@Transient
+	private Long subTicketCount = 0L; // 서브 티켓 개수
 }

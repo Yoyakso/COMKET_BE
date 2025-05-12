@@ -39,4 +39,6 @@ public class TicketInfoResponse {
 	private MemberInfoResponse assigneeMember;
 	@JsonProperty("creator_member")
 	private MemberInfoResponse creatorMember;
+	@JsonProperty("sub_ticket_count")
+	private Long subTicketCount;
 }

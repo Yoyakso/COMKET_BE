@@ -47,6 +47,7 @@ public class TicketMapper {
 				ticket.getAssignee() != null ? memberService.buildMemberInfoResponse(ticket.getAssignee()) : null)
 			.creatorMember(memberService.buildMemberInfoResponse(ticket.getCreator()))
 			.parentTicketId(ticket.getParentTicket() != null ? ticket.getParentTicket().getId() : null)
+			.subTicketCount(ticket.getSubTicketCount())
 			.build();
 	}
 
