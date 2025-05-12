@@ -12,6 +12,7 @@ import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.project.service.ProjectService;
 import com.yoyakso.comket.ticket.dto.request.TicketCreateRequest;
+import com.yoyakso.comket.ticket.dto.request.TicketDeleteRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketStateUpdateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketTypeUpdateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketUpdateRequest;
@@ -182,6 +183,27 @@ public class TicketService {
 		tickets.forEach(ticket -> ticket.setType(request.getType()));
 		ticketRepository.saveAll(tickets);
 		return tickets;
+	}
+
+	@Transactional
+	public void deleteTickets(String projectName, TicketDeleteRequest request, Member member) {
+		// 프로젝트 정보를 가져오기
+		Project project = projectService.getProjectByProjectName(projectName);
+		projectService.validateProjectAccess(project, member, "티켓 삭제자");
+
+		// 티켓 목록을 가져오기
+		List<Ticket> tickets = ticketRepository.findAllById(request.getTicketIds());
+
+		if (tickets.isEmpty()) {
+			throw new CustomException("CANNOT_FOUND_TICKET", "티켓을 찾을 수 없습니다.");
+		}
+
+		if (tickets.stream().anyMatch(ticket -> !ticket.getProject().equals(project))) {
+			throw new CustomException("INVALID_PROJECT", "요청한 프로젝트와 티켓의 프로젝트가 일치하지 않습니다.");
+		}
+
+		tickets.forEach(ticket -> ticket.setDeleted(true));
+		ticketRepository.saveAll(tickets);
 	}
 
 	// ------private------

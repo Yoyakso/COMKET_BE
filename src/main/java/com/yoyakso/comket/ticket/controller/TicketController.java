@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.ticket.dto.request.TicketCreateRequest;
+import com.yoyakso.comket.ticket.dto.request.TicketDeleteRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketStateUpdateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketTypeUpdateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketUpdateRequest;
@@ -86,7 +87,7 @@ public class TicketController {
 	@PatchMapping("/state")
 	public ResponseEntity<List<TicketInfoResponse>> updateTicketStates(
 		@RequestParam("project_name") String projectName,
-		@RequestBody TicketStateUpdateRequest request
+		@Valid @RequestBody TicketStateUpdateRequest request
 	) {
 		Member member = memberService.getAuthenticatedMember();
 		List<Ticket> updatedTickets = ticketService.updateTicketStates(projectName, request, member);
@@ -99,7 +100,7 @@ public class TicketController {
 	@PatchMapping("/type")
 	public ResponseEntity<List<TicketInfoResponse>> updateTicketTypes(
 		@RequestParam("project_name") String projectName,
-		@RequestBody TicketTypeUpdateRequest request
+		@Valid @RequestBody TicketTypeUpdateRequest request
 	) {
 		Member member = memberService.getAuthenticatedMember();
 		List<Ticket> updatedTickets = ticketService.updateTicketTypes(projectName, request, member);
@@ -108,7 +109,18 @@ public class TicketController {
 			.toList());
 	}
 
-	// 티켓 삭제
+	// 여러 티켓 삭제
+	@DeleteMapping("")
+	public ResponseEntity<Void> deleteTickets(
+		@RequestParam("project_name") String projectName,
+		@Valid @RequestBody TicketDeleteRequest request
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		ticketService.deleteTickets(projectName, request, member);
+		return ResponseEntity.noContent().build();
+	}
+
+	// 개별 티켓 삭제
 	@DeleteMapping("/{ticket_id}")
 	public ResponseEntity<Void> deleteTicket(
 		@RequestParam("project_name") String projectName,
