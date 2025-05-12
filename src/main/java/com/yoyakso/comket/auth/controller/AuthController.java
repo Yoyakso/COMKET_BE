@@ -16,6 +16,8 @@ import com.yoyakso.comket.auth.dto.TokenReissueRequest;
 import com.yoyakso.comket.auth.dto.TokenReissueResponse;
 import com.yoyakso.comket.auth.service.AuthService;
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.service.MemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 @CrossOrigin("http://localhost:3333")
 public class AuthController {
 	private final AuthService authService;
+	private final MemberService memberService;
 
 	@Operation(method = "GET", description = "구글 OAuth2 로그인 처리")
 	@GetMapping("/oauth2/google/login")
@@ -59,5 +62,13 @@ public class AuthController {
 		TokenReissueResponse response = authService.reissueToken(accessToken, request.getRefreshToken());
 
 		return ResponseEntity.ok(response);
+	}
+
+	@Operation(method = "POST", description = "로그아웃 API")
+	@PostMapping("/logout")
+	public ResponseEntity<Void> logout() {
+		Member member = memberService.getAuthenticatedMember();
+		authService.logout(member);
+		return ResponseEntity.noContent().build();
 	}
 }

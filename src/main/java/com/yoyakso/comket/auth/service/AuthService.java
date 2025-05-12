@@ -90,7 +90,7 @@ public class AuthService {
 		String email = jwtTokenProvider.getEmailFromToken(expiredAccessToken);
 		Member member = memberRepository.findByEmail(email);
 
-		String storedRefreshToken = refreshTokenService.getRefreshToken(email)
+		String storedRefreshToken = refreshTokenService.getRefreshToken(member.getId().toString())
 			.orElseThrow(() -> new CustomException("REFRESH_NOT_FOUND", "RefreshToken이 없습니다."));
 
 		if (!storedRefreshToken.equals(refreshToken)) {
@@ -98,14 +98,17 @@ public class AuthService {
 		}
 
 		String newAccessToken = jwtTokenProvider.createAccessToken(email);
-		String newRefreshToken = jwtTokenProvider.createRefreshToken(email); // 새로 생성 (회전 전략)
-
+		String newRefreshToken = jwtTokenProvider.createRefreshToken(email); // 새로 생성 (rotate)
 		refreshTokenService.saveRefreshToken(member.getId().toString(), newRefreshToken); // Redis에 덮어쓰기
 
 		return TokenReissueResponse.builder()
 			.accessToken(newAccessToken)
 			.refreshToken(newRefreshToken)
 			.build();
+	}
+
+	public void logout(Member member) {
+		refreshTokenService.deleteRefreshToken(member.getId().toString());
 	}
 
 	// ---private method---
