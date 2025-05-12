@@ -91,8 +91,16 @@ public class ProjectServiceTest {
 		Member member = new Member();
 		member.setId(1L);
 
+		ProjectMember pm = ProjectMember.builder()
+			.project(savedProject)
+			.member(member)
+			.state(ProjectMemberState.ACTIVE)
+			.positionType("OWNER")
+			.build();
+
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
 		when(projectRepository.save(any(Project.class))).thenReturn(savedProject);
+		when(projectMemberService.addProjectMember(savedProject, member, "OWNER")).thenReturn(pm);
 
 		projectRepository.save(savedProject);
 
