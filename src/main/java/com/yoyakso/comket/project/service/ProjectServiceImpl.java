@@ -435,7 +435,7 @@ public class ProjectServiceImpl implements ProjectService {
 		ProjectMember projectMember = projectMemberService.getProjectMemberByProjectIdAndMemberId(project.getId(),
 			member.getId());
 		if (projectMember == null || projectMember.getState() != ProjectMemberState.ACTIVE) {
-			throw new CustomException("PROJECT_AUTHORIZATION_FAILED", target + "에 대한 프로젝트에 대한 권한이 없습니다.");
+			throw new CustomException("PROJECT_ACCESS_FAILED", target + "에 대한 프로젝트에 대한 권한이 없습니다.");
 		}
 	}
 
