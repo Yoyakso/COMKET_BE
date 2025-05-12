@@ -21,7 +21,8 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtTokenProvider {
 	private final SecretKey secretKey;
-	private final long expirationTime = 1000 * 60 * 60 * 24; // 1일
+	private final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60; // 1시간
+	private final long REFRESH_TOKEN_EXPIRATION = 1000L * 60 * 60 * 24 * 30; // 30일
 
 	public JwtTokenProvider(@Value("${jwt.secret}") String secret) {
 		assert secret != null;
