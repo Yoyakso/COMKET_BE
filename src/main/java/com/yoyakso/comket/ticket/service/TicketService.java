@@ -1,5 +1,6 @@
 package com.yoyakso.comket.ticket.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -122,6 +123,18 @@ public class TicketService {
 		ticket.setDeleted(true);
 	}
 
+	@Transactional
+	public List<Ticket> searchTickets(String projectName, Member member, List<String> requestStates,
+		List<String> requestPriorities, List<Long> requestAssignees, LocalDate requestEndDate, String keyword) {
+		// 프로젝트 정보 가져오기 및 접근 권한 검증
+		Project project = projectService.getProjectByProjectName(projectName);
+		projectService.validateProjectAccess(project, member, "티켓 조회자");
+
+		// 필터링 및 검색 로직 호출
+		return ticketRepository.searchAndFilterTickets(project.getName(), requestStates, requestPriorities,
+			requestAssignees, requestEndDate, keyword);
+	}
+
 	// ------private------
 
 	private Optional<Ticket> getTicketById(Long ticketId) {
@@ -153,12 +166,4 @@ public class TicketService {
 		return ticket;
 	}
 
-	public List<Ticket> searchTickets(String projectName, String query, Member member) {
-		// 프로젝트 정보를 가져오기ß
-		Project project = projectService.getProjectByProjectName(projectName);
-		projectService.validateProjectAccess(project, member, "티켓 검색자");
-
-		// 삭제되지 않은 티켓 목록을 조회
-		return ticketRepository.findByProjectAndIsDeletedFalseAndNameContaining(project, query);
-	}
 }

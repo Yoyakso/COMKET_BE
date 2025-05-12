@@ -1,5 +1,6 @@
 package com.yoyakso.comket.ticket.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -94,10 +95,20 @@ public class TicketController {
 	@GetMapping("/search")
 	public ResponseEntity<List<TicketInfoResponse>> searchTickets(
 		@RequestParam("project_name") String projectName,
-		@RequestParam("query") String query
+		// 티켓 상태 필터링
+		@RequestParam(value = "state", required = false) List<String> requestStates,
+		// 티켓 우선순위 필터링
+		@RequestParam(value = "priority", required = false) List<String> requestPriorities,
+		// 티켓 담당자 필터링
+		@RequestParam(value = "assignee_member_id", required = false) List<Long> requestAssignees,
+		// 마감 일자 필터링
+		@RequestParam(value = "end_date", required = false) LocalDate requestEndDate,
+		// 키워드 검색
+		@RequestParam(value = "keyword", required = false) String keyword
 	) {
 		Member member = memberService.getAuthenticatedMember();
-		List<Ticket> tickets = ticketService.searchTickets(projectName, query, member);
+		List<Ticket> tickets = ticketService.searchTickets(projectName, member,
+			requestStates, requestPriorities, requestAssignees, requestEndDate, keyword);
 		return ResponseEntity.ok(tickets.stream()
 			.map(ticketMapper::toResponse)
 			.toList());

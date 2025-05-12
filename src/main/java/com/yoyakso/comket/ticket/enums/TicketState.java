@@ -6,10 +6,13 @@ import lombok.Getter;
 
 @Getter
 public enum TicketState {
-	OPEN(1),
+	TODO(1),
 	IN_PROGRESS(2),
-	CLOSED(3),
-	DELETED(4);
+	DONE(3),
+	HOLD(4),
+	DROP(5),
+	BACKLOG(6),
+	DELETED(7);
 
 	private final int stateValue;
 

@@ -51,6 +51,7 @@ public class Ticket {
 	private String description;
 
 	//티켓 타입
+	@Enumerated(EnumType.STRING)
 	private TicketType type;
 
 	//프로젝트
