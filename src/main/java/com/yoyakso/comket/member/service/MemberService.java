@@ -68,7 +68,7 @@ public class MemberService {
 		member.setPassword(passwordEncoder.encode(member.getPassword()));
 		memberRepository.save(member);
 
-		String token = jwtTokenProvider.createToken(member.getEmail());
+		String token = jwtTokenProvider.createAccessToken(member.getEmail());
 
 		return MemberRegisterResponse.builder()
 			.memberId(member.getId())
@@ -109,7 +109,8 @@ public class MemberService {
 				.build();
 		}
 
-		String token = jwtTokenProvider.createToken(member.getEmail());
+		String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
+		String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
 
 		return LoginResponse.builder()
 			.userId(member.getId())
