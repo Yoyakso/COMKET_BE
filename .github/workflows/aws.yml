@@ -77,6 +77,7 @@ jobs:
             echo "AWS_FILE_URL=${{ secrets.AWS_FILE_URL }}" >> .env
             echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env
             echo "AWS_FILE_URL=${{ secrets.AWS_FILE_URL }}" >> .env
+            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
             
             docker pull ${{ secrets.DOCKER_USERNAME }}/comket:latest  
             docker stop comket || true  
