@@ -19,6 +19,7 @@ import com.yoyakso.comket.auth.dto.GoogleTokenRequest;
 import com.yoyakso.comket.auth.dto.GoogleTokenResponse;
 import com.yoyakso.comket.auth.dto.LoginRequest;
 import com.yoyakso.comket.auth.dto.LoginResponse;
+import com.yoyakso.comket.auth.dto.TokenReissueResponse;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.jwt.JwtTokenProvider;
 import com.yoyakso.comket.member.entity.Member;
@@ -36,6 +37,7 @@ public class AuthService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final RefreshTokenService refreshTokenService;
 	@Value("${google.oauth2_client_id}")
 	private String googleClientId;
 	@Value("${google.oauth2_client_secret}")
@@ -48,13 +50,17 @@ public class AuthService {
 			throw new CustomException("LOGIN_VALIDATE_FAILED", "로그인 정보가 정확하지 않습니다.");
 		}
 
-		String token = jwtTokenProvider.createToken(member.getEmail());
+		String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
+		String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
+		refreshTokenService.saveRefreshToken(member.getId().toString(), refreshToken);
 
 		return LoginResponse.builder()
 			.userId(member.getId())
-			.accessToken(token)
 			.name(member.getRealName())
 			.email(member.getEmail())
+			.accessToken(accessToken)
+			.refreshToken(refreshToken)
+			.loginPlatformInfo("COMKET")
 			.build();
 	}
 
@@ -79,7 +85,31 @@ public class AuthService {
 		}
 	}
 
-	// 구글 로그인 토큰 요청
+	public TokenReissueResponse reissueToken(String expiredAccessToken, String refreshToken) {
+
+		String email = jwtTokenProvider.getEmailFromToken(expiredAccessToken);
+		Member member = memberRepository.findByEmail(email);
+
+		String storedRefreshToken = refreshTokenService.getRefreshToken(email)
+			.orElseThrow(() -> new CustomException("REFRESH_NOT_FOUND", "RefreshToken이 없습니다."));
+
+		if (!storedRefreshToken.equals(refreshToken)) {
+			throw new CustomException("REFRESH_INVALID", "RefreshToken이 일치하지 않습니다.");
+		}
+
+		String newAccessToken = jwtTokenProvider.createAccessToken(email);
+		String newRefreshToken = jwtTokenProvider.createRefreshToken(email); // 새로 생성 (회전 전략)
+
+		refreshTokenService.saveRefreshToken(member.getId().toString(), newRefreshToken); // Redis에 덮어쓰기
+
+		return TokenReissueResponse.builder()
+			.accessToken(newAccessToken)
+			.refreshToken(newRefreshToken)
+			.build();
+	}
+
+	// ---private method---
+
 	private GoogleTokenResponse requestGoogleToken(GoogleTokenRequest requestDto) {
 		try {
 			String tokenUrl = "https://oauth2.googleapis.com/token";
