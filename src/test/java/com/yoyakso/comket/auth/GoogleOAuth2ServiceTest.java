@@ -14,8 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.yoyakso.comket.auth.dto.GoogleDetailResponse;
-import com.yoyakso.comket.auth.dto.GoogleLoginResponse;
 import com.yoyakso.comket.auth.dto.GoogleTokenResponse;
+import com.yoyakso.comket.auth.dto.LoginResponse;
 import com.yoyakso.comket.auth.service.AuthService;
 import com.yoyakso.comket.member.service.MemberService;
 
@@ -44,11 +44,14 @@ class GoogleOAuth2ServiceTest {
 		mockDetailResponse.setName("Test User");
 
 		// 최종 로그인 응답 Mock
-		GoogleLoginResponse mockLoginResponse = new GoogleLoginResponse(
-			"mock-jwt-token",
-			"Test User",
-			"test@test.com"
-		);
+		LoginResponse mockLoginResponse = LoginResponse.builder()
+			.userId(1L)
+			.name("Test User")
+			.email("tset@gmail.com")
+			.accessToken("mock-jwt-token")
+			.refreshToken("mock-jwt-refresh-token")
+			.loginPlatformInfo("GOOGLE")
+			.build();
 
 		// when - 토큰 요청 Mock
 		Mockito.when(restTemplate.postForEntity(
@@ -69,7 +72,7 @@ class GoogleOAuth2ServiceTest {
 		Mockito.when(memberService.handleOAuth2Member(mockDetailResponse))
 			.thenReturn(mockLoginResponse);
 
-		GoogleLoginResponse response = service.handleGoogleLogin(dummyCode, "");
+		LoginResponse response = service.handleGoogleLogin(dummyCode, "");
 
 		// 검증
 		assertEquals("mock-jwt-token", response.getAccessToken());

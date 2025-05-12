@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.yoyakso.comket.auth.service.RefreshTokenService;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.jwt.JwtTokenProvider;
 import com.yoyakso.comket.member.dto.MemberRegisterRequest;
@@ -30,6 +31,9 @@ class MemberServiceTest {
 
 	@Mock
 	private JwtTokenProvider jwtTokenProvider;
+
+	@Mock
+	private RefreshTokenService refreshTokenService;
 
 	@InjectMocks
 	private MemberService memberService;
@@ -56,7 +60,8 @@ class MemberServiceTest {
 	void testRegisterMember_Success() {
 		when(memberRepository.existsByEmail(testMember.getEmail())).thenReturn(false);
 		when(passwordEncoder.encode(testMember.getPassword())).thenReturn("encodedPassword");
-		when(jwtTokenProvider.createToken(testMember.getEmail())).thenReturn("jwtToken");
+		when(jwtTokenProvider.createAccessToken(testMember.getEmail())).thenReturn("jwtAccessToken");
+		when(jwtTokenProvider.createRefreshToken(testMember.getEmail())).thenReturn("jwtRefreshToken");
 		when(memberRepository.save(any(Member.class))).thenAnswer(invocation -> {
 			Member savedMember = invocation.getArgument(0);
 			savedMember.setId(1L);
@@ -74,7 +79,8 @@ class MemberServiceTest {
 		assertNotNull(response);
 		assertEquals(1L, response.getMemberId());
 		assertEquals("test@example.com", response.getEmail());
-		assertEquals("jwtToken", response.getToken());
+		assertEquals("jwtAccessToken", response.getAccessToken());
+		assertEquals("jwtRefreshToken", response.getRefreshToken());
 		assertNull(response.getProfileFileUrl()); // 프로필 파일 URL이 null인지 확인
 	}
 
