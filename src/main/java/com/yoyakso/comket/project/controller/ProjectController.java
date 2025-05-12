@@ -129,7 +129,7 @@ public class ProjectController {
 	public ResponseEntity<ProjectInfoResponse> updateProject(
 		@PathVariable("workspaceName") String workspaceName,
 		@PathVariable("projectId") Long projectId,
-		@RequestBody ProjectCreateRequest request
+		@Valid @RequestBody ProjectCreateRequest request
 	) {
 		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
@@ -158,7 +158,7 @@ public class ProjectController {
 	public ResponseEntity<ProjectMemberResponse> patchProjectMembers(
 		@PathVariable String workspaceName,
 		@PathVariable Long projectId,
-		@Valid ProjectMemberUpdateRequest request
+		@Valid @RequestBody ProjectMemberUpdateRequest request
 	) {
 		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {
@@ -174,7 +174,7 @@ public class ProjectController {
 	public ResponseEntity<ProjectMemberResponse> patchProjectOwners(
 		@PathVariable String workspaceName,
 		@PathVariable Long projectId,
-		@RequestBody ProjectOwnerTransferRequest request
+		@Valid @RequestBody ProjectOwnerTransferRequest request
 	) {
 		Member member = memberService.getAuthenticatedMember();
 		if (member == null) {

@@ -183,7 +183,7 @@ public class ProjectServiceImpl implements ProjectService {
 			throw new CustomException("NOT_PROJECT_MEMBER", "이미 프로젝트 멤버가 아닙니다.");
 		}
 
-		validateOwnerPermission(updateRequester);
+		validateOwnerPermission(updateRequester, updateRequester);
 
 		updateRequester.updateMemberState(ProjectMemberState.DELETED);
 		projectMemberRepository.save(updateRequester);
@@ -342,7 +342,7 @@ public class ProjectServiceImpl implements ProjectService {
 		// 상위 권한 검증
 		validateUpperCasePermission(updateRequester, projectMember);
 
-		validateOwnerPermission(updateRequester);
+		validateOwnerPermission(updateRequester, projectMember);
 
 		projectMember.updatePositionType(request.getPositionType());
 		ProjectMember updatedProjectMember = projectMemberRepository.save(projectMember);
@@ -374,11 +374,11 @@ public class ProjectServiceImpl implements ProjectService {
 
 		validateAdminPermission(updateRequester.getMember(), projectId);
 
-		validateOwnerPermission(updateRequester);
-
 		// 변경 대상 검증
 		ProjectMember projectMember = projectMemberRepository.findById(projectMemberId)
 			.orElseThrow(() -> new CustomException("PROJECTMEMBER_NOT_FOUND", "프로젝트 멤버를 찾을 수 없습니다."));
+
+		validateOwnerPermission(updateRequester, projectMember);
 
 		projectMember.updateMemberState(ProjectMemberState.DELETED);
 		projectMemberRepository.save(projectMember);
@@ -467,8 +467,8 @@ public class ProjectServiceImpl implements ProjectService {
 		return new ArrayList<>(uniqueTags);
 	}
 
-	private void validateOwnerPermission(ProjectMember member) {
-		if (member.getPositionType().equals("OWNER")) {
+	private void validateOwnerPermission(ProjectMember member, ProjectMember targetMember) {
+		if (member.getPositionType().equals("OWNER") && (member.equals(targetMember))) {
 			throw new CustomException("OWNER_EXCEPTION", "소유자 권한 이전이 필요합니다.");
 		}
 	}
