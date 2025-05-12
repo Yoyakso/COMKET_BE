@@ -30,7 +30,7 @@ public class ProjectMemberService {
 	private final WorkspaceMemberRepository workspaceMemberRepository;
 	private final WorkspaceMemberService workspaceMemberService;
 
-	public void addProjectMember(Project project, Member member, String positionType) {
+	public ProjectMember addProjectMember(Project project, Member member, String positionType) {
 		ProjectMember projectMember = ProjectMember.builder()
 			.project(project)
 			.member(member)
@@ -38,7 +38,7 @@ public class ProjectMemberService {
 			.positionType(positionType)
 			.build();
 
-		projectMemberRepository.save(projectMember);
+		return projectMemberRepository.save(projectMember);
 	}
 
 	public ProjectMember getProjectMemberByProjectIdAndMemberId(Long projectId, Long memberId) {
