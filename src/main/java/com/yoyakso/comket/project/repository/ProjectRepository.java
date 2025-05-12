@@ -1,6 +1,7 @@
 package com.yoyakso.comket.project.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -23,4 +24,5 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
 	boolean existsByNameAndState(@NotNull @Size(min = 2, max = 100) String name, ProjectState state);
 
+	Optional<Project> findByName(String projectName);
 }

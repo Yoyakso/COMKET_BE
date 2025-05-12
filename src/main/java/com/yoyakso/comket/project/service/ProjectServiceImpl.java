@@ -427,6 +427,22 @@ public class ProjectServiceImpl implements ProjectService {
 			.build();
 	}
 
+	@Override
+	public Project getProjectByProjectName(String projectName) {
+		return projectRepository.findByName(projectName)
+			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
+	}
+
+	@Override
+	public void validateProjectAccess(Project project, Member member, String target) {
+		// 프로젝트 멤버가 존재하지 않거나 비활성화된 경우
+		ProjectMember projectMember = projectMemberService.getProjectMemberByProjectIdAndMemberId(project.getId(),
+			member.getId());
+		if (projectMember == null || projectMember.getState() != ProjectMemberState.ACTIVE) {
+			throw new CustomException("PROJECT_ACCESS_FAILED", target + "에 대한 프로젝트에 대한 권한이 없습니다.");
+		}
+	}
+
 	// ---private methods---
 	public ProjectMember validateAdminPermission(Member member, Long projectId) {
 		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(
