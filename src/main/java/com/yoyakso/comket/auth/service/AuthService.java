@@ -15,7 +15,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.yoyakso.comket.auth.dto.GoogleDetailRequest;
 import com.yoyakso.comket.auth.dto.GoogleDetailResponse;
-import com.yoyakso.comket.auth.dto.GoogleLoginResponse;
 import com.yoyakso.comket.auth.dto.GoogleTokenRequest;
 import com.yoyakso.comket.auth.dto.GoogleTokenResponse;
 import com.yoyakso.comket.auth.dto.LoginRequest;
@@ -59,7 +58,7 @@ public class AuthService {
 			.build();
 	}
 
-	public GoogleLoginResponse handleGoogleLogin(String code, String redirectUri) {
+	public LoginResponse handleGoogleLogin(String code, String redirectUri) {
 		try {
 			// 구글 토큰 요청
 			GoogleTokenRequest tokenRequest = new GoogleTokenRequest(code, googleClientId, googleClientSecret,
