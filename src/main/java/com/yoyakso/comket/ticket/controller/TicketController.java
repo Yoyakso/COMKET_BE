@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.ticket.dto.request.TicketCreateRequest;
+import com.yoyakso.comket.ticket.dto.request.TicketStateUpdateRequest;
+import com.yoyakso.comket.ticket.dto.request.TicketTypeUpdateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketUpdateRequest;
 import com.yoyakso.comket.ticket.dto.response.TicketInfoResponse;
 import com.yoyakso.comket.ticket.entity.Ticket;
@@ -78,6 +80,32 @@ public class TicketController {
 		Member member = memberService.getAuthenticatedMember();
 		Ticket ticket = ticketService.updateTicket(projectName, ticketId, request, member);
 		return ResponseEntity.ok(ticketMapper.toResponse(ticket));
+	}
+
+	// 여러 티켓 상태 변경
+	@PatchMapping("/state")
+	public ResponseEntity<List<TicketInfoResponse>> updateTicketStates(
+		@RequestParam("project_name") String projectName,
+		@RequestBody TicketStateUpdateRequest request
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		List<Ticket> updatedTickets = ticketService.updateTicketStates(projectName, request, member);
+		return ResponseEntity.ok(updatedTickets.stream()
+			.map(ticketMapper::toResponse)
+			.toList());
+	}
+
+	// 여러 티켓 유형 변경
+	@PatchMapping("/type")
+	public ResponseEntity<List<TicketInfoResponse>> updateTicketTypes(
+		@RequestParam("project_name") String projectName,
+		@RequestBody TicketTypeUpdateRequest request
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		List<Ticket> updatedTickets = ticketService.updateTicketTypes(projectName, request, member);
+		return ResponseEntity.ok(updatedTickets.stream()
+			.map(ticketMapper::toResponse)
+			.toList());
 	}
 
 	// 티켓 삭제
