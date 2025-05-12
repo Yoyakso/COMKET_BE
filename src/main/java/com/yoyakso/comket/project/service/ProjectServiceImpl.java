@@ -78,7 +78,9 @@ public class ProjectServiceImpl implements ProjectService {
 
 		Project savedProject = projectRepository.save(project);
 
-		projectMemberService.addProjectMember(project, member, "OWNER");
+		ProjectMember pm = projectMemberService.addProjectMember(savedProject, member, "OWNER");
+
+		ProjectMemberResponse adminInfo = returnAdminInfo(pm);
 
 		return ProjectInfoResponse.builder()
 			.projectId(savedProject.getId())
@@ -87,7 +89,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.projectTag(savedProject.getTags())
 			.isPublic(savedProject.getIsPublic())
 			.createTime(savedProject.getCreateTime())
-			.adminId(member.getId())
+			.adminInfo(adminInfo)
 			.profileFileUrl(profileFileUrl)
 			.build();
 	}
@@ -96,7 +98,7 @@ public class ProjectServiceImpl implements ProjectService {
 	public ProjectInfoResponse updateProject(String workSpaceName, Long projectId, ProjectCreateRequest request,
 		Member member) {
 		// 워크스페이스 조회
-		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
+		workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
 		File profileFile =
@@ -104,12 +106,12 @@ public class ProjectServiceImpl implements ProjectService {
 		fileService.validateFileCategory(profileFile, FileCategory.PROJECT_PROFILE);
 		String profileFileUrl = profileFile != null ? fileService.getFileUrlByPath(profileFile.getFilePath()) : null;
 
-		ProjectMember projectMember = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
+		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
 			member.getId());
 
 		// 프로젝트 멤버가 존재하지 않거나 비활성화된 경우, 또는 ADMIN, OWNER가 아닌 경우
-		if (projectMember == null || projectMember.getState() != ProjectMemberState.ACTIVE ||
-			(!projectMember.getPositionType().equals("ADMIN") && !projectMember.getPositionType()
+		if (updateRequester == null || updateRequester.getState() != ProjectMemberState.ACTIVE ||
+			(!updateRequester.getPositionType().equals("ADMIN") && !updateRequester.getPositionType()
 				.equals("OWNER"))) {
 			throw new CustomException("PROJECT_AUTHORIZATION_FAILED", "프로젝트에 대한 권한이 없습니다.");
 		}
@@ -137,6 +139,7 @@ public class ProjectServiceImpl implements ProjectService {
 		Project savedProject = projectRepository.save(project);
 
 		ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
+		ProjectMemberResponse adminInfo = returnAdminInfo(pm);
 
 		return ProjectInfoResponse.builder()
 			.projectId(savedProject.getId())
@@ -145,7 +148,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.isPublic(savedProject.getIsPublic())
 			.projectTag(savedProject.getTags())
 			.createTime(savedProject.getCreateTime())
-			.adminId(pm.getId())
+			.adminInfo(adminInfo)
 			.profileFileUrl(profileFileUrl)
 			.build();
 	}
@@ -203,13 +206,14 @@ public class ProjectServiceImpl implements ProjectService {
 			: null;
 
 		ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
+		ProjectMemberResponse adminInfo = returnAdminInfo(pm);
 
 		return ProjectInfoResponse.builder()
 			.projectId(project.getId())
 			.projectName(project.getName())
 			.projectDescription(project.getDescription())
 			.projectTag(project.getTags())
-			.adminId(pm.getId())
+			.adminInfo(adminInfo)
 			.isPublic(project.getIsPublic())
 			.createTime(project.getCreateTime())
 			.profileFileUrl(profileFileUrl)
@@ -236,17 +240,17 @@ public class ProjectServiceImpl implements ProjectService {
 					? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
 					: null;
 				ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
-
-				return new ProjectInfoResponse(
-					project.getId(),
-					project.getName(),
-					project.getDescription(),
-					project.getTags(),
-					project.getIsPublic(),
-					pm.getId(),
-					project.getCreateTime(),
-					profileFileUrl
-				);
+				ProjectMemberResponse adminInfo = returnAdminInfo(pm);
+				return ProjectInfoResponse.builder()
+					.projectId(project.getId())
+					.projectName(project.getName())
+					.projectDescription(project.getDescription())
+					.projectTag(project.getTags())
+					.adminInfo(adminInfo)
+					.isPublic(project.getIsPublic())
+					.createTime(project.getCreateTime())
+					.profileFileUrl(profileFileUrl)
+					.build();
 			})
 			.toList();
 	}
@@ -266,17 +270,17 @@ public class ProjectServiceImpl implements ProjectService {
 					: null;
 
 				ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
-
-				return new ProjectInfoResponse(
-					project.getId(),
-					project.getName(),
-					project.getDescription(),
-					project.getTags(),
-					project.getIsPublic(),
-					pm.getId(),
-					project.getCreateTime(),
-					profileFileUrl
-				);
+				ProjectMemberResponse adminInfo = returnAdminInfo(pm);
+				return ProjectInfoResponse.builder()
+					.projectId(project.getId())
+					.projectName(project.getName())
+					.projectDescription(project.getDescription())
+					.projectTag(project.getTags())
+					.adminInfo(adminInfo)
+					.isPublic(project.getIsPublic())
+					.createTime(project.getCreateTime())
+					.profileFileUrl(profileFileUrl)
+					.build();
 			})
 			.toList();
 	}
@@ -471,5 +475,15 @@ public class ProjectServiceImpl implements ProjectService {
 		if (member.getPositionType().equals("OWNER") && (member.equals(targetMember))) {
 			throw new CustomException("OWNER_EXCEPTION", "소유자 권한 이전이 필요합니다.");
 		}
+	}
+
+	private ProjectMemberResponse returnAdminInfo(ProjectMember pm) {
+		return ProjectMemberResponse.builder()
+			.projectMemberId(pm.getId())
+			.name(pm.getMember().getRealName())
+			.email(pm.getMember().getEmail())
+			.positionType(pm.getPositionType())
+			.state(pm.getState())
+			.build();
 	}
 }

@@ -16,7 +16,7 @@ public class ProjectInfoResponse {
 	private String projectDescription;
 	private List<String> projectTag;
 	private Boolean isPublic;
-	private Long adminId;
+	private ProjectMemberResponse adminInfo;
 	private LocalDateTime createTime;
 	private String profileFileUrl;
 }
