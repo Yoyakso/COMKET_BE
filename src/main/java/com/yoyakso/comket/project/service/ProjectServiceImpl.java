@@ -78,7 +78,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 		Project savedProject = projectRepository.save(project);
 
-		ProjectMember pm = projectMemberService.addProjectMember(project, member, "OWNER");
+		ProjectMember pm = projectMemberService.addProjectMember(savedProject, member, "OWNER");
 
 		ProjectMemberResponse adminInfo = returnAdminInfo(pm);
 
