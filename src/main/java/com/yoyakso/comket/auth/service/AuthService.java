@@ -55,7 +55,7 @@ public class AuthService {
 		refreshTokenService.saveRefreshToken(member.getId().toString(), refreshToken);
 
 		return LoginResponse.builder()
-			.userId(member.getId())
+			.memberId(member.getId())
 			.name(member.getRealName())
 			.email(member.getEmail())
 			.accessToken(accessToken)

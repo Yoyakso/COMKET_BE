@@ -45,7 +45,7 @@ class GoogleOAuth2ServiceTest {
 
 		// 최종 로그인 응답 Mock
 		LoginResponse mockLoginResponse = LoginResponse.builder()
-			.userId(1L)
+			.memberId(1L)
 			.name("Test User")
 			.email("tset@gmail.com")
 			.accessToken("mock-jwt-token")

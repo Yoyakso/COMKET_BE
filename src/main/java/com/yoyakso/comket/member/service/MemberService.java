@@ -105,7 +105,7 @@ public class MemberService {
 
 		if (member == null) {
 			return LoginResponse.builder()
-				.userId(null)
+				.memberId(null)
 				.name(null)
 				.email(googleUserInfo.getEmail())
 				.accessToken(null)
@@ -118,7 +118,7 @@ public class MemberService {
 		String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
 
 		return LoginResponse.builder()
-			.userId(member.getId())
+			.memberId(member.getId())
 			.name(member.getRealName())
 			.email(member.getEmail())
 			.accessToken(accessToken)
