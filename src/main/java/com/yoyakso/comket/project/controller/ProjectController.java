@@ -141,7 +141,7 @@ public class ProjectController {
 
 	@Operation(method = "PATCH", description = "프로젝트 비활성화 API")
 	@PatchMapping("/{workspaceName}/{projectId}/inactive")
-	public ResponseEntity<ProjectInfoResponse> inActiveProject(
+	public ResponseEntity<Void> inActiveProject(
 		@PathVariable("workspaceName") String workspaceName,
 		@PathVariable("projectId") Long projectId
 	) {

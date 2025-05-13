@@ -4,7 +4,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.auth.dto.GoogleDetailResponse;
-import com.yoyakso.comket.auth.dto.GoogleLoginResponse;
+import com.yoyakso.comket.auth.dto.LoginResponse;
+import com.yoyakso.comket.auth.service.RefreshTokenService;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.file.entity.File;
 import com.yoyakso.comket.file.enums.FileCategory;
@@ -26,6 +27,7 @@ public class MemberService {
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final FileService fileService;
+	private final RefreshTokenService refreshTokenService;
 
 	public Member findByEmail(String email) {
 		return memberRepository.findByEmail(email);
@@ -68,7 +70,9 @@ public class MemberService {
 		member.setPassword(passwordEncoder.encode(member.getPassword()));
 		memberRepository.save(member);
 
-		String token = jwtTokenProvider.createToken(member.getEmail());
+		String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
+		String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
+		refreshTokenService.saveRefreshToken(member.getId().toString(), refreshToken);
 
 		return MemberRegisterResponse.builder()
 			.memberId(member.getId())
@@ -77,7 +81,8 @@ public class MemberService {
 			.department(member.getDepartment())
 			.role(member.getRole())
 			.responsibility(member.getResponsibility())
-			.token(token)
+			.accessToken(accessToken)
+			.refreshToken(refreshToken)
 			.profileFileUrl(profileFileUrl)
 			.build();
 	}
@@ -98,16 +103,31 @@ public class MemberService {
 	}
 
 	// 구글 로그인 로직 처리
-	public GoogleLoginResponse handleOAuth2Member(GoogleDetailResponse googleUserInfo) {
+	public LoginResponse handleOAuth2Member(GoogleDetailResponse googleUserInfo) {
 		Member member = memberRepository.findByEmail(googleUserInfo.getEmail());
 
 		if (member == null) {
-			return new GoogleLoginResponse(null, null, googleUserInfo.getEmail());
+			return LoginResponse.builder()
+				.memberId(null)
+				.name(null)
+				.email(googleUserInfo.getEmail())
+				.accessToken(null)
+				.accessToken(null)
+				.loginPlatformInfo(null)
+				.build();
 		}
 
-		String token = jwtTokenProvider.createToken(member.getEmail());
+		String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
+		String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
 
-		return new GoogleLoginResponse(token, member.getRealName(), member.getEmail());
+		return LoginResponse.builder()
+			.memberId(member.getId())
+			.name(member.getRealName())
+			.email(member.getEmail())
+			.accessToken(accessToken)
+			.refreshToken(refreshToken)
+			.loginPlatformInfo("GOOGLE")
+			.build();
 	}
 
 	public Member getAuthenticatedMember() {
