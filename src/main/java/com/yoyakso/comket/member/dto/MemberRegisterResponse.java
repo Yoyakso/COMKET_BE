@@ -12,6 +12,7 @@ public class MemberRegisterResponse {
 	private String department;
 	private String role;
 	private String responsibility;
-	private String token;
+	private String accessToken;
+	private String refreshToken;
 	private String profileFileUrl;
 }

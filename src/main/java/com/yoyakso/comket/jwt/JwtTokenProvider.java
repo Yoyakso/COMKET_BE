@@ -21,35 +21,20 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtTokenProvider {
 	private final SecretKey secretKey;
-	private final long expirationTime = 1000 * 60 * 60 * 24; // 1일
+	private final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60; // 1시간
+	private final long REFRESH_TOKEN_EXPIRATION = 1000L * 60 * 60 * 24 * 30; // 30일
 
 	public JwtTokenProvider(@Value("${jwt.secret}") String secret) {
 		assert secret != null;
 		this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 	}
 
-	public String createToken(String email) {
-		Date now = new Date();
-		Date expiryDate = new Date(now.getTime() + expirationTime);
-
-		return Jwts.builder()
-			.setSubject(email)
-			.setIssuedAt(now)
-			.setExpiration(expiryDate)
-			.signWith(secretKey, SignatureAlgorithm.HS256)
-			.compact();
+	public String createAccessToken(String email) {
+		return generateToken(email, ACCESS_TOKEN_EXPIRATION);
 	}
 
-	private Claims parseToken(String token) {
-		try {
-			return Jwts.parserBuilder()
-				.setSigningKey(secretKey)
-				.build()
-				.parseClaimsJws(token)
-				.getBody();
-		} catch (JwtException e) {
-			throw new RuntimeException("Invalid JWT token", e);
-		}
+	public String createRefreshToken(String email) {
+		return generateToken(email, REFRESH_TOKEN_EXPIRATION);
 	}
 
 	public String getEmailFromToken(String token) {
@@ -66,5 +51,30 @@ public class JwtTokenProvider {
 			throw new CustomException("UNAUTHORIZED", "인증되지 않은 사용자입니다.");
 		}
 		return authentication.getName();
+	}
+
+	// ---private method---
+	private Claims parseToken(String token) {
+		try {
+			return Jwts.parserBuilder()
+				.setSigningKey(secretKey)
+				.build()
+				.parseClaimsJws(token)
+				.getBody();
+		} catch (JwtException e) {
+			throw new RuntimeException("Invalid JWT token", e);
+		}
+	}
+
+	private String generateToken(String email, long expirationTime) {
+		Date now = new Date();
+		Date expiryDate = new Date(now.getTime() + expirationTime);
+
+		return Jwts.builder()
+			.setSubject(email)
+			.setIssuedAt(now)
+			.setExpiration(expiryDate)
+			.signWith(secretKey, SignatureAlgorithm.HS256)
+			.compact();
 	}
 }
