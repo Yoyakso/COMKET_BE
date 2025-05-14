@@ -11,6 +11,7 @@ import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.project.service.ProjectService;
+import com.yoyakso.comket.thread.service.KafkaTopicService;
 import com.yoyakso.comket.ticket.dto.request.TicketCreateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketDeleteRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketStateUpdateRequest;
@@ -31,6 +32,7 @@ public class TicketService {
 	private final MemberService memberService;
 	private final ProjectService projectService;
 	private final TicketMapper ticketMapper;
+	private final KafkaTopicService kafkaTopicService;
 
 	@Transactional
 	public TicketInfoResponse createTicket(String projectName, TicketCreateRequest request,
@@ -50,7 +52,9 @@ public class TicketService {
 		setAssignee(ticket, request.getAssigneeId(), project);
 
 		// 티켓 저장
-		ticketRepository.save(ticket);
+		Ticket savedTicket = ticketRepository.save(ticket);
+
+		kafkaTopicService.createThreadTopicIfNotExists(savedTicket.getId());
 
 		return ticketMapper.toResponse(ticket);
 	}
@@ -232,6 +236,10 @@ public class TicketService {
 
 		tickets.forEach(ticket -> ticket.setDeleted(true));
 		ticketRepository.saveAll(tickets);
+	}
+
+	public Long getProjectIdByTicketId(Long ticketId) {
+		return ticketRepository.findProjectIdById(ticketId);
 	}
 
 	// ------private------
