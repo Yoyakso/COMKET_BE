@@ -17,7 +17,7 @@ public class ThreadMessageConsumer {
 	private final ThreadSocketHandler threadSocketHandler;
 	private final ThreadMessageService threadMessageService;
 
-	@KafkaListener(topics = "thread-ticket-*", groupId = "thread-consumer-group")
+	@KafkaListener(topics = "thread-ticket-1", groupId = "thread-consumer-group") // TODO: 가변 티켓 ID 받도록 수정
 	public void consume(String messageJson) throws Exception {
 		ThreadMessageDto messageDto = objectMapper.readValue(messageJson, ThreadMessageDto.class);
 		Long ticketId = messageDto.getTicketId();

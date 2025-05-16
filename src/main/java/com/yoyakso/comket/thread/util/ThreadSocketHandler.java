@@ -24,7 +24,7 @@ public class ThreadSocketHandler extends TextWebSocketHandler {
 
 	private final ThreadMessageProducer threadMessageProducer;
 	private final ThreadMessageService threadMessageService;
-	private final ObjectMapper objectMapper = new ObjectMapper();
+	private final ObjectMapper objectMapper;
 
 	private final Map<Long, List<WebSocketSession>> sessionPool = new ConcurrentHashMap<>();
 

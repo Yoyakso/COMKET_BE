@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,7 +32,8 @@ public class ThreadMessage {
 	@Column(nullable = false)
 	private Long senderMemberId;
 
-	@Column(nullable = false)
+	@Column(nullable = false, length = 255)
+	@Size(min = 0, max = 255)
 	private String content;
 
 	@Column(nullable = false)
