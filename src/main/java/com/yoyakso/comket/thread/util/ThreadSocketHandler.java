@@ -27,14 +27,16 @@ public class ThreadSocketHandler extends TextWebSocketHandler {
 	private final ObjectMapper objectMapper;
 
 	private final Map<Long, List<WebSocketSession>> sessionPool = new ConcurrentHashMap<>();
+	private final ThreadKafkaListenerManager threadKafkaListenerManager;
 
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 		Map<String, Object> attrs = session.getAttributes();
 		Long ticketId = (Long)attrs.get("ticketId");
 
-		sessionPool.computeIfAbsent(ticketId, k -> new CopyOnWriteArrayList<>()).add(session);
+		threadKafkaListenerManager.startListening(ticketId);
 
+		sessionPool.computeIfAbsent(ticketId, k -> new CopyOnWriteArrayList<>()).add(session);
 		List<ThreadMessageDto> previousMessages = threadMessageService.getMessagesByTicketId(ticketId);
 		String jsonPayload = objectMapper.writeValueAsString(previousMessages);
 		session.sendMessage(new TextMessage(jsonPayload));
