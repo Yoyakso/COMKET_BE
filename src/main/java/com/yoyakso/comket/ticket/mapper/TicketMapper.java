@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
-import com.yoyakso.comket.member.service.MemberService;
+import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.ticket.dto.request.TicketCreateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketUpdateRequest;
 import com.yoyakso.comket.ticket.dto.response.TicketInfoResponse;
@@ -16,7 +16,7 @@ import com.yoyakso.comket.ticket.entity.Ticket;
 @Component
 public class TicketMapper {
 	@Autowired
-	private MemberService memberService;
+	private ProjectMemberService projectMemberService;
 
 	public Ticket toEntity(TicketCreateRequest request, Member creator) {
 		return Ticket.builder()
@@ -44,8 +44,11 @@ public class TicketMapper {
 			.createdAt(ticket.getCreatedAt())
 			.updatedAt(ticket.getUpdatedAt())
 			.assigneeMember(
-				ticket.getAssignee() != null ? memberService.buildMemberInfoResponse(ticket.getAssignee()) : null)
-			.creatorMember(memberService.buildMemberInfoResponse(ticket.getCreator()))
+				ticket.getAssignee() != null ?
+					projectMemberService.buildProjectMemberInfoResponse(ticket.getProject(), ticket.getAssignee()) :
+					null)
+			.creatorMember(
+				projectMemberService.buildProjectMemberInfoResponse(ticket.getProject(), ticket.getCreator()))
 			.parentTicketId(ticket.getParentTicket() != null ? ticket.getParentTicket().getId() : null)
 			.subTicketCount(ticket.getSubTicketCount())
 			.build();
@@ -71,5 +74,5 @@ public class TicketMapper {
 		updateField(ticket::setStartDate, request.getStartDate(), true, null, null);
 		updateField(ticket::setEndDate, request.getEndDate(), true, null, null);
 	}
-	
+
 }
