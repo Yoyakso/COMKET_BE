@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.yoyakso.comket.member.dto.MemberInfoResponse;
+import com.yoyakso.comket.project.dto.ProjectMemberResponse;
 import com.yoyakso.comket.ticket.enums.TicketPriority;
 import com.yoyakso.comket.ticket.enums.TicketState;
 import com.yoyakso.comket.ticket.enums.TicketType;
@@ -36,9 +36,9 @@ public class TicketInfoResponse {
 	@JsonProperty("updated_at")
 	private LocalDateTime updatedAt;
 	@JsonProperty("assignee_member")
-	private MemberInfoResponse assigneeMember;
+	private ProjectMemberResponse assigneeMember;
 	@JsonProperty("creator_member")
-	private MemberInfoResponse creatorMember;
+	private ProjectMemberResponse creatorMember;
 	@JsonProperty("sub_ticket_count")
 	private Long subTicketCount;
 }

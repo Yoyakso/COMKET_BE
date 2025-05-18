@@ -11,6 +11,8 @@ import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.project.service.ProjectService;
+import com.yoyakso.comket.projectMember.entity.ProjectMember;
+import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.ticket.dto.request.TicketCreateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketDeleteRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketStateUpdateRequest;
@@ -29,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class TicketService {
 	private final TicketRepository ticketRepository;
 	private final MemberService memberService;
+	private final ProjectMemberService projectMemberService;
 	private final ProjectService projectService;
 	private final TicketMapper ticketMapper;
 
@@ -254,10 +257,12 @@ public class TicketService {
 	private void setAssignee(Ticket ticket, Long assigneeId, Project project) {
 		if (assigneeId == null)
 			return;
-
-		Member assignee = memberService.getMemberById(assigneeId);
-		projectService.validateProjectAccess(project, assignee, "티켓 담당자");
-		ticket.setAssignee(assignee);
+		ProjectMember assigneeProjectMember = projectMemberService.getProjectMemberByProjectMemberId(assigneeId);
+		if (!project.equals(assigneeProjectMember.getProject())) {
+			// 티켓의 프로젝트와 담당자의 프로젝트가 일치하지 않음
+			throw new CustomException("INVALID_ASSIGNEE", "담당자가 해당 프로젝트에 속하지 않습니다.");
+		}
+		ticket.setAssignee(assigneeProjectMember.getMember());
 	}
 
 	private Ticket getValidTicket(Long ticketId) {
