@@ -63,6 +63,11 @@ public class ProjectMemberService {
 		return returnInvitedMembersToProject(projectId, request.getPositionType(), newMemberIds);
 	}
 
+	public ProjectMember findByMemberEmail(Long projectId, String email) {
+		return projectMemberRepository.findByProjectIdAndMemberEmail(projectId, email)
+			.orElseThrow(() -> new CustomException("CANNOT_FOUND_PROJECTMEMBER", "프로젝트 멤버를 찾을 수 없습니다."));
+	}
+
 	// ---private method---
 
 	private List<Long> filterNewMemberIds(Long projectId, List<Long> WorkspaceMemberIdList) {

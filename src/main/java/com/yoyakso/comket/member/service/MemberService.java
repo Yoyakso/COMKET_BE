@@ -33,6 +33,13 @@ public class MemberService {
 		return memberRepository.findByEmail(email);
 	}
 
+	public String findMemberNameById(Long id) {
+		Member member = memberRepository.findById(id)
+			.orElseThrow(() -> new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다."));
+
+		return member.getRealName();
+	}
+
 	public void save(Member member) {
 		if (member.getId() == null) {
 			memberRepository.save(member);

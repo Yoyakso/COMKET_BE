@@ -79,6 +79,18 @@ spring:
       timeout: 6000
       host: ${REDIS_HOST}
       port: 6379
+  kafka:
+    bootstrap-servers: ${EC2_ELASTIC_IP}:9092
+    consumer:
+      group-id: thread-consumer-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    listener:
+      missing-topics-fatal: false
 jwt:
   secret: ${JWT_SECRET}
 management:

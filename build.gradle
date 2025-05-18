@@ -61,7 +61,6 @@ dependencies {
 
     // DB
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
-//	testImplementation 'com.h2database:h2'
 
     // HealthCheck
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -82,6 +81,11 @@ dependencies {
     //AWS
     implementation 'io.awspring.cloud:spring-cloud-aws-starter:3.1.1'
     implementation "software.amazon.awssdk:s3:2.13.0"
+
+    // Thread(Kafka + WebSocket)
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 }
 
 tasks.withType(Test).configureEach {
