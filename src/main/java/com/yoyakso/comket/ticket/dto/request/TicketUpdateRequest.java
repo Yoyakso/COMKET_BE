@@ -8,9 +8,13 @@ import com.yoyakso.comket.ticket.enums.TicketPriority;
 import com.yoyakso.comket.ticket.enums.TicketState;
 import com.yoyakso.comket.ticket.enums.TicketType;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class TicketUpdateRequest {
 	@JsonProperty("ticket_name")
 	private String name;
