@@ -16,6 +16,8 @@ import com.yoyakso.comket.projectMember.entity.ProjectMember;
 public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Long> {
 	Optional<ProjectMember> findByProjectIdAndMemberId(Long workspaceId, Long memberId);
 
+	Optional<ProjectMember> findByProjectIdAndMemberEmail(Long projectId, String email);
+
 	@Query("SELECT pm FROM ProjectMember pm JOIN FETCH pm.member WHERE pm.project.id = :projectId")
 	List<ProjectMember> findAllByProjectIdWithMember(@Param("projectId") Long projectId);
 

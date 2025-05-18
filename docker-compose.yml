@@ -1,7 +1,7 @@
 services:
   app:
     build:
-        context: .
+      context: .
     image: comket:latest
     env_file:
       - .env
@@ -9,3 +9,27 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       RDS_USERNAME: ${RDS_USERNAME}
       RDS_PASSWORD: ${RDS_PASSWORD}
+    depends_on:
+      - kafka
+
+  zookeeper:
+    image: bitnami/zookeeper:3.7
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  kafka:
+    image: bitnami/kafka:3.6
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://${EC2_ELASTIC_IP}:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
