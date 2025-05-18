@@ -30,6 +30,17 @@ public class ProjectMemberService {
 	private final WorkspaceMemberRepository workspaceMemberRepository;
 	private final WorkspaceMemberService workspaceMemberService;
 
+	public ProjectMemberResponse buildProjectMemberInfoResponse(Project project, Member assignee) {
+		ProjectMember projectMember = getProjectMemberByProjectIdAndMemberId(project.getId(), assignee.getId());
+		return ProjectMemberResponse.builder()
+			.projectMemberId(projectMember.getId())
+			.name(assignee.getRealName())
+			.email(assignee.getEmail())
+			.positionType(projectMember.getPositionType())
+			.state(projectMember.getState())
+			.build();
+	}
+
 	public ProjectMember addProjectMember(Project project, Member member, String positionType) {
 		ProjectMember projectMember = ProjectMember.builder()
 			.project(project)
@@ -39,6 +50,11 @@ public class ProjectMemberService {
 			.build();
 
 		return projectMemberRepository.save(projectMember);
+	}
+
+	public ProjectMember getProjectMemberByProjectMemberId(Long projectMemberId) {
+		return projectMemberRepository.findById(projectMemberId)
+			.orElseThrow(() -> new CustomException("CANNOT_FOUND_PROJECTMEMBER", "프로젝트 멤버를 찾을 수 없습니다."));
 	}
 
 	public ProjectMember getProjectMemberByProjectIdAndMemberId(Long projectId, Long memberId) {
