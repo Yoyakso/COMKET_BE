@@ -57,7 +57,7 @@ public class TicketService {
 		// 티켓 저장
 		Ticket savedTicket = ticketRepository.save(ticket);
 
-		// kafkaTopicService.createThreadTopicIfNotExists(savedTicket.getId());
+		kafkaTopicService.createThreadTopicIfNotExists(savedTicket.getId());
 
 		return ticketMapper.toResponse(ticket);
 	}

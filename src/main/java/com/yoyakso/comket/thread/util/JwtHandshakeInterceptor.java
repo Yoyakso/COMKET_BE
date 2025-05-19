@@ -45,8 +45,11 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
 		try {
 			String email = jwtTokenProvider.getEmailFromToken(token);
+			System.out.println("[Interceptor] - email: " + email);
 			Long projectId = ticketService.getProjectIdByTicketId(ticketId);
+			System.out.println("[Interceptor] - projectId: " + projectId);
 			Long projectMemberId = projectMemberService.findByMemberEmail(projectId, email).getId();
+			System.out.println("[Interceptor] - projectMemberId: " + projectMemberId);
 
 			attributes.put("memberId", projectMemberId);
 			attributes.put("email", email);
