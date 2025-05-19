@@ -86,7 +86,7 @@ jobs:
             echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> .env
             echo "AWS_FILE_URL=${{ secrets.AWS_FILE_URL }}" >> .env
             echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
-            echo "EC2_ELASTIC_IP=${{ secrets.EC2_ELASTIC_IP }}" >> .env
+            echo "EC2_ELASTIC_IP=${{ secrets.KAFKA_EC2_HOST_IP }}" >> .env
             
             docker pull ${{ secrets.DOCKER_USERNAME }}/comket:latest  
             docker stop comket || true  
