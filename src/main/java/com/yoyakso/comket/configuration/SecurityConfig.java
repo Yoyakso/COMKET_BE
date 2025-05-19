@@ -42,6 +42,11 @@ public class SecurityConfig {
 					"/api/v1/auth/reissue",
 					"/api/v1/auth/oauth2/**"
 				).permitAll()
+				.requestMatchers( // WS 제외
+					"/ws/**",
+					"/sub/**",
+					"/pub/**"
+				).permitAll()
 				.anyRequest().authenticated() // 그 외 요청은 인증 필요
 			)
 			.formLogin(AbstractHttpConfigurer::disable) // 폼 로그인 비활성화
