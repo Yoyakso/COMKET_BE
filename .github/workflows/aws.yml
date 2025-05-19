@@ -63,14 +63,6 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
-            # cat > install-kafka.sh <<EOF
-            # $(cat install-kafka.sh)
-            # EOF
-            
-            # chmod +x install-kafka.sh
-            
-            # EC2_ELASTIC_IP=${{ secrets.EC2_ELASTIC_IP }} ./install-kafka.sh
-            
             # .env 파일 생성 (덮어쓰기 주의)
             echo "RDS_USERNAME=${{ secrets.RDS_USERNAME }}" > .env
             echo "RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}" >> .env
