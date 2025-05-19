@@ -242,7 +242,7 @@ public class TicketService {
 	}
 
 	public Long getProjectIdByTicketId(Long ticketId) {
-		return ticketRepository.findById(ticketId).get().getId();
+		return ticketRepository.findProjectIdByTicketId(ticketId);
 	}
 
 	// ------private------

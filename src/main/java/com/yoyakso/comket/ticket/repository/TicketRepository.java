@@ -13,6 +13,9 @@ import com.yoyakso.comket.ticket.entity.Ticket;
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
 	List<Ticket> findByProjectAndIsDeletedFalse(Project project);
 
+	@Query("SELECT t.project.id FROM Ticket t WHERE t.id = :ticketId")
+	Long findProjectIdByTicketId(@Param("ticketId") Long ticketId);
+
 	@Query("SELECT t FROM Ticket t " +
 		"JOIN t.project p " +
 		"WHERE p.name = :projectName " +
