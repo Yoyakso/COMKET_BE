@@ -80,7 +80,7 @@ spring:
       host: ${REDIS_HOST}
       port: 6379
   kafka:
-    bootstrap-servers: ${EC2_ELASTIC_IP}:9092
+    bootstrap-servers: ${KAFKA_EC2_HOST_IP}:9092
     consumer:
       group-id: thread-consumer-group
       auto-offset-reset: earliest
