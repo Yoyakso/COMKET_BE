@@ -23,7 +23,6 @@ import com.yoyakso.comket.auth.dto.TokenReissueResponse;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.jwt.JwtTokenProvider;
 import com.yoyakso.comket.member.entity.Member;
-import com.yoyakso.comket.member.repository.MemberRepository;
 import com.yoyakso.comket.member.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
@@ -34,7 +33,6 @@ public class AuthService {
 
 	private final RestTemplate restTemplate;
 	private final MemberService memberService;
-	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RefreshTokenService refreshTokenService;
@@ -44,9 +42,10 @@ public class AuthService {
 	private String googleClientSecret;
 
 	public LoginResponse login(LoginRequest loginRequest) {
-		Member member = memberRepository.findByEmail(loginRequest.getEmail());
+		Member member = memberService.getMemberByEmailOptional(loginRequest.getEmail())
+			.orElseThrow(() -> new CustomException("LOGIN_VALIDATE_FAILED", "로그인 정보가 정확하지 않습니다."));
 
-		if (member == null || !passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
+		if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
 			throw new CustomException("LOGIN_VALIDATE_FAILED", "로그인 정보가 정확하지 않습니다.");
 		}
 
@@ -88,7 +87,7 @@ public class AuthService {
 	public TokenReissueResponse reissueToken(String expiredAccessToken, String refreshToken) {
 
 		String email = jwtTokenProvider.getEmailFromToken(expiredAccessToken);
-		Member member = memberRepository.findByEmail(email);
+		Member member = memberService.getMemberByEmail(email);
 
 		String storedRefreshToken = refreshTokenService.getRefreshToken(member.getId().toString())
 			.orElseThrow(() -> new CustomException("REFRESH_NOT_FOUND", "RefreshToken이 없습니다."));

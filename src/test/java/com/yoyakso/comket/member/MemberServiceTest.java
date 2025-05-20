@@ -3,6 +3,8 @@ package com.yoyakso.comket.member;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -95,7 +97,7 @@ class MemberServiceTest {
 
 	@Test
 	void testDeleteMember_Success() {
-		when(memberRepository.findByEmail(testMember.getEmail())).thenReturn(testMember);
+		when(memberRepository.findByEmail(testMember.getEmail())).thenReturn(Optional.ofNullable(testMember));
 
 		assertDoesNotThrow(() -> memberService.deleteMember(testMember.getEmail()));
 		verify(memberRepository, times(1)).delete(testMember);
@@ -125,7 +127,7 @@ class MemberServiceTest {
 
 	@Test
 	void testFindByEmail_Success() {
-		when(memberRepository.findByEmail(testMember.getEmail())).thenReturn(testMember);
+		when(memberRepository.findByEmail(testMember.getEmail())).thenReturn(Optional.ofNullable(testMember));
 
 		Member foundMember = memberService.getMemberByEmail(testMember.getEmail());
 
@@ -135,11 +137,11 @@ class MemberServiceTest {
 
 	@Test
 	void testFindByEmail_NotFound() {
-		when(memberRepository.findByEmail("nonexistent@example.com")).thenReturn(null);
+		when(memberRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
-		Member foundMember = memberService.findByEmail("nonexistent@example.com");
+		Optional<Member> foundMember = memberService.getMemberByEmailOptional("nonexistent@example.com");
 
-		assertNull(foundMember);
+		assertTrue(foundMember.isEmpty());
 	}
 
 	private Member createTestMember() {
