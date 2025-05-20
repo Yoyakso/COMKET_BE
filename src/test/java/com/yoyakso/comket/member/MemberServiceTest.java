@@ -105,7 +105,7 @@ class MemberServiceTest {
 
 	@Test
 	void testDeleteMember_NotFound() {
-		when(memberRepository.findByEmail("nonexistent@example.com")).thenReturn(null);
+		when(memberRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
 		CustomException exception = assertThrows(CustomException.class,
 			() -> memberService.deleteMember("nonexistent@example.com"));
