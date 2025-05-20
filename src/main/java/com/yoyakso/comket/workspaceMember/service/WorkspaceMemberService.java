@@ -2,11 +2,13 @@ package com.yoyakso.comket.workspaceMember.service;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.yoyakso.comket.email.service.EmailService;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
@@ -28,6 +30,8 @@ public class WorkspaceMemberService {
 	private final WorkspaceMemberRepository workspaceMemberRepository;
 
 	private final MemberService memberService;
+
+	private final EmailService emailService;
 
 	public void createWorkspaceMember(Workspace workspace, Member member, WorkspaceMemberState state,
 		String positionType) {
@@ -119,10 +123,15 @@ public class WorkspaceMemberService {
 	private void createWorkspaceMembers(Workspace workspace, List<String> newMemberEmailList,
 		WorkspaceMemberCreateRequest workspaceMemberCreateRequest) {
 		for (String memberEmail : newMemberEmailList) {
-			Member member = memberService.getMemberByEmail(memberEmail);
-			if (member == null) {
-				throw new CustomException("CANNOT_FOUND_MEMBER", "멤버를 찾을 수 없습니다.");
+			Optional<Member> memberOptional = memberService.getMemberByEmailOptional(memberEmail);
+			// 회원가입되지 않은 멤버 처리
+			if (memberOptional.isEmpty()) {
+				emailService.sendInvitationEmail(workspace, memberEmail);
+				continue;
 			}
+			Member member = memberOptional.orElseThrow(() ->
+				new CustomException("MEMBER_NOT_FOUND", "멤버를 찾을 수 없습니다.")
+			);
 			WorkspaceMember workspaceMember = WorkspaceMember.builder()
 				.workspace(workspace)
 				.member(member)

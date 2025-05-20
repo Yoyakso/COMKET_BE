@@ -1,5 +1,7 @@
 package com.yoyakso.comket.member.service;
 
+import java.util.Optional;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +32,7 @@ public class MemberService {
 	private final RefreshTokenService refreshTokenService;
 
 	public Member findByEmail(String email) {
-		return memberRepository.findByEmail(email);
+		return getMemberByEmail(email);
 	}
 
 	public String findMemberNameById(Long id) {
@@ -52,10 +54,7 @@ public class MemberService {
 	}
 
 	public void deleteMember(String email) {
-		Member member = memberRepository.findByEmail(email);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
+		Member member = getMemberByEmail(email);
 		memberRepository.delete(member);
 	}
 
@@ -111,9 +110,9 @@ public class MemberService {
 
 	// 구글 로그인 로직 처리
 	public LoginResponse handleOAuth2Member(GoogleDetailResponse googleUserInfo) {
-		Member member = memberRepository.findByEmail(googleUserInfo.getEmail());
+		Optional<Member> memberOptional = memberRepository.findByEmail(googleUserInfo.getEmail());
 
-		if (member == null) {
+		if (memberOptional.isEmpty()) {
 			return LoginResponse.builder()
 				.memberId(null)
 				.name(null)
@@ -123,6 +122,7 @@ public class MemberService {
 				.loginPlatformInfo(null)
 				.build();
 		}
+		Member member = memberOptional.get();
 
 		String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
 		String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
@@ -139,11 +139,7 @@ public class MemberService {
 
 	public Member getAuthenticatedMember() {
 		String email = jwtTokenProvider.getEmail();
-		Member member = memberRepository.findByEmail(email);
-		if (member == null) {
-			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
-		}
-		return member;
+		return getMemberByEmail(email);
 	}
 
 	public MemberInfoResponse buildMemberInfoResponse(Member member) {
@@ -167,10 +163,14 @@ public class MemberService {
 	}
 
 	public Member getMemberByEmail(String email) {
-		Member member = memberRepository.findByEmail(email);
-		if (member == null) {
+		Optional<Member> member = memberRepository.findByEmail(email);
+		if (member.isEmpty()) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
-		return member;
+		return member.get();
+	}
+
+	public Optional<Member> getMemberByEmailOptional(String email) {
+		return memberRepository.findByEmail(email);
 	}
 }
