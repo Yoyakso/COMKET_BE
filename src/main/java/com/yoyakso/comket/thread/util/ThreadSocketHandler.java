@@ -44,6 +44,14 @@ public class ThreadSocketHandler extends TextWebSocketHandler {
 
 	@Override
 	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+		String payload = message.getPayload();
+
+		// ping 요청인지 확인, ping이라면 아무런 동작 없이 종료
+		if (payload.contains("\"type\":\"ping\"") || payload.contains("\"type\": \"ping\"")) {
+			System.out.println("Ping!");
+			return;
+		}
+
 		Map<String, Object> attrs = session.getAttributes();
 		Long ticketId = (Long)attrs.get("ticketId");
 
