@@ -11,6 +11,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.workspace.entity.Workspace;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -28,15 +29,19 @@ public class EmailService {
 
 	private final JavaMailSender emailSender;
 	private final SpringTemplateEngine templateEngine;
+
 	@Value("${spring.mail.auth-code-expiration-millis}")
 	private long authCodeExpirationMillis;
+
+	@Value("${service.domain}")
+	private String serviceDomain;
 
 	// 인증 번호 생성 및 저장
 	public void createVerificationCode(String email) {
 		String code = String.format("%06d", random.nextInt(1000000)); // 6자리 랜덤 숫자 생성
 		verificationCodes.put(email, code);
 		verificationTimestamps.put(email, System.currentTimeMillis()); // 생성 시간 저장
-		sendEmail(email, setVerifyCodeContent(code)); // 이메일 전송
+		sendEmail(email, setVerifyCodeContent(code), "계정 인증을 위한 이메일 코드입니다"); // 이메일 전송
 	}
 
 	// 인증 번호 검증
@@ -66,7 +71,7 @@ public class EmailService {
 	}
 
 	// 이메일 전송
-	private void sendEmail(String email, String context) {
+	private void sendEmail(String email, String context, String subject) {
 		try {
 			// 이메일 설정
 			MimeMessage message = emailSender.createMimeMessage();
@@ -74,7 +79,7 @@ public class EmailService {
 
 			// HTML 형식으로 이메일 내용 설정
 			helper.setTo(email);
-			helper.setSubject("이메일 인증 코드");
+			helper.setSubject(subject);
 			helper.setText(context, true);
 
 			// 이메일 전송
@@ -90,5 +95,18 @@ public class EmailService {
 		context.setVariable("expirationTime", authCodeExpirationMillis / 60000); // 분 단위로 변환
 
 		return templateEngine.process("EmailVerifyFormat", context);
+	}
+
+	public void sendInvitationEmail(Workspace workspace, String memberEmail) {
+		sendEmail(memberEmail, setInvitationContent(workspace), workspace.getName() + "에 초대되었습니다 - 지금 참여하세요!");
+	}
+
+	private String setInvitationContent(Workspace workspace) {
+		Context context = new Context();
+		context.setVariable("workspaceName", workspace.getName());
+		context.setVariable("workspaceInvitationCode", workspace.getInviteCode());
+		context.setVariable("serviceUrl", serviceDomain);
+
+		return templateEngine.process("EmailWorkspaceInviteFormat", context);
 	}
 }
