@@ -102,7 +102,7 @@ public class EmailService {
 	}
 
 	private String setInvitationContent(Workspace workspace) {
-		String inviteUrl = serviceDomain + "/workspace/invite/" + workspace.getInviteCode();
+		String inviteUrl = serviceDomain + "/workspaces/invite?code=" + workspace.getInviteCode();
 		Context context = new Context();
 		context.setVariable("workspaceName", workspace.getName());
 		context.setVariable("workspaceInvitationCode", workspace.getInviteCode());
