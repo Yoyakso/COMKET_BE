@@ -106,7 +106,7 @@ public class WorkspaceMemberService {
 
 	private List<String> filterNewMemberEmails(Long workspaceId, List<String> memberEmailList) {
 		List<String> existingMemberEmails = getWorkspaceMembersByWorkspaceId(workspaceId).stream()
-			.filter(workspaceMember -> workspaceMember.getState() == WorkspaceMemberState.DELETED)
+			.filter(workspaceMember -> workspaceMember.getState() != WorkspaceMemberState.DELETED)
 			.map(workspaceMember -> workspaceMember.getMember().getEmail()) // 이메일 추출
 			.toList();
 
