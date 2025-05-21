@@ -102,10 +102,11 @@ public class EmailService {
 	}
 
 	private String setInvitationContent(Workspace workspace) {
+		String inviteUrl = serviceDomain + "/workspace/invite/" + workspace.getInviteCode();
 		Context context = new Context();
 		context.setVariable("workspaceName", workspace.getName());
 		context.setVariable("workspaceInvitationCode", workspace.getInviteCode());
-		context.setVariable("serviceUrl", serviceDomain);
+		context.setVariable("inviteUrl", inviteUrl);
 
 		return templateEngine.process("EmailWorkspaceInviteFormat", context);
 	}
