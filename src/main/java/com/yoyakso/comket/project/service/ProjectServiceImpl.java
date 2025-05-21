@@ -226,7 +226,8 @@ public class ProjectServiceImpl implements ProjectService {
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
-		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberById(member.getId());
+		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
+			workSpace.getId(), member.getId());
 		String positionType = workspaceMember.getPositionType();
 
 		// 워크스페이스 권한에 따라 모든 프로젝트를 리턴 or 공개 프로젝트만 리턴
