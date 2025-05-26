@@ -55,7 +55,7 @@ public class ProjectServiceImpl implements ProjectService {
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
 		// 생성하는 프로젝트 이름의 중복 검사
-		if (projectRepository.existsByNameAndState(request.getName(), ProjectState.ACTIVE)) {
+		if (projectRepository.existsByNameAndStateAndWorkspace(request.getName(), ProjectState.ACTIVE, workSpace)) {
 			throw new CustomException("PROJECT_NAME_DUPLICATE", "프로젝트 이름이 중복되었습니다.");
 		}
 
@@ -98,7 +98,7 @@ public class ProjectServiceImpl implements ProjectService {
 	public ProjectInfoResponse updateProject(String workSpaceName, Long projectId, ProjectCreateRequest request,
 		Member member) {
 		// 워크스페이스 조회
-		workspaceRepository.findByName(workSpaceName)
+		Workspace workspace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
 		File profileFile =
@@ -120,7 +120,8 @@ public class ProjectServiceImpl implements ProjectService {
 			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
 
 		// 수정하는 프로젝트 이름의 중복 검사, 프로젝트 수정의 경우 기존 프로젝트 이름도 중복 처리되어 비교 추가
-		if (projectRepository.existsByNameAndState(request.getName(), ProjectState.ACTIVE) && (!Objects.equals(
+		if (projectRepository.existsByNameAndStateAndWorkspace(request.getName(), ProjectState.ACTIVE, workspace)
+			&& (!Objects.equals(
 			originProject.getName(),
 			request.getName()))) {
 			throw new CustomException("PROJECT_NAME_DUPLICATE", "프로젝트 이름이 중복되었습니다.");
@@ -230,11 +231,11 @@ public class ProjectServiceImpl implements ProjectService {
 			workSpace.getId(), member.getId());
 		String positionType = workspaceMember.getPositionType();
 
-		// 워크스페이스 권한에 따라 모든 프로젝트를 리턴 or 공개 프로젝트만 리턴
+		// 워크스페이스 권한에 따라 모든 프로젝트를 리턴 or 공개 프로젝트만 리턴 + 해당 프로젝트 멤버일 경우 모두 리턴
 		List<Project> projects = (positionType.equals("ADMIN") || positionType.equals("OWNER"))
 			? projectRepository.findAllByWorkspaceAndState(workSpace, ProjectState.ACTIVE)
-			: projectRepository.findAllByWorkspaceAndIsPublicTrueAndState(workSpace, ProjectState.ACTIVE);
-
+			: projectMemberService.getProjectListByMemberAndWorkspace(member, workSpace);
+		
 		return projects.stream()
 			.map(project -> {
 				String profileFileUrl = project.getProfileFile() != null
@@ -262,7 +263,7 @@ public class ProjectServiceImpl implements ProjectService {
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
-		List<Project> projects = projectMemberService.getProjectListByMemberId(member);
+		List<Project> projects = projectMemberService.getProjectListByMemberAndWorkspace(member, workSpace);
 
 		return projects.stream()
 			.map(project -> {
