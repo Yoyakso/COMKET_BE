@@ -209,15 +209,20 @@ public class ProjectServiceTest {
 			.workspace(mockWorkspace)
 			.member(member)
 			.state(WorkspaceMemberState.ACTIVE)
-			.positionType("Developer")
+			.positionType("MEMBER")
 			.build();
 
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
 		when(workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(mockWorkspace.getId(), member.getId()))
 			.thenReturn(mockWorkspaceMember);
-		
-		when(projectRepository.findAllByWorkspaceAndIsPublicTrueAndState(mockWorkspace, ProjectState.ACTIVE))
+
+		// OWNER, ADMIN인 경우
+		// when(projectRepository.findAllByWorkspaceAndState(mockWorkspace, ProjectState.ACTIVE))
+		// 	.thenReturn(List.of(savedProject1, savedProject2, savedProject3));
+		// MEMBER인 경우
+		when(projectMemberService.getProjectListByMemberAndWorkspace(member, mockWorkspace))
 			.thenReturn(List.of(savedProject1, savedProject2, savedProject3));
+
 		when(projectMemberRepository.findByProjectIdAndPositionType(100L, "OWNER"))
 			.thenReturn(mockProjectMember1);
 		when(projectMemberRepository.findByProjectIdAndPositionType(101L, "OWNER"))

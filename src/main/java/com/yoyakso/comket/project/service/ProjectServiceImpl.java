@@ -234,8 +234,8 @@ public class ProjectServiceImpl implements ProjectService {
 		// 워크스페이스 권한에 따라 모든 프로젝트를 리턴 or 공개 프로젝트만 리턴 + 해당 프로젝트 멤버일 경우 모두 리턴
 		List<Project> projects = (positionType.equals("ADMIN") || positionType.equals("OWNER"))
 			? projectRepository.findAllByWorkspaceAndState(workSpace, ProjectState.ACTIVE)
-			: projectMemberService.getProjectListByMemberIdAndWorkspace(member, workSpace);
-
+			: projectMemberService.getProjectListByMemberAndWorkspace(member, workSpace);
+		
 		return projects.stream()
 			.map(project -> {
 				String profileFileUrl = project.getProfileFile() != null
@@ -263,7 +263,7 @@ public class ProjectServiceImpl implements ProjectService {
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
-		List<Project> projects = projectMemberService.getProjectListByMemberIdAndWorkspace(member, workSpace);
+		List<Project> projects = projectMemberService.getProjectListByMemberAndWorkspace(member, workSpace);
 
 		return projects.stream()
 			.map(project -> {

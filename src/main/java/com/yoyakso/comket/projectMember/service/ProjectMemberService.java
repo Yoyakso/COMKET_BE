@@ -63,7 +63,7 @@ public class ProjectMemberService {
 			.orElseThrow(() -> new CustomException("CANNOT_FOUND_PROJECTMEMBER", "프로젝트 멤버를 찾을 수 없습니다."));
 	}
 
-	public List<Project> getProjectListByMemberIdAndWorkspace(Member member, Workspace workspace) {
+	public List<Project> getProjectListByMemberAndWorkspace(Member member, Workspace workspace) {
 		return projectMemberRepository.findAllProjectsByMemberAndWorkspace(member, workspace);
 	}
 
