@@ -18,11 +18,14 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
 	List<Project> findAllByWorkspaceAndIsPublicTrueAndState(Workspace workspace, ProjectState state);
 
+	// List<Project> findAll
+
 	List<Project> findAllByWorkspaceAndState(Workspace workspace, ProjectState state);
 
 	boolean existsByName(@NotNull @Size(min = 2, max = 100) String name);
 
-	boolean existsByNameAndState(@NotNull @Size(min = 2, max = 100) String name, ProjectState state);
+	boolean existsByNameAndStateAndWorkspace(@NotNull @Size(min = 2, max = 100) String name, ProjectState state,
+		Workspace workspace);
 
 	Optional<Project> findByName(String projectName);
 }
