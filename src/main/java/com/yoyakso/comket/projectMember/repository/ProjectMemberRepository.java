@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.projectMember.entity.ProjectMember;
+import com.yoyakso.comket.workspace.entity.Workspace;
 
 @Repository
 public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Long> {
@@ -25,9 +26,12 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
 		    SELECT pm.project
 		    FROM ProjectMember pm
 		    WHERE pm.member = :member
-		      AND pm.project.isPublic = true
+		    And pm.project.workspace = :workspace
 		""")
-	List<Project> findAllPublicProjectsByMember(@Param("member") Member member);
+	List<Project> findAllProjectsByMemberAndWorkspace(
+		@Param("member") Member member,
+		@Param("workspace") Workspace workspace
+	);
 
 	List<ProjectMember> findAllByProjectId(Long projectId);
 

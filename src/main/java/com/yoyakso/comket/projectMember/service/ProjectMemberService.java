@@ -15,6 +15,7 @@ import com.yoyakso.comket.project.repository.ProjectRepository;
 import com.yoyakso.comket.projectMember.entity.ProjectMember;
 import com.yoyakso.comket.projectMember.enums.ProjectMemberState;
 import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
+import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.repository.WorkspaceMemberRepository;
 import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
@@ -62,8 +63,8 @@ public class ProjectMemberService {
 			.orElseThrow(() -> new CustomException("CANNOT_FOUND_PROJECTMEMBER", "프로젝트 멤버를 찾을 수 없습니다."));
 	}
 
-	public List<Project> getProjectListByMemberId(Member member) {
-		return projectMemberRepository.findAllPublicProjectsByMember(member);
+	public List<Project> getProjectListByMemberAndWorkspace(Member member, Workspace workspace) {
+		return projectMemberRepository.findAllProjectsByMemberAndWorkspace(member, workspace);
 	}
 
 	public List<ProjectMemberResponse> inviteMembersToProject(
