@@ -93,6 +93,10 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
     listener:
       missing-topics-fatal: false
+  ai:
+    openai:
+      api-key: ${GPT_SECRET}
+      api-url: "https://api.openai.com/v1/chat/completions"
 jwt:
   secret: ${JWT_SECRET}
 management:
