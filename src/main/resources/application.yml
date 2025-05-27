@@ -26,7 +26,7 @@ spring:
     allow-bean-definition-overriding: true
   datasource:
     driverClassName: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://comket-rds.c3mka68c68ht.ap-northeast-2.rds.amazonaws.com:3306/comket
+    url: jdbc:mariadb://comket-rds.c3mka68c68ht.ap-northeast-2.rds.amazonaws.com:3306/comket?useUnicode=true&characterEncoding=utf8mb4
     username: ${RDS_USERNAME}
     password: ${RDS_PASSWORD}
   jpa:
