@@ -55,10 +55,6 @@ public class AiService {
 			String name = memberService.findMemberNameById(message.getSenderMemberId());
 			promptBuilder.append("{").append(name).append("-").append(message.getSenderMemberId()).append("}: ")
 				.append(message.getContent()).append("\n");
-
-			System.out.println(
-				"[MESSAGE] - " + "[" + message.getSenderMemberId() + "] " + name + ": " + message.getContent()
-			);
 		}
 
 		promptBuilder.append("\n")
@@ -88,8 +84,6 @@ public class AiService {
 			.append("}");
 
 		String aiResult = openAiClient.getAiSummary(promptBuilder.toString());
-
-		System.out.println("[aiResult]: " + aiResult);
 
 		ObjectMapper mapper = new ObjectMapper();
 		AiSummaryWithActionItemsResponse response;
