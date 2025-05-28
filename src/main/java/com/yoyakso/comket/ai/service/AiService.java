@@ -1,13 +1,21 @@
 package com.yoyakso.comket.ai.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yoyakso.comket.ai.dto.ActionItemContentDto;
 import com.yoyakso.comket.ai.dto.AiSummaryWithActionItemsResponse;
+import com.yoyakso.comket.ai.entity.AiActionItem;
+import com.yoyakso.comket.ai.entity.AiSummary;
+import com.yoyakso.comket.ai.enums.SummaryType;
+import com.yoyakso.comket.ai.repository.AiActionItemsRepository;
+import com.yoyakso.comket.ai.repository.AiSummaryRepository;
 import com.yoyakso.comket.exception.CustomException;
-import com.yoyakso.comket.member.repository.MemberRepository;
+import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.thread.entity.ThreadMessage;
 import com.yoyakso.comket.thread.repository.ThreadMessageRepository;
@@ -22,9 +30,10 @@ public class AiService {
 
 	private final TicketRepository ticketRepository;
 	private final ThreadMessageRepository threadMessageRepository;
-	private final MemberRepository memberRepository;
 	private final OpenAiClient openAiClient;
 	private final MemberService memberService;
+	private final AiSummaryRepository aiSummaryRepository;
+	private final AiActionItemsRepository aiActionItemsRepository;
 
 	public AiSummaryWithActionItemsResponse summarizeThread(Long ticketId) {
 		Ticket ticket = ticketRepository.findById(ticketId)
@@ -58,6 +67,7 @@ public class AiService {
 			.append("action item 책임자가 있다면 책임자의의 id와 이름 쌍은 절대 틀리면 안돼. 꼭 스레드 대화에서 찾은 id와 이름의 짝을 지켜줘.\n")
 			.append("언제까지 완료하겠다는 대화가 없었다면, null로 리턴해줘. \n")
 			.append("만약 여러개의 작업이 존재한다면, actionItems에 리스트로 여러개 만들어줘. \n")
+			.append("memberId는 항상 Long 타입이어야해. \n")
 			.append("응답 예시:\n")
 			.append("{\n")
 			.append("  \"summary\": \"티켓 생성 시 프로젝트 이름 중복으로 인한 이슈 발생\",\n")
@@ -85,96 +95,34 @@ public class AiService {
 		AiSummaryWithActionItemsResponse response;
 		try {
 			response = mapper.readValue(aiResult, AiSummaryWithActionItemsResponse.class);
+			response.setCreateTime(LocalDateTime.now());
 		} catch (Exception e) {
 			throw new CustomException("AI_PARSE_ERROR", "AI 응답 파싱에 실패했습니다." + e.getMessage());
 		}
+
+		AiSummary summary = AiSummary.builder()
+			.ticket(ticket)
+			.summaryType(SummaryType.GENERAL)
+			.summary(response.getSummary())
+			.build();
+
+		AiSummary savedSummary = aiSummaryRepository.save(summary);
+
+		for (ActionItemContentDto actionItemData : response.getActionItems()) {
+			Member member = Optional.ofNullable(actionItemData.getMemberInfo())
+				.map(info -> memberService.getMemberById(info.getMemberId()))
+				.orElse(null);
+
+			AiActionItem item = AiActionItem.builder()
+				.aiSummary(savedSummary)
+				.title(actionItemData.getTitle())
+				.assignee(member)
+				.priority(actionItemData.getPriority())
+				.dueDate(actionItemData.getDueDate())
+				.build();
+			aiActionItemsRepository.save(item);
+		}
+
 		return response;
 	}
 }
-
-/*
-#1
-[aiResult]: {
-  "response": "티켓 생성 시 프로젝트 이름 중복 이슈에 대한 아래 액션아이템이 도출됨.",
-  "title": "프로젝트 중복 검증 로직 수정",
-  "priority": "MEDIUM",
-  "assigneeMember": { "id": 2, "name": "이태경" },
-  "dueDate": "2025-05-25"
-}
-
-#2
-[aiResult]: {
-  "response": "티켓 생성 시 프로젝트 중복 이슈에 대한 아래 액션아이템이 도출됨.",
-  "title": "프로젝트 중복 이슈 해결",
-  "priority": "MEDIUM",
-  "assigneeMember": { "id": 2, "name": "이태경" },
-  "dueDate": "2025-05-27"
-}
-
-#3 프로젝트 담당자 변경 메시지 전송 후
-[aiResult]: {
-  "response": "티켓 생성 중 프로젝트 이름 중복 이슈에 대한 아래 액션아이템이 도출되었습니다.",
-  "title": "프로젝트 이름 중복 이슈 해결",
-  "priority": "MEDIUM",
-  "assigneeMember": { "id": 2, "name": "이태경" },
-  "dueDate": "2025-05-27"
-}
-
-#4 태경님 확인 후
-[aiResult]: {
-  "response": "티켓 생성 시 프로젝트 중복 이슈 관련하여 아래 액션아이템이 도출됨.",
-  "title": "티켓 생성 시 프로젝트 중복 이슈 해결",
-  "priority": "MEDIUM",
-  "assigneeMember": { "id": 2, "name": "이태경" },
-  "dueDate": "2025-05-27"
-}
-
-#5 '민현'님이 작업 한다고 명시
-[aiResult]: {
-  "response": "티켓 생성 시 프로젝트 이름 중복 이슈에 대한 액션아이템과 요약입니다.",
-  "title": "프로젝트 이름 중복 이슈 해결",
-  "priority": "MEDIUM",
-  "assigneeMember": { "id": 2, "name": "이태경" },
-  "dueDate": "2025-05-25"
-}
-
-#6 GPT-4.0 사용
-[aiResult]: {
-  "summary": "티켓 생성 시 프로젝트 이름 중복 이슈 발생. 워크스페이스를 조건으로 추가하여 수정하는 작업 필요.",
-  "title": "티켓 생성 시 프로젝트 이름 중복 이슈 수정",
-  "priority": "MEDIUM",
-  "assigneeMember": { "id": 1, "name": "조민현" },
-  "dueDate": null
-}
-
-#7 액션아이템 여러개 테스트
-[MESSAGE] - [2] 이태경: 안녕하세요.
-[MESSAGE] - [2] 이태경: 민현님, 이슈 공유 감사합니다. 확인해 보겠습니다.
-[MESSAGE] - [1] 조민현: 넵, 감사합니다.
-[MESSAGE] - [2] 이태경: 민현님, 이슈 확인했습니다. 해당 이슈는 티켓 생성 시 프로젝트 정보를 조회하는 과정에서 발생했습니다.
-[MESSAGE] - [2] 이태경: 프로젝트 정보 조회 시 프로젝트 이름으로 프로젝트를 검증하는데, 프로젝트 테이블 전체에서 이름을 조회하여 다른 워크스페이스의 프로젝트인 경우에도 조회를 하다 보니 DB에서 어떤 값을 리턴해야하는지 몰라 에러가 발생했습니다.
-[MESSAGE] - [2] 이태경: 따라서 이 부분 워크스페이스를 조건으로 추가하도록 작업해서 PR올리겠습니다.
-[MESSAGE] - [1] 조민현: 넵, 감사합니다. 하위 티켓 생성해서 작업 후 전달주세요.
-[MESSAGE] - [1] 조민현: 태경님, 다시 생각해보니 작업은 제가 하는게 좋을 것 같습니다.
-[MESSAGE] - [2] 이태경: 넵 알겠습니다.
-[MESSAGE] - [2] 이태경: 그럼 민현님이 작업 해주시는 것으로 알고 정리하겠습니다.
-[MESSAGE] - [1] 조민현: 넵, 이슈 발생 시 에러 메시지가 노출되지 않고 있습니다. 이 부분 기획자 확인이 필요합니다.
-[MESSAGE] - [1] 조민현: 이 부분 기획자 수연님께 전달 드려 확인 부탁드리도록 하겠습니다.
-[aiResult]: {
-  "summary": "티켓 생성 시 프로젝트 이름 중복으로 인한 이슈가 발생하였고, 아래 액션아이템이 도출되었습니다.",
-  "actionItems": [
-	 {
-  		"title": "프로젝트 정보 조회 로직 수정",
-  		"priority": "MEDIUM",
-  		"memberInfo": { "memberId": 1, "name": "조민현" },
-  		"dueDate": null
-	 },
-	 {
-  		"title": "이슈 발생 시 에러 메시지 노출 여부 확인",
-  		"priority": "MEDIUM",
-  		"memberInfo": null,
-  		"dueDate": null
-	 }
-  ]
-}
- */
