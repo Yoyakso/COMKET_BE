@@ -13,8 +13,10 @@ import lombok.NoArgsConstructor;
 public class ActionItemContentDto {
 	private String title;
 	private TicketPriority priority;
+
 	@Nullable
 	private ActionItemAssigneeDto memberInfo;
+	
 	@Nullable
 	private String dueDate;
 }

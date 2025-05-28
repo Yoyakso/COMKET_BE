@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ActionItemAssigneeDto {
-	String name;
-	Long memberId;
+	private String name;
+	private Long memberId;
 }

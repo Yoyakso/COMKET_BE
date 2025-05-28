@@ -60,7 +60,7 @@ public class AiService {
 			.append("만약 여러개의 작업이 존재한다면, actionItems에 리스트로 여러개 만들어줘. \n")
 			.append("응답 예시:\n")
 			.append("{\n")
-			.append("  \"summary\": \"프로젝트 목록 불러오기 버그와 관련해 아래 액션아이템이 도출됨.\",\n")
+			.append("  \"summary\": \"티켓 생성 시 프로젝트 이름 중복으로 인한 이슈 발생\",\n")
 			.append("  \"actionItems\": \"[\", \n")
 			.append("	 {\n")
 			.append("  		\"title\": \"프로젝트 목록 권한 서버 로직 수정\",\n")
