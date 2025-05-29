@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ActionItemAssigneeDto {
 	private String name;
-	private Long memberId;
+	private Long projectMemberId;
 }

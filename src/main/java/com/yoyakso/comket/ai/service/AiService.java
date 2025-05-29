@@ -17,6 +17,9 @@ import com.yoyakso.comket.ai.repository.AiSummaryRepository;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
+import com.yoyakso.comket.project.service.ProjectService;
+import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
+import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.thread.entity.ThreadMessage;
 import com.yoyakso.comket.thread.repository.ThreadMessageRepository;
 import com.yoyakso.comket.ticket.entity.Ticket;
@@ -34,6 +37,9 @@ public class AiService {
 	private final MemberService memberService;
 	private final AiSummaryRepository aiSummaryRepository;
 	private final AiActionItemsRepository aiActionItemsRepository;
+	private final ProjectMemberRepository projectMemberRepository;
+	private final ProjectMemberService projectMemberService;
+	private final ProjectService projectService;
 
 	public AiSummaryWithActionItemsResponse summarizeThread(Long ticketId) {
 		Ticket ticket = ticketRepository.findById(ticketId)
@@ -53,7 +59,11 @@ public class AiService {
 
 		for (ThreadMessage message : messages) {
 			String name = memberService.findMemberNameById(message.getSenderMemberId());
-			promptBuilder.append("{").append(name).append("-").append(message.getSenderMemberId()).append("}: ")
+			Long projectMemberId = projectMemberService.findProjectMemberIdByProjectIdAndMemberId(
+				ticket.getProject().getId(),
+				message.getSenderMemberId()
+			);
+			promptBuilder.append("{").append(name).append("-").append(projectMemberId).append("}: ")
 				.append(message.getContent()).append("\n");
 		}
 
@@ -71,7 +81,7 @@ public class AiService {
 			.append("	 {\n")
 			.append("  		\"title\": \"프로젝트 목록 권한 서버 로직 수정\",\n")
 			.append("  		\"priority\": \"MEDIUM\",\n // HIGH, MEDIUM, LOW 세가지 단계가 있음")
-			.append("  		\"memberInfo\": { \"memberId\": 17, \"name\": \"조민현\" },\n // 담당자를 찾기 어려우면 null")
+			.append("  		\"memberInfo\": { \"projectMemberId\": 17, \"name\": \"조민현\" },\n // 담당자를 찾기 어려우면 null")
 			.append("  		\"dueDate\": \"2025-00-00\"\n // 날짜에 대한 대화가 없다면 null")
 			.append("	 },\n")
 			.append("	 {\n")
@@ -104,7 +114,7 @@ public class AiService {
 
 		for (ActionItemContentDto actionItemData : response.getActionItems()) {
 			Member member = Optional.ofNullable(actionItemData.getMemberInfo())
-				.map(info -> memberService.getMemberById(info.getMemberId()))
+				.map(info -> memberService.getMemberById(info.getProjectMemberId()))
 				.orElse(null);
 
 			AiActionItem item = AiActionItem.builder()
