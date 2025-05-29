@@ -85,6 +85,11 @@ public class ProjectMemberService {
 			.orElseThrow(() -> new CustomException("CANNOT_FOUND_PROJECTMEMBER", "프로젝트 멤버를 찾을 수 없습니다."));
 	}
 
+	public Long findProjectMemberIdByProjectIdAndMemberId(Long projectId, Long memberId) {
+		return projectMemberRepository.findIdByProjectIdAndMemberId(projectId, memberId)
+			.orElseThrow(() -> new CustomException("CANNOT_FOUND_PROJECTMEMBER", "프로젝트 멤버를 찾을 수 없습니다."));
+	}
+
 	// ---private method---
 
 	private List<Long> filterNewMemberIds(Long projectId, List<Long> WorkspaceMemberIdList) {
