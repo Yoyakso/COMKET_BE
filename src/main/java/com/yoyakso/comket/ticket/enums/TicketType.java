@@ -8,15 +8,22 @@ import lombok.Getter;
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 @Getter
 public enum TicketType {
-	// 티켓 유형 : 기획, 버그, 디자인, 개발, 테스트, 문서화, 회의/논의, 기타
-	PLANNING("기획"),
-	BUG("버그"),
-	DESIGN("디자인"),
-	DEVELOPMENT("개발"),
-	TEST("테스트"),
-	DOCUMENTATION("문서화"),
+
+	// 티켓 Template Type : 기본형, 기능 개발, 기획/정책 제안, 회의/논의, QA 테스트, 이슈/버그 리포트, 데이터 분석
+	// 기본형
+	DEFAULT("기본형"),
+	// 기능 개발
+	FEATURE("기능 개발"),
+	// 기획/정책 제안
+	PLANNING("기획/정책 제안"),
+	// 회의/논의
 	MEETING("회의/논의"),
-	OTHER("기타");
+	// QA 테스트
+	QA("QA 테스트"),
+	// 이슈/버그 리포트
+	BUG("이슈/버그 리포트"),
+	// 데이터 분석
+	DATA_ANALYSIS("데이터 분석");
 
 	@JsonValue
 	private final String type;
