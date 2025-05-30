@@ -114,7 +114,10 @@ public class AiService {
 
 		for (ActionItemContentDto actionItemData : response.getActionItems()) {
 			Member member = Optional.ofNullable(actionItemData.getMemberInfo())
-				.map(info -> memberService.getMemberById(info.getProjectMemberId()))
+				.map(info -> {
+					Long memberId = projectMemberService.getMemberIdByProjectMemberId(info.getProjectMemberId());
+					return memberService.getMemberById(memberId);
+				})
 				.orElse(null);
 
 			AiActionItem item = AiActionItem.builder()

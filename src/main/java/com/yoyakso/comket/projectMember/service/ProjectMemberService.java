@@ -67,6 +67,11 @@ public class ProjectMemberService {
 		return projectMemberRepository.findAllProjectsByMemberAndWorkspace(member, workspace);
 	}
 
+	public Long getMemberIdByProjectMemberId(Long projectMemberId) {
+		return projectMemberRepository.findMemberIdById(projectMemberId)
+			.orElseThrow(() -> new CustomException("CANNOT_FOUND_MEMBER_ID", "멤버ID를 찾을 수 없습니다."));
+	}
+
 	public List<ProjectMemberResponse> inviteMembersToProject(
 		Long projectId,
 		ProjectMemberInviteRequest request
