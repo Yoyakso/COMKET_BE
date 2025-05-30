@@ -27,6 +27,7 @@ public class TicketMapper {
 			.state(request.getState())
 			.startDate(request.getStartDate())
 			.endDate(request.getEndDate())
+			.additionalInfo(request.getAdditionalInfo()) // 추가 정보 매핑
 			.creator(creator)
 			.build();
 	}
@@ -51,6 +52,7 @@ public class TicketMapper {
 				projectMemberService.buildProjectMemberInfoResponse(ticket.getProject(), ticket.getCreator()))
 			.parentTicketId(ticket.getParentTicket() != null ? ticket.getParentTicket().getId() : null)
 			.subTicketCount(ticket.getSubTicketCount())
+			.additionalInfo(ticket.getAdditionalInfo()) // 추가 정보 매핑
 			.build();
 	}
 
@@ -73,6 +75,7 @@ public class TicketMapper {
 		updateField(ticket::setState, request.getState(), false, "INVALID_TICKET_STATE", "티켓 상태는 null이 될 수 없습니다.");
 		updateField(ticket::setStartDate, request.getStartDate(), true, null, null);
 		updateField(ticket::setEndDate, request.getEndDate(), true, null, null);
+		updateField(ticket::setAdditionalInfo, request.getAdditionalInfo(), true, null, null); // 추가 정보 처리
 	}
 
 }

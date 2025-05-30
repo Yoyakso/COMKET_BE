@@ -1,6 +1,7 @@
 package com.yoyakso.comket.ticket.dto.request;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -47,6 +48,9 @@ public class TicketCreateRequest {
 	@JsonProperty("assignee_member_id")
 	private Long assigneeId;
 
+	@JsonProperty("additional_info")
+	private Map<String, Object> additionalInfo; // 템플릿별 추가 정보
+	
 	@JsonCreator
 	public void setPriority(@JsonProperty("ticket_priority") String priority) {
 		this.priority = (priority != null) ? TicketPriority.valueOf(priority.toUpperCase()) : null;

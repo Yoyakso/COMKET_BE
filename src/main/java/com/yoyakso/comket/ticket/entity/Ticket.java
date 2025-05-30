@@ -2,16 +2,19 @@ package com.yoyakso.comket.ticket.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.entity.Project;
+import com.yoyakso.comket.ticket.converter.AdditionalInfoConverter;
 import com.yoyakso.comket.ticket.enums.TicketPriority;
 import com.yoyakso.comket.ticket.enums.TicketState;
 import com.yoyakso.comket.ticket.enums.TicketType;
 
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -20,6 +23,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -49,6 +53,7 @@ public class Ticket {
 	private String name;
 
 	//티켓 설명
+	@Lob
 	private String description;
 
 	//티켓 타입
@@ -100,6 +105,10 @@ public class Ticket {
 	//삭제 여부
 	//티켓은 삭제여부만 존재하기에 isDeleted로 명명
 	private boolean isDeleted = false;
+
+	@Lob
+	@Convert(converter = AdditionalInfoConverter.class)
+	private Map<String, Object> additionalInfo;
 
 	@Transient
 	private Long subTicketCount = 0L; // 서브 티켓 개수

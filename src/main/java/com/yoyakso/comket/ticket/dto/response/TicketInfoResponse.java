@@ -2,6 +2,7 @@ package com.yoyakso.comket.ticket.dto.response;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yoyakso.comket.project.dto.ProjectMemberResponse;
@@ -41,4 +42,6 @@ public class TicketInfoResponse {
 	private ProjectMemberResponse creatorMember;
 	@JsonProperty("sub_ticket_count")
 	private Long subTicketCount;
+	@JsonProperty("additional_info")
+	private Map<String, Object> additionalInfo;
 }
