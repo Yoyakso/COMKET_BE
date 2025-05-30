@@ -1,4 +1,4 @@
-package com.yoyakso.comket.notification.service;
+package com.yoyakso.comket.alarm.service;
 
 import org.springframework.stereotype.Service;
 
