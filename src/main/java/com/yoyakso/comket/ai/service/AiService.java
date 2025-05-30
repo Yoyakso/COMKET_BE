@@ -87,10 +87,20 @@ public class AiService {
 
 		List<String> aiGenerateResponse = generateAiEyeLevelSummaryData(ticket, messages, responsibility);
 
-		return AiEyeLevelSummaryResponse.builder()
+		AiEyeLevelSummaryResponse response = AiEyeLevelSummaryResponse.builder()
 			.summary(aiGenerateResponse)
 			.createTime(LocalDateTime.now())
 			.build();
+
+		AiSummary summary = AiSummary.builder()
+			.ticket(ticket)
+			.summaryType(responsibility)
+			.summary(String.valueOf(response.getSummary()))
+			.build();
+
+		aiSummaryRepository.save(summary);
+
+		return response;
 	}
 
 	public AiSummaryWithActionItemsResponse[] getSummaryHistoryAll(Long ticketId) {
