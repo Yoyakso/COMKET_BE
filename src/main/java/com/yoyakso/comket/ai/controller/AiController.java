@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class AiController {
 	private final AiService aiService;
 
-	@GetMapping("{ticketId}/ai")
+	@GetMapping("{ticketId}/ai/summary")
 	public ResponseEntity<AiSummaryWithActionItemsResponse> getSummaryAndActionItems(
 		@PathVariable("ticketId") Long ticketId
 	) {
@@ -25,12 +25,20 @@ public class AiController {
 		return ResponseEntity.ok(response);
 	}
 
-	// @GetMapping("{ticketId}/ai")
+	// @GetMapping("{ticketId}/ai/eyelevel")
 	// public ResponseEntity<AiEyeLevelSummaryResponse> getEyeLevelSummary(
 	// 	@PathVariable("ticketId") Long ticketId,
 	// 	@RequestParam("responsibility") String responsibility
 	// ) {
 	//
 	// }
+
+	@GetMapping("{ticketId}/ai/history")
+	public ResponseEntity<AiSummaryWithActionItemsResponse[]> getHistoryAndActionItems(
+		@PathVariable("ticketId") Long ticketId
+	) {
+		AiSummaryWithActionItemsResponse[] summaryList = aiService.getSummaryHistoryAll(ticketId);
+		return ResponseEntity.ok(summaryList);
+	}
 
 }
