@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yoyakso.comket.exception.CustomException;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
@@ -18,7 +19,8 @@ public class AdditionalInfoConverter implements AttributeConverter<Map<String, O
 		try {
 			return objectMapper.writeValueAsString(attribute);
 		} catch (Exception e) {
-			throw new RuntimeException("Error converting map to JSON", e);
+			throw new CustomException("ADDITIONALINFO_DATABASE_CONVERT_FAILED",
+				"Failed to convert additional info to JSON");
 		}
 	}
 
@@ -28,7 +30,8 @@ public class AdditionalInfoConverter implements AttributeConverter<Map<String, O
 			return objectMapper.readValue(dbData, new TypeReference<Map<String, Object>>() {
 			});
 		} catch (Exception e) {
-			throw new RuntimeException("Error converting JSON to map", e);
+			throw new CustomException("ADDITIONALINFO_ENTITY_CONVERT_FAILED",
+				"Failed to convert JSON to additional info map");
 		}
 	}
 }
