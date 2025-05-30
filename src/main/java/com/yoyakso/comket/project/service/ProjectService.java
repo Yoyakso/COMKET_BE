@@ -47,4 +47,6 @@ public interface ProjectService {
 	Project getProjectByProjectName(String projectName);
 
 	void validateProjectAccess(Project project, Member member, String target);
+
+	Project getProjectNameById(Long projectId);
 }

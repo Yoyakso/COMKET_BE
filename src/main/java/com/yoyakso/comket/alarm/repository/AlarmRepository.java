@@ -16,8 +16,8 @@ public interface AlarmRepository extends JpaRepository<Alarm, Long> {
 
 	@Query(
 		"SELECT a " +
-			"FROM Alarm a JOIN Project p ON a.projectId = p.id " +
-			"WHERE a.memberId = :memberId AND p.workspace.id = :workspaceId"
+			"FROM Alarm a JOIN Project p ON a.project.id = p.id " +
+			"WHERE a.member.id = :memberId AND p.workspace.id = :workspaceId"
 	)
 	List<Alarm> findByMemberIdAndWorkspaceId(@Param("memberId") Long memberId,
 		@Param("workspaceId") Long workspaceId);

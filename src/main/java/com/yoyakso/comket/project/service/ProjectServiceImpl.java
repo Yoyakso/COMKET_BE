@@ -235,7 +235,7 @@ public class ProjectServiceImpl implements ProjectService {
 		List<Project> projects = (positionType.equals("ADMIN") || positionType.equals("OWNER"))
 			? projectRepository.findAllByWorkspaceAndState(workSpace, ProjectState.ACTIVE)
 			: projectMemberService.getProjectListByMemberAndWorkspace(member, workSpace);
-		
+
 		return projects.stream()
 			.map(project -> {
 				String profileFileUrl = project.getProfileFile() != null
@@ -445,7 +445,6 @@ public class ProjectServiceImpl implements ProjectService {
 		}
 	}
 
-	// ---private methods---
 	public ProjectMember validateAdminPermission(Member member, Long projectId) {
 		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(
 			projectId,
@@ -461,6 +460,13 @@ public class ProjectServiceImpl implements ProjectService {
 		return updateRequester;
 	}
 
+	@Override
+	public Project getProjectNameById(Long projectId) {
+		return projectRepository.findById(projectId)
+			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
+	}
+
+	// ---private methods---
 	private void validateUpperCasePermission(ProjectMember controllerMember, ProjectMember targetMember) {
 		// OWNER는 모든 멤버의 포지션과 상태를 변경할 수 있다.
 		if ("OWNER".equals(controllerMember.getPositionType())) {

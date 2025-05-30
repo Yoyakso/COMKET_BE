@@ -10,5 +10,6 @@ import lombok.Data;
 public class AlarmProjectResponse {
 	private Long memberId;
 	private Long projectId;
+	private String projectName;
 	private Long alarmCount;
 }
