@@ -41,4 +41,4 @@ out/
 .vscode/
 
 ### fcm ###
-resources/certification.json
+src/main/resources/certification.json
