@@ -86,6 +86,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // FCM
+    implementation 'com.google.firebase:firebase-admin:9.3.0'
 }
 
 tasks.withType(Test).configureEach {
