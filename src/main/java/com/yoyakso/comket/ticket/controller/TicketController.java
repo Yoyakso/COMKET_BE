@@ -22,6 +22,7 @@ import com.yoyakso.comket.ticket.dto.request.TicketStateUpdateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketTypeUpdateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketUpdateRequest;
 import com.yoyakso.comket.ticket.dto.response.TicketInfoResponse;
+import com.yoyakso.comket.ticket.dto.response.TicketProjectInfoResponse;
 import com.yoyakso.comket.ticket.entity.Ticket;
 import com.yoyakso.comket.ticket.mapper.TicketMapper;
 import com.yoyakso.comket.ticket.service.TicketService;
@@ -57,6 +58,18 @@ public class TicketController {
 		List<Ticket> tickets = ticketService.getTickets(projectName, member);
 		return ResponseEntity.ok(tickets.stream()
 			.map(ticketMapper::toResponse)
+			.toList());
+	}
+
+	// 내 티켓 몰아보기 조회
+	@GetMapping("/workspace")
+	public ResponseEntity<List<TicketProjectInfoResponse>> getTicketWorkspaces(
+		@RequestParam("workspace_name") String workspaceName
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		List<Ticket> tickets = ticketService.getTicketsByWorkspace(workspaceName, member);
+		return ResponseEntity.ok(tickets.stream()
+			.map(ticketMapper::toWorkspaceResponse)
 			.toList());
 	}
 

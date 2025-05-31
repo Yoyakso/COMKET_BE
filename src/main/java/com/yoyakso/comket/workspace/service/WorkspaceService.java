@@ -57,6 +57,14 @@ public class WorkspaceService {
 		return workspace;
 	}
 
+	public Workspace getWorkspaceByWorkspaceName(String workspaceName, Member member) {
+		Workspace workspace = workspaceRepository.findByName(workspaceName)
+			.filter(ws -> ws.getState().equals(WorkspaceState.ACTIVE))
+			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스 정보를 찾을 수 없습니다."));
+		validateWorkspaceAccess(workspace, member);
+		return workspace;
+	}
+
 	public List<Workspace> getAllWorkspaces() {
 		return workspaceRepository.findAll();
 	}

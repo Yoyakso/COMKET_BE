@@ -235,7 +235,7 @@ public class ProjectServiceImpl implements ProjectService {
 		List<Project> projects = (positionType.equals("ADMIN") || positionType.equals("OWNER"))
 			? projectRepository.findAllByWorkspaceAndState(workSpace, ProjectState.ACTIVE)
 			: projectMemberService.getProjectListByMemberAndWorkspace(member, workSpace);
-		
+
 		return projects.stream()
 			.map(project -> {
 				String profileFileUrl = project.getProfileFile() != null
@@ -443,6 +443,11 @@ public class ProjectServiceImpl implements ProjectService {
 		if (projectMember == null || projectMember.getState() != ProjectMemberState.ACTIVE) {
 			throw new CustomException("PROJECT_ACCESS_FAILED", target + "에 대한 프로젝트에 대한 권한이 없습니다.");
 		}
+	}
+
+	@Override
+	public List<Project> getProjectsByWorkspaceAndMember(Workspace workspace, Member member) {
+		return projectMemberService.getProjectListByMemberAndWorkspace(member, workspace);
 	}
 
 	// ---private methods---
