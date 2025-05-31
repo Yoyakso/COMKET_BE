@@ -106,3 +106,5 @@ management:
         include: health
   security:
     enabled: false
+fcm:
+  certification: ${FCM_CERTIFICATION}
