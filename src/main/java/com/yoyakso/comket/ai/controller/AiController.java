@@ -24,7 +24,7 @@ public class AiController {
 	public ResponseEntity<AiSummaryWithActionItemsResponse> getSummaryAndActionItems(
 		@PathVariable("ticketId") Long ticketId
 	) {
-		AiSummaryWithActionItemsResponse response = aiService.getAiSummarAndActionItems(ticketId);
+		AiSummaryWithActionItemsResponse response = aiService.getAiSummaryAndActionItems(ticketId);
 		return ResponseEntity.ok(response);
 	}
 

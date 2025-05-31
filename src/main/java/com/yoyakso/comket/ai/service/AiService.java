@@ -42,7 +42,7 @@ public class AiService {
 	private final AiActionItemsRepository aiActionItemsRepository;
 	private final ProjectMemberService projectMemberService;
 
-	public AiSummaryWithActionItemsResponse getAiSummarAndActionItems(Long ticketId) {
+	public AiSummaryWithActionItemsResponse getAiSummaryAndActionItems(Long ticketId) {
 		Ticket ticket = ticketRepository.findById(ticketId)
 			.orElseThrow(() -> new CustomException("TICKET_NOT_FOUND", "해당 티켓을 찾을 수 없습니다."));
 
