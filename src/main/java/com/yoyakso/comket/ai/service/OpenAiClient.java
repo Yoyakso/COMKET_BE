@@ -33,7 +33,7 @@ public class OpenAiClient {
 		Map<String, Object> requestBody = Map.of(
 			"model", "gpt-4",
 			"messages", List.of(
-				Map.of("role", "system", "content", "너는 협업 툴의 AI 요약봇이야. 액션아이템과 요약을 아래 포맷에 맞춰 반환해."),
+				Map.of("role", "system", "content", "너는 협업 툴의 AI 요약봇이야. 요약을 아래 포맷에 맞춰 반환해."),
 				Map.of("role", "user", "content", prompt)
 			),
 			"temperature", 0.5
