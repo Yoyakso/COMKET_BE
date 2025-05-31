@@ -36,4 +36,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 	);
 
 	Long countByParentTicket(Ticket t);
+
+	List<Ticket> findByProjectInAndIsDeletedFalse(List<Project> projects);
 }

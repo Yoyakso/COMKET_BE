@@ -11,6 +11,7 @@ import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.ticket.dto.request.TicketCreateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketUpdateRequest;
 import com.yoyakso.comket.ticket.dto.response.TicketInfoResponse;
+import com.yoyakso.comket.ticket.dto.response.TicketProjectInfoResponse;
 import com.yoyakso.comket.ticket.entity.Ticket;
 
 @Component
@@ -78,4 +79,27 @@ public class TicketMapper {
 		updateField(ticket::setAdditionalInfo, request.getAdditionalInfo(), true, null, null); // 추가 정보 처리
 	}
 
+	public TicketProjectInfoResponse toWorkspaceResponse(Ticket ticket) {
+		return TicketProjectInfoResponse.builder()
+			.id(ticket.getId())
+			.name(ticket.getName())
+			.description(ticket.getDescription())
+			.type(ticket.getType())
+			.priority(ticket.getPriority())
+			.state(ticket.getState())
+			.startDate(ticket.getStartDate())
+			.endDate(ticket.getEndDate())
+			.createdAt(ticket.getCreatedAt())
+			.updatedAt(ticket.getUpdatedAt())
+			.assigneeMember(
+				ticket.getAssignee() != null ?
+					projectMemberService.buildProjectMemberInfoResponse(ticket.getProject(), ticket.getAssignee()) :
+					null)
+			.creatorMember(
+				projectMemberService.buildProjectMemberInfoResponse(ticket.getProject(), ticket.getCreator()))
+			.parentTicketId(ticket.getParentTicket() != null ? ticket.getParentTicket().getId() : null)
+			.subTicketCount(ticket.getSubTicketCount())
+			.additionalInfo(ticket.getAdditionalInfo()) // 추가 정보 매핑
+			.build();
+	}
 }
