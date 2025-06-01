@@ -12,6 +12,7 @@ import com.yoyakso.comket.project.dto.ProjectMemberResponse;
 import com.yoyakso.comket.project.dto.ProjectMemberUpdateRequest;
 import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.project.enums.ProjectState;
+import com.yoyakso.comket.workspace.entity.Workspace;
 
 @Service
 public interface ProjectService {
@@ -46,5 +47,13 @@ public interface ProjectService {
 
 	Project getProjectByProjectName(String projectName);
 
+	List<Project> getProjectsByWorkspaceAndMember(Workspace workspace, Member member);
+
 	void validateProjectAccess(Project project, Member member, String target);
+
+	Project getProjectNameById(Long projectId);
+
+	List<Project> getProjectsByWorkspaceId(Long workspaceId, Member member);
+
+	Project getProjectByProjectId(Long projectId, Member member);
 }

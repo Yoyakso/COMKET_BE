@@ -6,6 +6,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.yoyakso.comket.alarm.enums.TicketAlarmType;
+import com.yoyakso.comket.alarm.service.AlarmService;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
@@ -23,6 +25,8 @@ import com.yoyakso.comket.ticket.dto.response.TicketInfoResponse;
 import com.yoyakso.comket.ticket.entity.Ticket;
 import com.yoyakso.comket.ticket.mapper.TicketMapper;
 import com.yoyakso.comket.ticket.repository.TicketRepository;
+import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspace.service.WorkspaceService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +39,9 @@ public class TicketService {
 	private final ProjectMemberService projectMemberService;
 	private final ProjectService projectService;
 	private final TicketMapper ticketMapper;
+	private final AlarmService alarmService;
 	private final KafkaTopicService kafkaTopicService;
+	private final WorkspaceService workspaceService;
 
 	@Transactional
 	public TicketInfoResponse createTicket(String projectName, TicketCreateRequest request,
@@ -120,6 +126,7 @@ public class TicketService {
 
 		// 부모 티켓 정보 설정
 		setParentTicket(ticket, request.getParentTicketId());
+
 		// 담당자 정보 설정
 		setAssignee(ticket, request.getAssigneeId(), project);
 
@@ -245,6 +252,16 @@ public class TicketService {
 		return ticketRepository.findProjectIdByTicketId(ticketId);
 	}
 
+	@Transactional
+	public List<Ticket> getTicketsByWorkspace(String workspaceName, Member member) {
+		// 워크스페이스에 속한 프로젝트 목록을 가져오기
+		Workspace workspace = workspaceService.getWorkspaceByWorkspaceName(workspaceName, member);
+		// 해당 워크스페이스 내의 프로젝트에 속한 티켓 목록을 가져오기
+		List<Project> projectList = projectService.getProjectsByWorkspaceAndMember(workspace, member);
+
+		return ticketRepository.findByProjectInAndIsDeletedFalse(projectList);
+	}
+
 	// ------private------
 
 	private Optional<Ticket> getTicketById(Long ticketId) {
@@ -270,6 +287,9 @@ public class TicketService {
 			// 티켓의 프로젝트와 담당자의 프로젝트가 일치하지 않음
 			throw new CustomException("INVALID_ASSIGNEE", "담당자가 해당 프로젝트에 속하지 않습니다.");
 		}
+		// 알람 생성
+		alarmService.addTicketAlarm(assigneeProjectMember.getMember(), ticket, TicketAlarmType.ASSIGNEE_SETTING, "");
+		// 티켓에 담당자 설정
 		ticket.setAssignee(assigneeProjectMember.getMember());
 	}
 
