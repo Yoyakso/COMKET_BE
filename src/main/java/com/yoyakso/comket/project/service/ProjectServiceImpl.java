@@ -466,6 +466,29 @@ public class ProjectServiceImpl implements ProjectService {
 			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
 	}
 
+	@Override
+	public List<Project> getProjectsByWorkspaceId(Long workspaceId, Member member) {
+		// 워크스페이스 조회
+		Workspace workSpace = workspaceRepository.findById(workspaceId)
+			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
+
+		// 워크스페이스 멤버 검증
+		workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(workSpace.getId(), member.getId());
+
+		return projectRepository.findAllByWorkspaceAndState(workSpace, ProjectState.ACTIVE);
+	}
+
+	@Override
+	public Project getProjectByProjectId(Long projectId, Member member) {
+		// 프로젝트 조회
+		Project project = projectRepository.findById(projectId)
+			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
+		// 프로젝트 멤버 검증
+		ProjectMember projectMember = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
+			member.getId());
+		return project;
+	}
+
 	// ---private methods---
 	private void validateUpperCasePermission(ProjectMember controllerMember, ProjectMember targetMember) {
 		// OWNER는 모든 멤버의 포지션과 상태를 변경할 수 있다.

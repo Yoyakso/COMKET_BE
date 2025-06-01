@@ -1,4 +1,4 @@
-package com.yoyakso.comket.alarm.dto.external;
+package com.yoyakso.comket.alarm.dto.response;
 
 import java.util.List;
 
@@ -9,8 +9,8 @@ import lombok.Data;
 @Data
 @Builder
 @AllArgsConstructor
-public class AlarmWorkspaceResponse {
+public class AlarmWorkspaceCountResponse {
 	private Long memberId;
 	private Long workspaceId;
-	private List<AlarmProjectResponse> projectAlarmList;
+	private List<AlarmProjectCountResponse> projectAlarmList;
 }

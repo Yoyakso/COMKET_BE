@@ -49,4 +49,8 @@ public interface ProjectService {
 	void validateProjectAccess(Project project, Member member, String target);
 
 	Project getProjectNameById(Long projectId);
+
+	List<Project> getProjectsByWorkspaceId(Long workspaceId, Member member);
+
+	Project getProjectByProjectId(Long projectId, Member member);
 }

@@ -2,92 +2,86 @@ package com.yoyakso.comket.alarm.service;
 
 import java.util.List;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import com.yoyakso.comket.alarm.dto.external.AlarmProjectResponse;
-import com.yoyakso.comket.alarm.dto.external.AlarmWorkspaceResponse;
-import com.yoyakso.comket.alarm.entity.Alarm;
+import com.yoyakso.comket.alarm.entity.ProjectAlarm;
+import com.yoyakso.comket.alarm.entity.TicketAlarm;
+import com.yoyakso.comket.alarm.enums.TicketAlarmType;
 import com.yoyakso.comket.alarm.repository.AlarmRepository;
-import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.project.service.ProjectService;
+import com.yoyakso.comket.ticket.entity.Ticket;
+import com.yoyakso.comket.ticket.service.TicketService;
+import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspace.service.WorkspaceService;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class AlarmService {
-	private final AlarmRepository alarmRepository;
+	private final WorkspaceService workspaceService;
 	private final ProjectService projectService;
+	private final TicketService ticketService;
+	private final AlarmRepository alarmRepository;
+	private final RedisTemplate<String, String> redisTemplate;
 
-	// alarm count 추가 메서드
-	// 해당되는 row가 없다면 추가
-	@Transactional
-	public void incrementAlarmCount(Member member, Project project) {
-		// Alarm 엔티티를 memberId와 projectId로 조회
-		Alarm alarm = alarmRepository.findByMemberIdAndProjectId(member.getId(), project.getId())
-			.orElseGet(() -> {
-				// 해당 row가 없으면 새로 생성
-				Alarm newAlarm = Alarm.builder()
-					.member(member)
-					.project(project)
-					.count(0L)
-					.build();
-				return alarmRepository.save(newAlarm);
-			});
+	// 워크스페이스별 알람 count 조회
+	public List<ProjectAlarm> getProjectAlarmsByWorkspace(Member member, Long workspaceId) {
+		// 워크스페이스 접근 가능 여부 확인
+		Workspace workspace = workspaceService.getWorkspaceById(workspaceId, member);
 
-		// count 증가
-		alarm.setCount(alarm.getCount() + 1);
-		alarmRepository.save(alarm);
+		// 프로젝트 ID List 조회
+		List<Project> projectList = projectService.getProjectsByWorkspaceId(workspace.getId(), member);
+
+		return alarmRepository.findProjectAlarmListByMemberAndProjectIdIn(member, projectList);
 	}
 
-	// 알람 카운트 초기화 메서드
-	@Transactional
-	public void resetAlarmCount(Member member, Long projectId) {
-		// Alarm 엔티티를 memberId와 projectId로 조회
-		Alarm alarm = alarmRepository.findByMemberIdAndProjectId(member.getId(), projectId)
-			.orElseThrow(() -> new IllegalArgumentException("알람을 찾을 수 없습니다."));
+	// 프로젝트별 티켓 알람 조회
+	public List<TicketAlarm> getTicketAlarmsByProject(Member member, Long projectId) {
+		// 프로젝트 접근 가능 여부 확인
+		Project project = projectService.getProjectByProjectId(projectId, member);
 
-		// count 초기화
-		alarm.setCount(0L);
-		alarmRepository.save(alarm);
+		// 티켓 ID List 조회
+		List<Ticket> ticketList = ticketService.getTickets(project.getName(), member);
+
+		return alarmRepository.findTicketAlarmListByMemberAndTicketIdIn(member, ticketList);
 	}
 
-	// 알람 카운트 조회 메서드
-	@Transactional
-	public AlarmProjectResponse getAlarmCountByProject(Member member, Long projectId) {
-		// Alarm 엔티티를 memberId와 projectId로 조회
-		Alarm alarm = alarmRepository.findByMemberIdAndProjectId(member.getId(), projectId)
-			.orElseThrow(() -> new CustomException("CANNOT_FOUND_ALARM", "해당 프로젝트에 대한 알람이 존재하지 않습니다."));
+	// 티켓 알람 읽음 처리
+	public void markTicketAlarmAsRead(Member member, Long ticketId) {
+		// 티켓 접근 가능 여부 확인
+		Ticket ticket = ticketService.getTicketByIdAndMember(ticketId, member);
+		alarmRepository.markTicketAlarmAsRead(member, ticketId);
+		// 티켓 알람 읽음 처리 후, 프로젝트 알람 카운트 감소
+		alarmRepository.decrementProjectAlarmCount(member, ticket.getProject().getId());
+	}
 
-		return AlarmProjectResponse.builder()
-			.memberId(alarm.getMember().getId())
-			.projectId(alarm.getProject().getId())
-			.projectName(alarm.getProject().getName())
-			.alarmCount(alarm.getCount())
+	// 티켓 알람 추가 로직
+	public void addTicketAlarm(Member member, Ticket ticket, TicketAlarmType alarmType, String alarmMessage) {
+		// 티켓 알람 생성
+		TicketAlarm ticketAlarm = TicketAlarm.builder()
+			.member(member)
+			.ticket(ticket)
+			.alarmType(alarmType)
+			.alarmMessage(alarmMessage) // 알람 메세지는 필요에 따라 설정
 			.build();
+
+		boolean isAlarmExist = alarmRepository.existsTicketAlarm(ticketAlarm);
+		// 티켓 알람 저장
+		alarmRepository.createTicketAlarm(member, ticketAlarm);
+
+		if (!isAlarmExist) {
+			// 프로젝트에 대한 알람 카운트 증가
+			alarmRepository.incrementProjectAlarmCount(member, ticket.getProject().getId());
+		}
 	}
 
-	// 워크스페이스 내부 프로젝트별 알람 카운트 조회 메서드
-	@Transactional
-	public AlarmWorkspaceResponse getAlarmCountByWorkspace(Member member, Long workspaceId) {
-		// 워크스페이스 내부의 모든 프로젝트에 대한 알람 카운트를 조회하고, 각 프로젝트 별로 AlarmProjectResponse 객체를 생성
-		List<Alarm> alarmList = alarmRepository.findByMemberIdAndWorkspaceId(member.getId(), workspaceId);
-
-		// AlarmWorkspaceResponse 객체 생성 및 반환
-		return AlarmWorkspaceResponse.builder()
-			.memberId(member.getId())
-			.workspaceId(workspaceId)
-			.projectAlarmList(alarmList.stream()
-				.map(alarm -> AlarmProjectResponse.builder()
-					.memberId(alarm.getMember().getId())
-					.projectId(alarm.getProject().getId())
-					.projectName(alarm.getProject().getName())
-					.alarmCount(alarm.getCount())
-					.build())
-				.toList())
-			.build();
+	// 테스트용 티켓 알람 추가 API
+	public void addTicketAlarm(Member member, Long ticketId, TicketAlarmType alarmType, String alarmMessage) {
+		Ticket ticket = ticketService.getTicketByIdAndMember(ticketId, member);
+		addTicketAlarm(member, ticket, alarmType, alarmMessage);
 	}
 }

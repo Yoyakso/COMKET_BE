@@ -245,6 +245,12 @@ public class TicketService {
 		return ticketRepository.findProjectIdByTicketId(ticketId);
 	}
 
+	public Ticket getTicketByIdAndMember(Long ticketId, Member member) {
+		// 티켓 정보를 가져오기
+
+		return getValidTicket(ticketId);
+	}
+
 	// ------private------
 
 	private Optional<Ticket> getTicketById(Long ticketId) {
