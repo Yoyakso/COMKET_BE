@@ -445,6 +445,11 @@ public class ProjectServiceImpl implements ProjectService {
 		}
 	}
 
+	@Override
+	public List<Project> getProjectsByWorkspaceAndMember(Workspace workspace, Member member) {
+		return projectMemberService.getProjectListByMemberAndWorkspace(member, workspace);
+	}
+
 	public ProjectMember validateAdminPermission(Member member, Long projectId) {
 		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(
 			projectId,
