@@ -23,6 +23,8 @@ import com.yoyakso.comket.ticket.dto.response.TicketInfoResponse;
 import com.yoyakso.comket.ticket.entity.Ticket;
 import com.yoyakso.comket.ticket.mapper.TicketMapper;
 import com.yoyakso.comket.ticket.repository.TicketRepository;
+import com.yoyakso.comket.workspace.entity.Workspace;
+import com.yoyakso.comket.workspace.service.WorkspaceService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ public class TicketService {
 	private final ProjectService projectService;
 	private final TicketMapper ticketMapper;
 	private final KafkaTopicService kafkaTopicService;
+	private final WorkspaceService workspaceService;
 
 	@Transactional
 	public TicketInfoResponse createTicket(String projectName, TicketCreateRequest request,
@@ -243,6 +246,16 @@ public class TicketService {
 
 	public Long getProjectIdByTicketId(Long ticketId) {
 		return ticketRepository.findProjectIdByTicketId(ticketId);
+	}
+
+	@Transactional
+	public List<Ticket> getTicketsByWorkspace(String workspaceName, Member member) {
+		// 워크스페이스에 속한 프로젝트 목록을 가져오기
+		Workspace workspace = workspaceService.getWorkspaceByWorkspaceName(workspaceName, member);
+		// 해당 워크스페이스 내의 프로젝트에 속한 티켓 목록을 가져오기
+		List<Project> projectList = projectService.getProjectsByWorkspaceAndMember(workspace, member);
+
+		return ticketRepository.findByProjectInAndIsDeletedFalse(projectList);
 	}
 
 	// ------private------
