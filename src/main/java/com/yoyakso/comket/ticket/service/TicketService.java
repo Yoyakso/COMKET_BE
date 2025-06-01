@@ -6,6 +6,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.yoyakso.comket.alarm.enums.TicketAlarmType;
+import com.yoyakso.comket.alarm.service.AlarmService;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
@@ -35,6 +37,7 @@ public class TicketService {
 	private final ProjectMemberService projectMemberService;
 	private final ProjectService projectService;
 	private final TicketMapper ticketMapper;
+	private final AlarmService alarmService;
 	private final KafkaTopicService kafkaTopicService;
 
 	@Transactional
@@ -120,6 +123,7 @@ public class TicketService {
 
 		// 부모 티켓 정보 설정
 		setParentTicket(ticket, request.getParentTicketId());
+
 		// 담당자 정보 설정
 		setAssignee(ticket, request.getAssigneeId(), project);
 
@@ -276,6 +280,9 @@ public class TicketService {
 			// 티켓의 프로젝트와 담당자의 프로젝트가 일치하지 않음
 			throw new CustomException("INVALID_ASSIGNEE", "담당자가 해당 프로젝트에 속하지 않습니다.");
 		}
+		// 알람 생성
+		alarmService.addTicketAlarm(assigneeProjectMember.getMember(), ticket, TicketAlarmType.ASSIGNEE_SETTING, "");
+		// 티켓에 담당자 설정
 		ticket.setAssignee(assigneeProjectMember.getMember());
 	}
 
