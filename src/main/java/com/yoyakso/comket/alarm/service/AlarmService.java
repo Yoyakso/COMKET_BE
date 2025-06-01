@@ -13,7 +13,7 @@ import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.project.service.ProjectService;
 import com.yoyakso.comket.ticket.entity.Ticket;
-import com.yoyakso.comket.ticket.service.TicketService;
+import com.yoyakso.comket.ticket.service.InternalTicketService;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.service.WorkspaceService;
 
@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class AlarmService {
 	private final WorkspaceService workspaceService;
 	private final ProjectService projectService;
-	private final TicketService ticketService;
+	private final InternalTicketService internalTicketService;
 	private final AlarmRepository alarmRepository;
 	private final RedisTemplate<String, String> redisTemplate;
 
@@ -45,7 +45,7 @@ public class AlarmService {
 		Project project = projectService.getProjectByProjectId(projectId, member);
 
 		// 티켓 ID List 조회
-		List<Ticket> ticketList = ticketService.getTickets(project.getName(), member);
+		List<Ticket> ticketList = internalTicketService.getTickets(project.getName(), member);
 
 		return alarmRepository.findTicketAlarmListByMemberAndTicketIdIn(member, ticketList);
 	}
@@ -53,7 +53,7 @@ public class AlarmService {
 	// 티켓 알람 읽음 처리
 	public void markTicketAlarmAsRead(Member member, Long ticketId) {
 		// 티켓 접근 가능 여부 확인
-		Ticket ticket = ticketService.getTicketByIdAndMember(ticketId, member);
+		Ticket ticket = internalTicketService.getTicketByIdAndMember(ticketId, member);
 		alarmRepository.markTicketAlarmAsRead(member, ticketId);
 		// 티켓 알람 읽음 처리 후, 프로젝트 알람 카운트 감소
 		alarmRepository.decrementProjectAlarmCount(member, ticket.getProject().getId());
@@ -81,7 +81,7 @@ public class AlarmService {
 
 	// 테스트용 티켓 알람 추가 API
 	public void addTicketAlarm(Member member, Long ticketId, TicketAlarmType alarmType, String alarmMessage) {
-		Ticket ticket = ticketService.getTicketByIdAndMember(ticketId, member);
+		Ticket ticket = internalTicketService.getTicketByIdAndMember(ticketId, member);
 		addTicketAlarm(member, ticket, alarmType, alarmMessage);
 	}
 }
