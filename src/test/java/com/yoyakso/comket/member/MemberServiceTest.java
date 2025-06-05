@@ -16,9 +16,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.yoyakso.comket.auth.service.RefreshTokenService;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.jwt.JwtTokenProvider;
-import com.yoyakso.comket.member.dto.MemberRegisterRequest;
-import com.yoyakso.comket.member.dto.MemberRegisterResponse;
-import com.yoyakso.comket.member.dto.MemberUpdateRequest;
+import com.yoyakso.comket.member.dto.request.MemberRegisterRequest;
+import com.yoyakso.comket.member.dto.request.MemberUpdateRequest;
+import com.yoyakso.comket.member.dto.response.MemberRegisterResponse;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.repository.MemberRepository;
 import com.yoyakso.comket.member.service.MemberService;
@@ -73,8 +73,7 @@ class MemberServiceTest {
 		MemberRegisterRequest request = new MemberRegisterRequest();
 		request.setEmail(testMember.getEmail());
 		request.setPassword(testMember.getPassword());
-		request.setRealName(testMember.getRealName());
-		request.setProfileFileId(null); // 프로필 파일 ID 없음
+		request.setFullName(testMember.getFullName());
 
 		MemberRegisterResponse response = memberService.registerMember(request);
 
@@ -99,30 +98,30 @@ class MemberServiceTest {
 	void testDeleteMember_Success() {
 		when(memberRepository.findByEmail(testMember.getEmail())).thenReturn(Optional.ofNullable(testMember));
 
-		assertDoesNotThrow(() -> memberService.deleteMember(testMember.getEmail()));
+		assertDoesNotThrow(() -> memberService.deleteMember(testMember));
 		verify(memberRepository, times(1)).delete(testMember);
 	}
 
 	@Test
 	void testDeleteMember_NotFound() {
-		when(memberRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+		when(memberRepository.findById(999L)).thenReturn(Optional.empty());
 
 		CustomException exception = assertThrows(CustomException.class,
-			() -> memberService.deleteMember("nonexistent@example.com"));
+			() -> memberService.deleteMember(memberService.getMemberById(999L)));
 		assertEquals("MEMBER_NOT_FOUND", exception.getCode());
 	}
 
 	@Test
 	void testUpdateMember_Success() {
 		MemberUpdateRequest updateRequest = new MemberUpdateRequest();
-		updateRequest.setRealName("Updated Real Name");
+		updateRequest.setFullName("Updated Real Name");
 
 		when(memberRepository.save(any(Member.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		Member updatedMember = memberService.updateMember(testMember, updateRequest);
 
 		assertNotNull(updatedMember);
-		assertEquals("Updated Real Name", updatedMember.getRealName());
+		assertEquals("Updated Real Name", updatedMember.getFullName());
 	}
 
 	@Test
@@ -155,7 +154,7 @@ class MemberServiceTest {
 		MemberRegisterRequest request = new MemberRegisterRequest();
 		request.setEmail("test@exmaple.com");
 		request.setPassword("password");
-		request.setRealName("Test User");
+		request.setFullName("Test User");
 		request.setProfileFileId(null); // 프로필 파일 ID 없음
 		return request;
 	}

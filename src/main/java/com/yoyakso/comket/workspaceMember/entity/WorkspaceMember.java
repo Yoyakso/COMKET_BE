@@ -51,6 +51,12 @@ public class WorkspaceMember {
 	@Column(nullable = false, length = 20)
 	private String positionType; // "MEMBER", "ADMIN"
 
+	// 소속
+	private String department;
+
+	// 직무
+	private String responsibility;
+
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 

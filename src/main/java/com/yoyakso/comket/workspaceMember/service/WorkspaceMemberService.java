@@ -148,7 +148,7 @@ public class WorkspaceMemberService {
 			.filter(workspaceMember -> workspaceMember.getState() == WorkspaceMemberState.ACTIVE)
 			.map(workspaceMember -> WorkspaceMemberInfoResponse.builder()
 				.workspaceMemberid(workspaceMember.getId())
-				.name(workspaceMember.getMember().getRealName())
+				.name(workspaceMember.getMember().getFullName())
 				.email(workspaceMember.getMember().getEmail())
 				.positionType(workspaceMember.getPositionType())
 				.state(workspaceMember.getState())

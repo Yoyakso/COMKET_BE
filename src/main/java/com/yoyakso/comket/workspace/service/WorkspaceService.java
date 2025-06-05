@@ -227,7 +227,7 @@ public class WorkspaceService {
 	public WorkspaceMemberInfoResponse toMemberInfoResponse(WorkspaceMember member) {
 		return WorkspaceMemberInfoResponse.builder()
 			.workspaceMemberid(member.getId())
-			.name(member.getMember().getRealName())
+			.name(member.getMember().getFullName())
 			.email(member.getMember().getEmail())
 			.positionType(member.getPositionType())
 			.state(member.getState())

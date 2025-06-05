@@ -1,4 +1,4 @@
-package com.yoyakso.comket.member.dto;
+package com.yoyakso.comket.member.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -12,15 +12,7 @@ import lombok.NoArgsConstructor;
 public class MemberUpdateRequest {
 	private String email;
 
-	@JsonProperty("real_name")
-	private String realName;
+	@JsonProperty("full_name")
+	private String fullName;
 
-	private String department;
-
-	private String role;
-
-	private String responsibility;
-
-	@JsonProperty("profile_file_id")
-	private Long profileFileId;
 }
