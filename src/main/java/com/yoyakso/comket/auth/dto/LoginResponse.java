@@ -10,6 +10,5 @@ public class LoginResponse {
 	private String name;
 	private String email;
 	private String accessToken;
-	private String refreshToken;
 	private String loginPlatformInfo;
 }
