@@ -20,7 +20,6 @@ import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -36,16 +35,16 @@ public class MemberController {
 	@PostMapping("/members/register")
 	@Operation(summary = "회원가입", description = "새로운 회원을 등록합니다.")
 	public ResponseEntity<MemberRegisterResponse> registerMember(
-		@Valid @RequestBody MemberRegisterRequest memberRegisterRequest,
-		HttpServletResponse httpResponse
+		@Valid @RequestBody MemberRegisterRequest memberRegisterRequest
 	) {
 		MemberRegisterResponse response = memberService.registerMember(memberRegisterRequest);
 
 		Member member = memberService.getMemberByEmail(response.getEmail());
 
-		httpResponse.setHeader(HttpHeaders.SET_COOKIE, refreshTokenService.getRefreshTokenCookie(member).toString());
-
-		return ResponseEntity.ok(response);
+		return ResponseEntity
+			.ok()
+			.header(HttpHeaders.SET_COOKIE, refreshTokenService.getRefreshTokenCookie(member).toString())
+			.body(response);
 	}
 
 	//회원 정보 조회

@@ -23,7 +23,6 @@ import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -40,36 +39,36 @@ public class AuthController {
 	@GetMapping("/oauth2/google/login")
 	public ResponseEntity<LoginResponse> googleLoginCallback(
 		@RequestParam(value = "code") String code,
-		@RequestParam(value = "redirect") String redirectUri,
-		HttpServletResponse httpResponse
+		@RequestParam(value = "redirect") String redirectUri
 	) {
 		LoginResponse loginResponse = authService.handleGoogleLogin(code, redirectUri);
 		Member member = memberService.getMemberByEmail(loginResponse.getEmail());
 
-		httpResponse.setHeader(HttpHeaders.SET_COOKIE, refreshTokenService.getRefreshTokenCookie(member).toString());
-
-		return ResponseEntity.ok(loginResponse);
+		return ResponseEntity
+			.ok()
+			.header(HttpHeaders.SET_COOKIE, refreshTokenService.getRefreshTokenCookie(member).toString())
+			.body(loginResponse);
 	}
 
 	@Operation(method = "POST", description = "자체 로그인 API")
 	@PostMapping("/login")
 	public ResponseEntity<LoginResponse> requestLogin(
-		@RequestBody LoginRequest requestInfo,
-		HttpServletResponse httpResponse
+		@RequestBody LoginRequest requestInfo
 	) {
 		LoginResponse loginResponse = authService.login(requestInfo);
 		Member member = memberService.getMemberByEmail(loginResponse.getEmail());
 
-		httpResponse.setHeader(HttpHeaders.SET_COOKIE, refreshTokenService.getRefreshTokenCookie(member).toString());
-		return ResponseEntity.ok(loginResponse);
+		return ResponseEntity
+			.ok()
+			.header(HttpHeaders.SET_COOKIE, refreshTokenService.getRefreshTokenCookie(member).toString())
+			.body(loginResponse);
 	}
 
 	@Operation(method = "POST", description = "만료 토큰 재발급 API")
 	@PostMapping("/reissue")
 	public ResponseEntity<TokenReissueResponse> reissueToken(
 		@RequestBody TokenReissueRequest request,
-		@RequestHeader("Authorization") String accessHeader,
-		HttpServletResponse httpResponse
+		@RequestHeader("Authorization") String accessHeader
 	) {
 		if (accessHeader == null || !accessHeader.startsWith("Bearer ")) {
 			throw new CustomException("TOKEN_NOT_FOUND", "AccessToken이 없습니다.");
@@ -80,9 +79,10 @@ public class AuthController {
 
 		Member member = memberService.getMemberByEmail(jwtTokenProvider.getEmail());
 
-		httpResponse.setHeader(HttpHeaders.SET_COOKIE, refreshTokenService.getRefreshTokenCookie(member).toString());
-
-		return ResponseEntity.ok(response);
+		return ResponseEntity
+			.ok()
+			.header(HttpHeaders.SET_COOKIE, refreshTokenService.getRefreshTokenCookie(member).toString())
+			.body(response);
 	}
 
 	@Operation(method = "POST", description = "로그아웃 API")
