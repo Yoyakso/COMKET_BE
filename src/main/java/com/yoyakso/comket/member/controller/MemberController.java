@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.common.net.HttpHeaders;
+import com.yoyakso.comket.auth.service.RefreshTokenService;
 import com.yoyakso.comket.jwt.JwtTokenProvider;
 import com.yoyakso.comket.member.dto.MemberInfoResponse;
 import com.yoyakso.comket.member.dto.MemberRegisterRequest;
@@ -18,6 +20,7 @@ import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -27,16 +30,22 @@ import lombok.RequiredArgsConstructor;
 public class MemberController {
 	private final MemberService memberService;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final RefreshTokenService refreshTokenService;
 
 	//회원가입
 	@PostMapping("/members/register")
 	@Operation(summary = "회원가입", description = "새로운 회원을 등록합니다.")
 	public ResponseEntity<MemberRegisterResponse> registerMember(
-		@Valid @RequestBody MemberRegisterRequest memberRegisterRequest
+		@Valid @RequestBody MemberRegisterRequest memberRegisterRequest,
+		HttpServletResponse httpResponse
 	) {
 		MemberRegisterResponse response = memberService.registerMember(memberRegisterRequest);
-		return ResponseEntity.ok(response);
 
+		Member member = memberService.getMemberByEmail(response.getEmail());
+
+		httpResponse.setHeader(HttpHeaders.SET_COOKIE, refreshTokenService.getRefreshTokenCookie(member).toString());
+
+		return ResponseEntity.ok(response);
 	}
 
 	//회원 정보 조회
