@@ -82,7 +82,6 @@ class MemberServiceTest {
 		assertEquals(1L, response.getMemberId());
 		assertEquals("test@example.com", response.getEmail());
 		assertEquals("jwtAccessToken", response.getAccessToken());
-		assertEquals("jwtRefreshToken", response.getRefreshToken());
 		assertNull(response.getProfileFileUrl()); // 프로필 파일 URL이 null인지 확인
 	}
 

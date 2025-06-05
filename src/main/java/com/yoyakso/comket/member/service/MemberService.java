@@ -77,8 +77,6 @@ public class MemberService {
 		memberRepository.save(member);
 
 		String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
-		String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
-		refreshTokenService.saveRefreshToken(member.getId().toString(), refreshToken);
 
 		return MemberRegisterResponse.builder()
 			.memberId(member.getId())
@@ -88,7 +86,6 @@ public class MemberService {
 			.role(member.getRole())
 			.responsibility(member.getResponsibility())
 			.accessToken(accessToken)
-			.refreshToken(refreshToken)
 			.profileFileUrl(profileFileUrl)
 			.build();
 	}
@@ -132,7 +129,6 @@ public class MemberService {
 			.name(member.getRealName())
 			.email(member.getEmail())
 			.accessToken(accessToken)
-			.refreshToken(refreshToken)
 			.loginPlatformInfo("GOOGLE")
 			.build();
 	}

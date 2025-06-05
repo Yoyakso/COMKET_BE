@@ -13,6 +13,5 @@ public class MemberRegisterResponse {
 	private String role;
 	private String responsibility;
 	private String accessToken;
-	private String refreshToken;
 	private String profileFileUrl;
 }
