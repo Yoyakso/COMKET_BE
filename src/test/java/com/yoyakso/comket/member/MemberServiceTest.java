@@ -20,6 +20,7 @@ import com.yoyakso.comket.member.dto.request.MemberRegisterRequest;
 import com.yoyakso.comket.member.dto.request.MemberUpdateRequest;
 import com.yoyakso.comket.member.dto.response.MemberRegisterResponse;
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.mapper.MemberMapper;
 import com.yoyakso.comket.member.repository.MemberRepository;
 import com.yoyakso.comket.member.service.MemberService;
 
@@ -33,6 +34,9 @@ class MemberServiceTest {
 
 	@Mock
 	private JwtTokenProvider jwtTokenProvider;
+
+	@Mock
+	private MemberMapper memberMapper;
 
 	@Mock
 	private RefreshTokenService refreshTokenService;
@@ -64,6 +68,20 @@ class MemberServiceTest {
 		when(passwordEncoder.encode(testMember.getPassword())).thenReturn("encodedPassword");
 		when(jwtTokenProvider.createAccessToken(testMember.getEmail())).thenReturn("jwtAccessToken");
 		when(jwtTokenProvider.createRefreshToken(testMember.getEmail())).thenReturn("jwtRefreshToken");
+		when(memberMapper.toEntity(any(MemberRegisterRequest.class))).thenReturn(testMember);
+		when(memberMapper.toMemberRegisterResponse(any(Member.class), anyString(), anyString()))
+			.thenAnswer(invocation -> {
+				Member member = invocation.getArgument(0);
+				String accessToken = invocation.getArgument(1);
+				String refreshToken = invocation.getArgument(2);
+				return MemberRegisterResponse.builder()
+					.memberId(member.getId())
+					.email(member.getEmail())
+					.accessToken(accessToken)
+					.refreshToken(refreshToken)
+					.profileFileUrl(null)
+					.build();
+			});
 		when(memberRepository.save(any(Member.class))).thenAnswer(invocation -> {
 			Member savedMember = invocation.getArgument(0);
 			savedMember.setId(1L);
@@ -96,10 +114,11 @@ class MemberServiceTest {
 
 	@Test
 	void testDeleteMember_Success() {
-		when(memberRepository.findByEmail(testMember.getEmail())).thenReturn(Optional.ofNullable(testMember));
+		when(memberRepository.findById(testMember.getId())).thenReturn(Optional.of(testMember));
 
 		assertDoesNotThrow(() -> memberService.deleteMember(testMember));
-		verify(memberRepository, times(1)).delete(testMember);
+		verify(memberRepository, times(1)).save(testMember); // soft delete 처리 확인
+		assertTrue(testMember.getIsDeleted()); // 삭제 플래그 확인
 	}
 
 	@Test
@@ -114,14 +133,23 @@ class MemberServiceTest {
 	@Test
 	void testUpdateMember_Success() {
 		MemberUpdateRequest updateRequest = new MemberUpdateRequest();
-		updateRequest.setFullName("Updated Real Name");
+		updateRequest.setFullName("Updated Full Name");
 
+		// memberMapper Mock 설정
+		doAnswer(invocation -> {
+			Member member = invocation.getArgument(0);
+			MemberUpdateRequest request = invocation.getArgument(1);
+			member.setFullName(request.getFullName());
+			return null;
+		}).when(memberMapper).updateMemberFromRequest(any(Member.class), any(MemberUpdateRequest.class));
+
+		// memberRepository Mock 설정
 		when(memberRepository.save(any(Member.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		Member updatedMember = memberService.updateMember(testMember, updateRequest);
 
 		assertNotNull(updatedMember);
-		assertEquals("Updated Real Name", updatedMember.getFullName());
+		assertEquals("Updated Full Name", updatedMember.getFullName());
 	}
 
 	@Test
@@ -145,8 +173,10 @@ class MemberServiceTest {
 
 	private Member createTestMember() {
 		Member member = new Member();
+		member.setId(1L);
 		member.setEmail("test@example.com");
 		member.setPassword("password");
+		member.setFullName("Test User"); // fullName 추가
 		return member;
 	}
 
@@ -155,7 +185,6 @@ class MemberServiceTest {
 		request.setEmail("test@exmaple.com");
 		request.setPassword("password");
 		request.setFullName("Test User");
-		request.setProfileFileId(null); // 프로필 파일 ID 없음
 		return request;
 	}
 }

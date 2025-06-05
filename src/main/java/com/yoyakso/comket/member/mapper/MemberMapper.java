@@ -2,11 +2,9 @@ package com.yoyakso.comket.member.mapper;
 
 import java.util.function.Consumer;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.yoyakso.comket.exception.CustomException;
-import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.dto.request.MemberRegisterRequest;
 import com.yoyakso.comket.member.dto.request.MemberUpdateRequest;
 import com.yoyakso.comket.member.dto.response.MemberInfoResponse;
@@ -15,8 +13,6 @@ import com.yoyakso.comket.member.entity.Member;
 
 @Component
 public class MemberMapper {
-	@Autowired
-	private FileService fileService;
 
 	public Member toEntity(MemberRegisterRequest request) {
 		// password,profileFileURL은 service에서 처리하도록 함
