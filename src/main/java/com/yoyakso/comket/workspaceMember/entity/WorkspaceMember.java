@@ -49,7 +49,7 @@ public class WorkspaceMember {
 	private WorkspaceMemberState state;
 
 	@Column(nullable = false, length = 20)
-	private String positionType; // "OWNER", "MEMBER", "ADMIN"
+	private String positionType; // "MEMBER", "ADMIN"
 
 	@CreationTimestamp
 	private LocalDateTime createdAt;
