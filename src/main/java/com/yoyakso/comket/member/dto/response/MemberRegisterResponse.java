@@ -16,8 +16,6 @@ public class MemberRegisterResponse {
 	private String fullName;
 	@JsonProperty("access_token")
 	private String accessToken;
-	@JsonProperty("refresh_token")
-	private String refreshToken;
 	@JsonProperty("profile_file_url")
 	private String profileFileUrl;
 }

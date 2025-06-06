@@ -69,16 +69,14 @@ class MemberServiceTest {
 		when(jwtTokenProvider.createAccessToken(testMember.getEmail())).thenReturn("jwtAccessToken");
 		when(jwtTokenProvider.createRefreshToken(testMember.getEmail())).thenReturn("jwtRefreshToken");
 		when(memberMapper.toEntity(any(MemberRegisterRequest.class))).thenReturn(testMember);
-		when(memberMapper.toMemberRegisterResponse(any(Member.class), anyString(), anyString()))
+		when(memberMapper.toMemberRegisterResponse(any(Member.class), anyString()))
 			.thenAnswer(invocation -> {
 				Member member = invocation.getArgument(0);
 				String accessToken = invocation.getArgument(1);
-				String refreshToken = invocation.getArgument(2);
 				return MemberRegisterResponse.builder()
 					.memberId(member.getId())
 					.email(member.getEmail())
 					.accessToken(accessToken)
-					.refreshToken(refreshToken)
 					.profileFileUrl(null)
 					.build();
 			});
@@ -99,7 +97,6 @@ class MemberServiceTest {
 		assertEquals(1L, response.getMemberId());
 		assertEquals("test@example.com", response.getEmail());
 		assertEquals("jwtAccessToken", response.getAccessToken());
-		assertEquals("jwtRefreshToken", response.getRefreshToken());
 		assertNull(response.getProfileFileUrl()); // 프로필 파일 URL이 null인지 확인
 	}
 

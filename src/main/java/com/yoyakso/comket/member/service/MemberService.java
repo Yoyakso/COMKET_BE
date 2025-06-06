@@ -43,11 +43,8 @@ public class MemberService {
 
 		// JWT 토큰 생성 및 RefreshToken 저장
 		String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
-		String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
-		refreshTokenService.saveRefreshToken(member.getId().toString(), refreshToken);
-
 		// MemberRegisterResponse 생성
-		return memberMapper.toMemberRegisterResponse(member, accessToken, refreshToken);
+		return memberMapper.toMemberRegisterResponse(member, accessToken);
 	}
 
 	public Member updateMember(Member member, MemberUpdateRequest updateRequest) {
@@ -99,7 +96,6 @@ public class MemberService {
 			.name(member.getFullName())
 			.email(member.getEmail())
 			.accessToken(accessToken)
-			.refreshToken(refreshToken)
 			.loginPlatformInfo("GOOGLE")
 			.build();
 	}

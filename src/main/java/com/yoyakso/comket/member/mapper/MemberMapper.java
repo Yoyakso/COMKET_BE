@@ -31,13 +31,12 @@ public class MemberMapper {
 			.build();
 	}
 
-	public MemberRegisterResponse toMemberRegisterResponse(Member member, String accessToken, String refreshToken) {
+	public MemberRegisterResponse toMemberRegisterResponse(Member member, String accessToken) {
 		return MemberRegisterResponse.builder()
 			.memberId(member.getId())
 			.email(member.getEmail())
 			.fullName(member.getFullName())
 			.accessToken(accessToken)
-			.refreshToken(refreshToken)
 			.build();
 	}
 

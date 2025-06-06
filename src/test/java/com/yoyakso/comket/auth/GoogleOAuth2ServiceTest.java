@@ -49,7 +49,6 @@ class GoogleOAuth2ServiceTest {
 			.name("Test User")
 			.email("tset@gmail.com")
 			.accessToken("mock-jwt-token")
-			.refreshToken("mock-jwt-refresh-token")
 			.loginPlatformInfo("GOOGLE")
 			.build();
 
