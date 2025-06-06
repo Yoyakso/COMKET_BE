@@ -10,10 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.yoyakso.comket.email.service.EmailService;
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.file.service.FileService;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
-import com.yoyakso.comket.workspace.dto.WorkspaceMemberCreateRequest;
-import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoResponse;
+import com.yoyakso.comket.workspace.dto.request.WorkspaceMemberCreateRequest;
+import com.yoyakso.comket.workspace.dto.response.WorkspaceMemberInfoResponse;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.enums.WorkspaceState;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
@@ -33,14 +34,20 @@ public class WorkspaceMemberService {
 
 	private final EmailService emailService;
 
+	private final FileService fileService;
+
 	public void createWorkspaceMember(Workspace workspace, Member member, WorkspaceMemberState state,
 		String positionType) {
 		// 워크스페이스 멤버 생성
 		WorkspaceMember workspaceMember = WorkspaceMember.builder()
 			.workspace(workspace)
 			.member(member)
+			.nickName(member.getFullName())
 			.state(state)
 			.positionType(positionType)
+			.responsibility(null)
+			.department(null)
+			.profileFile(null)
 			.build();
 		// 워크스페이스 멤버 저장
 		workspaceMemberRepository.save(workspaceMember);
@@ -70,13 +77,23 @@ public class WorkspaceMemberService {
 		return workspaceMemberRepository.findAll();
 	}
 
-	public WorkspaceMember updateWorkspaceMember(WorkspaceMember updatedWorkspaceMember) {
+	public WorkspaceMember updateWorkspaceMemberAuthority(WorkspaceMember updatedWorkspaceMember) {
 		WorkspaceMember existingWorkspaceMember = workspaceMemberRepository.findById(updatedWorkspaceMember.getId())
 			.orElseThrow(() -> new CustomException("CANNOT_FOUND_WORKSPACEMEMBER", "워크스페이스 멤버를 찾을 수 없습니다."));
 		existingWorkspaceMember.setWorkspace(updatedWorkspaceMember.getWorkspace());
 		existingWorkspaceMember.setMember(updatedWorkspaceMember.getMember());
 		existingWorkspaceMember.setState(updatedWorkspaceMember.getState());
 		existingWorkspaceMember.setPositionType(updatedWorkspaceMember.getPositionType());
+		return workspaceMemberRepository.save(existingWorkspaceMember);
+	}
+
+	public WorkspaceMember updateWorkspaceMemberInfo(WorkspaceMember workspaceMember) {
+		WorkspaceMember existingWorkspaceMember = workspaceMemberRepository.findById(workspaceMember.getId())
+			.orElseThrow(() -> new CustomException("CANNOT_FOUND_WORKSPACEMEMBER", "워크스페이스 멤버를 찾을 수 없습니다."));
+		existingWorkspaceMember.setNickName(workspaceMember.getNickName());
+		existingWorkspaceMember.setDepartment(workspaceMember.getDepartment());
+		existingWorkspaceMember.setResponsibility(workspaceMember.getResponsibility());
+		existingWorkspaceMember.setProfileFile(workspaceMember.getProfileFile());
 		return workspaceMemberRepository.save(existingWorkspaceMember);
 	}
 
@@ -135,6 +152,7 @@ public class WorkspaceMemberService {
 			WorkspaceMember workspaceMember = WorkspaceMember.builder()
 				.workspace(workspace)
 				.member(member)
+				.nickName(member.getFullName())
 				.state(workspaceMemberCreateRequest.getState())
 				.positionType(workspaceMemberCreateRequest.getPositionType())
 				.build();
@@ -148,10 +166,14 @@ public class WorkspaceMemberService {
 			.filter(workspaceMember -> workspaceMember.getState() == WorkspaceMemberState.ACTIVE)
 			.map(workspaceMember -> WorkspaceMemberInfoResponse.builder()
 				.workspaceMemberid(workspaceMember.getId())
-				.name(workspaceMember.getMember().getRealName())
+				.name(workspaceMember.getNickName())
 				.email(workspaceMember.getMember().getEmail())
 				.positionType(workspaceMember.getPositionType())
 				.state(workspaceMember.getState())
+				.department(workspaceMember.getDepartment())
+				.responsibility(workspaceMember.getResponsibility())
+				.profileFileUrl(workspaceMember.getProfileFile() != null ?
+					fileService.getFileUrlByPath(workspaceMember.getProfileFile().getFilePath()) : null)
 				.build())
 			.toList();
 	}

@@ -316,7 +316,7 @@ public class ProjectServiceImpl implements ProjectService {
 				Member member = pm.getMember();
 				return ProjectMemberResponse.builder()
 					.projectMemberId(pm.getId())
-					.name(member.getRealName())
+					.name(member.getFullName())
 					.email(member.getEmail())
 					.positionType(pm.getPositionType())
 					.state(pm.getState())
@@ -356,7 +356,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 		return ProjectMemberResponse.builder()
 			.projectMemberId(updatedMember.getId())
-			.name(updatedMember.getRealName())
+			.name(updatedMember.getFullName())
 			.email(updatedMember.getEmail())
 			.state(updatedProjectMember.getState())
 			.positionType(updatedProjectMember.getPositionType())
@@ -422,7 +422,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 		return ProjectMemberResponse.builder()
 			.projectMemberId(updatedMember.getId())
-			.name(updatedMember.getRealName())
+			.name(updatedMember.getFullName())
 			.email(updatedMember.getEmail())
 			.state(updatedProjectMember.getState())
 			.positionType(updatedProjectMember.getPositionType())
@@ -532,7 +532,7 @@ public class ProjectServiceImpl implements ProjectService {
 	private ProjectMemberResponse returnAdminInfo(ProjectMember pm) {
 		return ProjectMemberResponse.builder()
 			.projectMemberId(pm.getId())
-			.name(pm.getMember().getRealName())
+			.name(pm.getMember().getFullName())
 			.email(pm.getMember().getEmail())
 			.positionType(pm.getPositionType())
 			.state(pm.getState())

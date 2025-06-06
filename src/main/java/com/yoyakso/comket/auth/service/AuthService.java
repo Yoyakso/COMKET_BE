@@ -55,7 +55,7 @@ public class AuthService {
 
 		return LoginResponse.builder()
 			.memberId(member.getId())
-			.name(member.getRealName())
+			.name(member.getFullName())
 			.email(member.getEmail())
 			.accessToken(accessToken)
 			.loginPlatformInfo("COMKET")

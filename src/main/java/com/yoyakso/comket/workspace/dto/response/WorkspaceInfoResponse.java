@@ -1,4 +1,4 @@
-package com.yoyakso.comket.workspace.dto;
+package com.yoyakso.comket.workspace.dto.response;
 
 import com.yoyakso.comket.workspace.enums.WorkspaceState;
 
