@@ -65,7 +65,7 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
 		config.addAllowedOrigin("https://comket.co.kr");
-		config.addAllowedOrigin("http://localhost:3333");
+		config.addAllowedOrigin("https://localhost:3333");
 		config.addAllowedMethod("*");
 		config.addAllowedHeader("*");
 		config.setAllowCredentials(true);
