@@ -25,6 +25,7 @@ import com.yoyakso.comket.workspace.dto.response.WorkspaceMemberInfoResponse;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.service.WorkspaceService;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
+import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -36,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class WorkspaceController {
 
 	private final WorkspaceService workspaceService;
+	private final WorkspaceMemberService workspaceMemberService;
 	private final MemberService memberService;
 
 	@PostMapping
@@ -126,6 +128,17 @@ public class WorkspaceController {
 		List<WorkspaceMember> workspaceMembers = workspaceService.getWorkspaceMembers(id, authenticatedMember,
 			positionTypes, memberStates, keyword);
 		return ResponseEntity.ok(workspaceMembers.stream().map(workspaceService::toMemberInfoResponse).toList());
+	}
+
+	@GetMapping("/{workspaceId}/member")
+	@Operation(summary = "워크스페이스 멤버 자기 자신 조회 API", description = "워크스페이스의 자기 프로필 정보를 조회하는 API")
+	public ResponseEntity<WorkspaceMemberInfoResponse> getWorkspaceMember(
+		@PathVariable Long workspaceId
+	) {
+		Member authenticatedMember = memberService.getAuthenticatedMember();
+		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(workspaceId,
+			authenticatedMember.getId());
+		return ResponseEntity.ok(workspaceService.toMemberInfoResponse(workspaceMember));
 	}
 
 	@PatchMapping("/{workspaceId}/members")
