@@ -29,7 +29,6 @@ import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
-import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import jakarta.transaction.Transactional;
@@ -227,14 +226,9 @@ public class ProjectServiceImpl implements ProjectService {
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
-		WorkspaceMember workspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
-			workSpace.getId(), member.getId());
-		String positionType = workspaceMember.getPositionType();
-
-		// 워크스페이스 권한에 따라 모든 프로젝트를 리턴 or 공개 프로젝트만 리턴 + 해당 프로젝트 멤버일 경우 모두 리턴
-		List<Project> projects = (positionType.equals("ADMIN") || positionType.equals("OWNER"))
-			? projectRepository.findAllByWorkspaceAndState(workSpace, ProjectState.ACTIVE)
-			: projectMemberService.getProjectListByMemberAndWorkspace(member, workSpace);
+		// isPublic = true인 경우 모두 리턴 + isPublic = false인 경우 내가 속한 경우에만 리턴
+		List<Project> projects = projectRepository.findProjectsByWorkspaceAndMemberAndState(workSpace.getId(),
+			member.getId(), ProjectState.ACTIVE);
 
 		return projects.stream()
 			.map(project -> {
