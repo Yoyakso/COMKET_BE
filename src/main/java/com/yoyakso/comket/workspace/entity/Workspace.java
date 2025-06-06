@@ -6,8 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.yoyakso.comket.file.entity.File;
-import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
-import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
+import com.yoyakso.comket.workspace.dto.request.WorkspaceRegisterRequest;
+import com.yoyakso.comket.workspace.dto.request.WorkspaceUpdateRequest;
 import com.yoyakso.comket.workspace.enums.WorkspaceState;
 
 import jakarta.persistence.Column;
