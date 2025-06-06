@@ -35,7 +35,7 @@ public class ProjectMemberService {
 		ProjectMember projectMember = getProjectMemberByProjectIdAndMemberId(project.getId(), assignee.getId());
 		return ProjectMemberResponse.builder()
 			.projectMemberId(projectMember.getId())
-			.name(assignee.getRealName())
+			.name(assignee.getFullName())
 			.email(assignee.getEmail())
 			.positionType(projectMember.getPositionType())
 			.state(projectMember.getState())
@@ -146,7 +146,7 @@ public class ProjectMemberService {
 
 			ProjectMemberResponse response = ProjectMemberResponse.builder()
 				.projectMemberId(member.getId())
-				.name(member.getRealName())
+				.name(member.getFullName())
 				.email(member.getEmail())
 				.positionType(newProjectMember.getPositionType())
 				.state(newProjectMember.getState())

@@ -12,8 +12,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.yoyakso.comket.member.entity.Member;
-import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
-import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
+import com.yoyakso.comket.workspace.dto.request.WorkspaceRegisterRequest;
+import com.yoyakso.comket.workspace.dto.request.WorkspaceUpdateRequest;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.enums.WorkspaceState;
 import com.yoyakso.comket.workspace.repository.WorkspaceRepository;

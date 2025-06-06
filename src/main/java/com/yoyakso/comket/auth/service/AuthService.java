@@ -55,10 +55,9 @@ public class AuthService {
 
 		return LoginResponse.builder()
 			.memberId(member.getId())
-			.name(member.getRealName())
+			.name(member.getFullName())
 			.email(member.getEmail())
 			.accessToken(accessToken)
-			.refreshToken(refreshToken)
 			.loginPlatformInfo("COMKET")
 			.build();
 	}
@@ -97,12 +96,9 @@ public class AuthService {
 		}
 
 		String newAccessToken = jwtTokenProvider.createAccessToken(email);
-		String newRefreshToken = jwtTokenProvider.createRefreshToken(email); // 새로 생성 (rotate)
-		refreshTokenService.saveRefreshToken(member.getId().toString(), newRefreshToken); // Redis에 덮어쓰기
 
 		return TokenReissueResponse.builder()
 			.accessToken(newAccessToken)
-			.refreshToken(newRefreshToken)
 			.build();
 	}
 

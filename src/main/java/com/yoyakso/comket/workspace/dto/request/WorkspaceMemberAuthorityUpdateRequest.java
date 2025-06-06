@@ -1,7 +1,6 @@
-package com.yoyakso.comket.workspace.dto;
+package com.yoyakso.comket.workspace.dto.request;
 
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
 
 import lombok.AllArgsConstructor;
@@ -13,8 +12,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WorkspaceMemberCreateRequest {
-	private List<String> memberEmailList;
+public class WorkspaceMemberAuthorityUpdateRequest {
+	@JsonProperty("workspace_member_email")
+	private String workspaceMemberEmail;
+
+	@JsonProperty("position_type")
 	private String positionType;
+
 	private WorkspaceMemberState state;
 }

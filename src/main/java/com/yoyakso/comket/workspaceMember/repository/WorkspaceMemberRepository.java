@@ -20,7 +20,7 @@ public interface WorkspaceMemberRepository extends JpaRepository<WorkspaceMember
 
 	@Query("SELECT wm FROM WorkspaceMember wm " +
 		"WHERE wm.workspace.id = :workspaceId " +
-		"AND (:keyword IS NULL OR wm.member.realName LIKE %:keyword% OR wm.member.email LIKE %:keyword%) " +
+		"AND (:keyword IS NULL OR wm.member.fullName LIKE %:keyword% OR wm.member.email LIKE %:keyword%) " +
 		"AND (:positionTypes IS NULL OR wm.positionType IN :positionTypes) " +
 		"AND (:memberStates IS NULL OR wm.state IN :memberStates)")
 	List<WorkspaceMember> searchWorkspaceMembers(

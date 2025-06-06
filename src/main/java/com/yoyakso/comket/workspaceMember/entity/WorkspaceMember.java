@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.yoyakso.comket.file.entity.File;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
@@ -17,6 +18,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,7 +51,21 @@ public class WorkspaceMember {
 	private WorkspaceMemberState state;
 
 	@Column(nullable = false, length = 20)
-	private String positionType; // "OWNER", "MEMBER", "ADMIN"
+	private String positionType; // "MEMBER", "ADMIN"
+
+	// 닉네임
+	private String nickName;
+
+	// 소속
+	private String department;
+
+	// 직무
+	private String responsibility;
+
+	// 프로필 파일
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "profile_file_id", referencedColumnName = "id", nullable = true)
+	private File profileFile;
 
 	@CreationTimestamp
 	private LocalDateTime createdAt;

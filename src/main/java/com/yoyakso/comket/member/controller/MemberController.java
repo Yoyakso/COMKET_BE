@@ -9,12 +9,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.common.net.HttpHeaders;
+import com.yoyakso.comket.auth.service.RefreshTokenService;
 import com.yoyakso.comket.jwt.JwtTokenProvider;
-import com.yoyakso.comket.member.dto.MemberInfoResponse;
-import com.yoyakso.comket.member.dto.MemberRegisterRequest;
-import com.yoyakso.comket.member.dto.MemberRegisterResponse;
-import com.yoyakso.comket.member.dto.MemberUpdateRequest;
+import com.yoyakso.comket.member.dto.request.MemberRegisterRequest;
+import com.yoyakso.comket.member.dto.request.MemberUpdateRequest;
+import com.yoyakso.comket.member.dto.response.MemberInfoResponse;
+import com.yoyakso.comket.member.dto.response.MemberRegisterResponse;
 import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.member.mapper.MemberMapper;
 import com.yoyakso.comket.member.service.MemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +29,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MemberController {
 	private final MemberService memberService;
+	private final MemberMapper memberMapper;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final RefreshTokenService refreshTokenService;
 
 	//회원가입
 	@PostMapping("/members/register")
@@ -35,8 +40,13 @@ public class MemberController {
 		@Valid @RequestBody MemberRegisterRequest memberRegisterRequest
 	) {
 		MemberRegisterResponse response = memberService.registerMember(memberRegisterRequest);
-		return ResponseEntity.ok(response);
 
+		Member member = memberService.getMemberByEmail(response.getEmail());
+
+		return ResponseEntity
+			.ok()
+			.header(HttpHeaders.SET_COOKIE, refreshTokenService.getRefreshTokenCookie(member).toString())
+			.body(response);
 	}
 
 	//회원 정보 조회
@@ -44,8 +54,7 @@ public class MemberController {
 	@Operation(summary = "회원 정보 조회", description = "현재 로그인한 회원의 정보를 조회합니다.")
 	public ResponseEntity<MemberInfoResponse> getMember() {
 		Member member = memberService.getAuthenticatedMember();
-		MemberInfoResponse memberInfoResponse = memberService.buildMemberInfoResponse(member);
-		return ResponseEntity.ok(memberInfoResponse);
+		return ResponseEntity.ok(memberMapper.toMemberInfoResponse(member));
 	}
 
 	//회원 정보 수정
@@ -55,17 +64,16 @@ public class MemberController {
 		@Valid @RequestBody MemberUpdateRequest updateRequest
 	) {
 		Member member = memberService.getAuthenticatedMember();
-		Member updatedMember = memberService.updateMember(member, updateRequest);
-		MemberInfoResponse memberInfoResponse = memberService.buildMemberInfoResponse(updatedMember);
-		return ResponseEntity.ok(memberInfoResponse);
+		member = memberService.updateMember(member, updateRequest);
+		return ResponseEntity.ok(memberMapper.toMemberInfoResponse(member));
 	}
 
 	// 회원 탈퇴
 	@DeleteMapping("/members/me")
 	@Operation(summary = "회원 탈퇴", description = "현재 로그인한 회원의 계정을 삭제합니다.")
 	public ResponseEntity<Void> deleteMember() {
-		String email = jwtTokenProvider.getEmail();
-		memberService.deleteMember(email);
+		Member member = memberService.getAuthenticatedMember();
+		memberService.deleteMember(member);
 		return ResponseEntity.noContent().build();
 	}
 }

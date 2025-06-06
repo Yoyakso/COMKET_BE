@@ -15,12 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
-import com.yoyakso.comket.workspace.dto.WorkspaceInfoResponse;
-import com.yoyakso.comket.workspace.dto.WorkspaceMemberCreateRequest;
-import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoResponse;
-import com.yoyakso.comket.workspace.dto.WorkspaceMemberInfoUpdateRequest;
-import com.yoyakso.comket.workspace.dto.WorkspaceRegisterRequest;
-import com.yoyakso.comket.workspace.dto.WorkspaceUpdateRequest;
+import com.yoyakso.comket.workspace.dto.request.WorkspaceMemberAuthorityUpdateRequest;
+import com.yoyakso.comket.workspace.dto.request.WorkspaceMemberCreateRequest;
+import com.yoyakso.comket.workspace.dto.request.WorkspaceMemberInfoUpdateRequest;
+import com.yoyakso.comket.workspace.dto.request.WorkspaceRegisterRequest;
+import com.yoyakso.comket.workspace.dto.request.WorkspaceUpdateRequest;
+import com.yoyakso.comket.workspace.dto.response.WorkspaceInfoResponse;
+import com.yoyakso.comket.workspace.dto.response.WorkspaceMemberInfoResponse;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.service.WorkspaceService;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
@@ -128,14 +129,26 @@ public class WorkspaceController {
 	}
 
 	@PatchMapping("/{workspaceId}/members")
-	@Operation(summary = "워크스페이스 멤버 수정 API", description = "워크스페이스의 멤버 정보를 수정하는 API")
+	@Operation(summary = "워크스페이스 멤버 권한 수정 API", description = "워크스페이스의 멤버 정보를 수정하는 API")
 	public ResponseEntity<WorkspaceMemberInfoResponse> updateWorkspaceMember(
+		@PathVariable Long workspaceId,
+		@Valid @RequestBody WorkspaceMemberAuthorityUpdateRequest workspaceMemberInfoUpdateRequest
+	) {
+		Member controlMember = memberService.getAuthenticatedMember();
+		WorkspaceMember updatedWorkspaceMember = workspaceService.updateWorkspaceMemberAuthority(workspaceId,
+			workspaceMemberInfoUpdateRequest, controlMember);
+		return ResponseEntity.ok(workspaceService.toMemberInfoResponse(updatedWorkspaceMember));
+	}
+
+	@PatchMapping("/{workspaceId}/members/info")
+	@Operation(summary = "워크스페이스 멤버 정보 수정 API", description = "워크스페이스의 멤버 정보를 수정하는 API")
+	public ResponseEntity<WorkspaceMemberInfoResponse> updateWorkspaceMemberInfo(
 		@PathVariable Long workspaceId,
 		@Valid @RequestBody WorkspaceMemberInfoUpdateRequest workspaceMemberInfoUpdateRequest
 	) {
-		Member controlMember = memberService.getAuthenticatedMember();
-		WorkspaceMember updatedWorkspaceMember = workspaceService.updateWorkspaceMember(workspaceId,
-			workspaceMemberInfoUpdateRequest, controlMember);
+		Member member = memberService.getAuthenticatedMember();
+		WorkspaceMember updatedWorkspaceMember = workspaceService.updateWorkspaceMemberInfo(workspaceId,
+			workspaceMemberInfoUpdateRequest, member);
 		return ResponseEntity.ok(workspaceService.toMemberInfoResponse(updatedWorkspaceMember));
 	}
 

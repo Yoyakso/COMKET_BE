@@ -128,7 +128,7 @@ public class AiService {
 
 						memberInfo = ActionItemAssigneeDto.builder()
 							.projectMemberId(projectMemberId)
-							.name(member.getRealName())
+							.name(member.getFullName())
 							.build();
 					}
 
