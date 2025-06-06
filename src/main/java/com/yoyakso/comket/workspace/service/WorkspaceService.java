@@ -335,5 +335,4 @@ public class WorkspaceService {
 		}
 		throw new CustomException("WORKSPACE_AUTHORIZATION_FAILED", "워크스페이스에 대한 권한이 없습니다.");
 	}
-
 }
