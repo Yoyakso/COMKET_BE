@@ -95,12 +95,12 @@ public class ProjectServiceTest {
 			.project(savedProject)
 			.member(member)
 			.state(ProjectMemberState.ACTIVE)
-			.positionType("OWNER")
+			.positionType("ADMIN")
 			.build();
 
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
 		when(projectRepository.save(any(Project.class))).thenReturn(savedProject);
-		when(projectMemberService.addProjectMember(savedProject, member, "OWNER")).thenReturn(pm);
+		when(projectMemberService.addProjectMember(savedProject, member, "ADMIN")).thenReturn(pm);
 
 		projectRepository.save(savedProject);
 
@@ -199,7 +199,7 @@ public class ProjectServiceTest {
 		ProjectMember mockProjectMember1 = ProjectMember.builder()
 			.id(1L)
 			.project(savedProject1)
-			.positionType("OWNER")
+			.positionType("ADMIN")
 			.member(member)
 			.state(ProjectMemberState.ACTIVE)
 			.build();
@@ -207,7 +207,7 @@ public class ProjectServiceTest {
 		ProjectMember mockProjectMember2 = ProjectMember.builder()
 			.id(2L)
 			.project(savedProject2)
-			.positionType("OWNER")
+			.positionType("ADMIN")
 			.member(member)
 			.state(ProjectMemberState.ACTIVE)
 			.build();
@@ -215,7 +215,7 @@ public class ProjectServiceTest {
 		ProjectMember mockProjectMember3 = ProjectMember.builder()
 			.id(3L)
 			.project(savedProject3)
-			.positionType("OWNER")
+			.positionType("ADMIN")
 			.member(member)
 			.state(ProjectMemberState.ACTIVE)
 			.build();
@@ -228,11 +228,11 @@ public class ProjectServiceTest {
 			.positionType("MEMBER")
 			.build();
 
-		when(projectMemberRepository.findByProjectIdAndPositionType(100L, "OWNER"))
+		when(projectMemberRepository.findFirstByProjectIdAndPositionTypeOrderByUpdatedAtAsc(100L, "ADMIN"))
 			.thenReturn(mockProjectMember1);
-		when(projectMemberRepository.findByProjectIdAndPositionType(101L, "OWNER"))
+		when(projectMemberRepository.findFirstByProjectIdAndPositionTypeOrderByUpdatedAtAsc(101L, "ADMIN"))
 			.thenReturn(mockProjectMember2);
-		when(projectMemberRepository.findByProjectIdAndPositionType(102L, "OWNER"))
+		when(projectMemberRepository.findFirstByProjectIdAndPositionTypeOrderByUpdatedAtAsc(102L, "ADMIN"))
 			.thenReturn(mockProjectMember3);
 
 		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));

@@ -65,7 +65,8 @@ public class ProjectMemberService {
 	}
 
 	public ProjectMember getProjectMemberByProjectIdAndMemberId(Long projectId, Long memberId) {
-		return projectMemberRepository.findByProjectIdAndMemberId(projectId, memberId)
+		return projectMemberRepository.findByProjectIdAndMemberIdAndState(projectId, memberId,
+				ProjectMemberState.ACTIVE)
 			.orElseThrow(() -> new CustomException("CANNOT_FOUND_PROJECTMEMBER", "프로젝트 멤버를 찾을 수 없습니다."));
 	}
 
@@ -151,7 +152,7 @@ public class ProjectMemberService {
 			ProjectMember newProjectMember = projectMemberRepository.save(projectMember);
 
 			ProjectMemberResponse response = ProjectMemberResponse.builder()
-				.projectMemberId(member.getId())
+				.projectMemberId(newProjectMember.getId())
 				.name(member.getFullName())
 				.email(member.getEmail())
 				.positionType(newProjectMember.getPositionType())
