@@ -11,6 +11,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.workspace.entity.Workspace;
 
 import jakarta.mail.MessagingException;
@@ -29,6 +30,7 @@ public class EmailService {
 
 	private final JavaMailSender emailSender;
 	private final SpringTemplateEngine templateEngine;
+	private final MemberService memberService;
 
 	@Value("${spring.mail.auth-code-expiration-millis}")
 	private long authCodeExpirationMillis;
@@ -101,6 +103,45 @@ public class EmailService {
 		sendEmail(memberEmail, setInvitationContent(workspace), workspace.getName() + "에 초대되었습니다 - 지금 참여하세요!");
 	}
 
+	public void verifyPasswordResetCode(String email, String code) {
+		verifyVerificationCode(email, code);
+	}
+
+	// 비밀번호 재설정 링크 생성 및 이메일 전송
+	public void sendPasswordResetLink(String email) {
+		// 이메일이 존재하는지 확인
+		memberService.getMemberByEmail(email);
+
+		// 비밀번호 재설정 코드 생성
+		String code = String.format("%06d", random.nextInt(1000000)); // 6자리 랜덤 숫자 생성
+		verificationCodes.put(email, code);
+		verificationTimestamps.put(email, System.currentTimeMillis()); // 생성 시간 저장
+
+		// 비밀번호 재설정 이메일 전송
+		sendEmail(email, setPasswordResetContent(email, code), "비밀번호 재설정 링크입니다");
+	}
+
+	// 비밀번호 재설정 이메일 내용 생성
+	private String setPasswordResetContent(String email, String code) {
+		String resetUrl = serviceDomain + "/password-reset?email=" + email + "&code=" + code;
+
+		Context context = new Context();
+		context.setVariable("resetUrl", resetUrl);
+		context.setVariable("code", code);
+		context.setVariable("expirationTime", authCodeExpirationMillis / 60000); // 분 단위로 변환
+
+		return templateEngine.process("EmailPasswordResetFormat", context);
+	}
+
+	// 비밀번호 재설정
+	public void resetPassword(String email, String code, String newPassword) {
+		// 코드 검증
+		verifyPasswordResetCode(email, code);
+
+		// 비밀번호 변경
+		memberService.updatePassword(email, newPassword);
+	}
+
 	private String setInvitationContent(Workspace workspace) {
 		String inviteUrl = serviceDomain + "/workspaces/invite?code=" + workspace.getInviteCode();
 		Context context = new Context();
@@ -110,4 +151,5 @@ public class EmailService {
 
 		return templateEngine.process("EmailWorkspaceInviteFormat", context);
 	}
+
 }

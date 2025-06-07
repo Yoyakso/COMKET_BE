@@ -120,4 +120,11 @@ public class MemberService {
 	public Optional<Member> getMemberByEmailOptional(String email) {
 		return memberRepository.findByEmail(email);
 	}
+
+	// 비밀번호 업데이트
+	public void updatePassword(String email, String newPassword) {
+		Member member = getMemberByEmail(email);
+		member.setPassword(passwordEncoder.encode(newPassword));
+		memberRepository.save(member);
+	}
 }
