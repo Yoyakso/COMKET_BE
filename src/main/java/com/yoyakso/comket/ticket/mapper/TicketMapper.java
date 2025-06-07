@@ -45,10 +45,11 @@ public class TicketMapper {
 			.endDate(ticket.getEndDate())
 			.createdAt(ticket.getCreatedAt())
 			.updatedAt(ticket.getUpdatedAt())
-			.assigneeMember(
-				ticket.getAssignee() != null ?
-					projectMemberService.buildProjectMemberInfoResponse(ticket.getProject(), ticket.getAssignee()) :
-					null)
+			.assigneeMemberList(
+				ticket.getAssignees() != null && !ticket.getAssignees().isEmpty() ?
+					projectMemberService.buildProjectMemberInfoListResponse(ticket.getProject(),
+						ticket.getAssignees()) : null
+			)
 			.creatorMember(
 				projectMemberService.buildProjectMemberInfoResponse(ticket.getProject(), ticket.getCreator()))
 			.parentTicketId(ticket.getParentTicket() != null ? ticket.getParentTicket().getId() : null)
@@ -91,10 +92,11 @@ public class TicketMapper {
 			.endDate(ticket.getEndDate())
 			.createdAt(ticket.getCreatedAt())
 			.updatedAt(ticket.getUpdatedAt())
-			.assigneeMember(
-				ticket.getAssignee() != null ?
-					projectMemberService.buildProjectMemberInfoResponse(ticket.getProject(), ticket.getAssignee()) :
-					null)
+			.assigneeMemberList(
+				ticket.getAssignees() != null && !ticket.getAssignees().isEmpty() ?
+					projectMemberService.buildProjectMemberInfoListResponse(ticket.getProject(),
+						ticket.getAssignees()) : null
+			)
 			.creatorMember(
 				projectMemberService.buildProjectMemberInfoResponse(ticket.getProject(), ticket.getCreator()))
 			.parentTicketId(ticket.getParentTicket() != null ? ticket.getParentTicket().getId() : null)

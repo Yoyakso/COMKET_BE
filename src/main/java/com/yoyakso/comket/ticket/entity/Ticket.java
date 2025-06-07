@@ -2,6 +2,8 @@ package com.yoyakso.comket.ticket.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -14,6 +16,7 @@ import com.yoyakso.comket.ticket.enums.TicketPriority;
 import com.yoyakso.comket.ticket.enums.TicketState;
 import com.yoyakso.comket.ticket.enums.TicketType;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -23,8 +26,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
@@ -70,10 +75,13 @@ public class Ticket {
 	@JoinColumn(name = "parent_ticket_id")
 	private Ticket parentTicket;
 
-	//담당자
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "assignee_id")
-	private Member assignee;
+	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@JoinTable(
+		name = "ticket_assignee",
+		joinColumns = @JoinColumn(name = "ticket_id"),
+		inverseJoinColumns = @JoinColumn(name = "member_id")
+	)
+	private List<Member> assignees = new ArrayList<>();
 
 	//우선순위
 	@Enumerated(EnumType.STRING)
