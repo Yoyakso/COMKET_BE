@@ -64,8 +64,9 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		config.addAllowedOrigin("https://comket.co.kr");
-		config.addAllowedOrigin("https://localhost:3333");
+		config.addAllowedOriginPattern("http://localhost:3333");
+		config.addAllowedOriginPattern("https://localhost:3333");
+		config.addAllowedOriginPattern("https://comket.co.kr");
 		config.addAllowedMethod("*");
 		config.addAllowedHeader("*");
 		config.setAllowCredentials(true);
