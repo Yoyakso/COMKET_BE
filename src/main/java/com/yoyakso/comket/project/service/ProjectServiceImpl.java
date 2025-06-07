@@ -77,7 +77,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 		Project savedProject = projectRepository.save(project);
 
-		ProjectMember pm = projectMemberService.addProjectMember(savedProject, member, "OWNER");
+		ProjectMember pm = projectMemberService.addProjectMember(savedProject, member, "ADMIN");
 
 		ProjectMemberResponse adminInfo = returnAdminInfo(pm);
 
@@ -108,10 +108,9 @@ public class ProjectServiceImpl implements ProjectService {
 		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
 			member.getId());
 
-		// 프로젝트 멤버가 존재하지 않거나 비활성화된 경우, 또는 ADMIN, OWNER가 아닌 경우
+		// 프로젝트 멤버가 존재하지 않거나 비활성화된 경우, 또는 ADMIN이 아닌 경우
 		if (updateRequester == null || updateRequester.getState() != ProjectMemberState.ACTIVE ||
-			(!updateRequester.getPositionType().equals("ADMIN") && !updateRequester.getPositionType()
-				.equals("OWNER"))) {
+			(!updateRequester.getPositionType().equals("ADMIN"))) {
 			throw new CustomException("PROJECT_AUTHORIZATION_FAILED", "프로젝트에 대한 권한이 없습니다.");
 		}
 
@@ -138,7 +137,8 @@ public class ProjectServiceImpl implements ProjectService {
 		project.updateTags(tags);
 		Project savedProject = projectRepository.save(project);
 
-		ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
+		ProjectMember pm = projectMemberRepository.findFirstByProjectIdAndPositionTypeOrderByUpdatedAtAsc(
+			project.getId(), "ADMIN");
 		ProjectMemberResponse adminInfo = returnAdminInfo(pm);
 
 		return ProjectInfoResponse.builder()
@@ -160,13 +160,13 @@ public class ProjectServiceImpl implements ProjectService {
 		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
 			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
 
+		Project project = projectRepository.findById(projectId)
+			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
+
 		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
 			member.getId());
 
 		validateAdminPermission(updateRequester.getMember(), projectId);
-
-		Project project = projectRepository.findById(projectId)
-			.orElseThrow(() -> new CustomException("PROJECT_NOT_FOUND", "프로젝트를 찾을 수 없습니다."));
 
 		project.updateState(state);
 		projectRepository.save(project);
@@ -186,7 +186,7 @@ public class ProjectServiceImpl implements ProjectService {
 			throw new CustomException("NOT_PROJECT_MEMBER", "이미 프로젝트 멤버가 아닙니다.");
 		}
 
-		validateOwnerPermission(updateRequester, updateRequester);
+		validateAdminPermission(updateRequester, updateRequester);
 
 		updateRequester.updateMemberState(ProjectMemberState.DELETED);
 		projectMemberRepository.save(updateRequester);
@@ -205,7 +205,8 @@ public class ProjectServiceImpl implements ProjectService {
 			? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
 			: null;
 
-		ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
+		ProjectMember pm = projectMemberRepository.findFirstByProjectIdAndPositionTypeOrderByUpdatedAtAsc(
+			project.getId(), "ADMIN");
 		ProjectMemberResponse adminInfo = returnAdminInfo(pm);
 
 		return ProjectInfoResponse.builder()
@@ -235,7 +236,8 @@ public class ProjectServiceImpl implements ProjectService {
 				String profileFileUrl = project.getProfileFile() != null
 					? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
 					: null;
-				ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
+				ProjectMember pm = projectMemberRepository.findFirstByProjectIdAndPositionTypeOrderByUpdatedAtAsc(
+					project.getId(), "ADMIN");
 				ProjectMemberResponse adminInfo = returnAdminInfo(pm);
 				return ProjectInfoResponse.builder()
 					.projectId(project.getId())
@@ -265,7 +267,8 @@ public class ProjectServiceImpl implements ProjectService {
 					? fileService.getFileUrlByPath(project.getProfileFile().getFilePath())
 					: null;
 
-				ProjectMember pm = projectMemberRepository.findByProjectIdAndPositionType(project.getId(), "OWNER");
+				ProjectMember pm = projectMemberRepository.findFirstByProjectIdAndPositionTypeOrderByUpdatedAtAsc(
+					project.getId(), "ADMIN");
 				ProjectMemberResponse adminInfo = returnAdminInfo(pm);
 				return ProjectInfoResponse.builder()
 					.projectId(project.getId())
@@ -342,7 +345,7 @@ public class ProjectServiceImpl implements ProjectService {
 		// 상위 권한 검증
 		validateUpperCasePermission(updateRequester, projectMember);
 
-		validateOwnerPermission(updateRequester, projectMember);
+		validateAdminPermission(updateRequester, projectMember);
 
 		projectMember.updatePositionType(request.getPositionType());
 		ProjectMember updatedProjectMember = projectMemberRepository.save(projectMember);
@@ -378,49 +381,10 @@ public class ProjectServiceImpl implements ProjectService {
 		ProjectMember projectMember = projectMemberRepository.findById(projectMemberId)
 			.orElseThrow(() -> new CustomException("PROJECTMEMBER_NOT_FOUND", "프로젝트 멤버를 찾을 수 없습니다."));
 
-		validateOwnerPermission(updateRequester, projectMember);
+		validateAdminPermission(updateRequester, projectMember);
 
 		projectMember.updateMemberState(ProjectMemberState.DELETED);
 		projectMemberRepository.save(projectMember);
-	}
-
-	@Override
-	public ProjectMemberResponse assignNewOwner(
-		String workSpaceName,
-		Long projectId,
-		Member member,
-		Long targetMemberId
-	) {
-		// 워크스페이스 조회
-		Workspace workSpace = workspaceRepository.findByName(workSpaceName)
-			.orElseThrow(() -> new CustomException("WORKSPACE_NOT_FOUND", "워크스페이스를 찾을 수 없습니다."));
-
-		// API 사용 유저 권한 검증
-		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
-			member.getId());
-
-		// OWNER인지 검증
-		if (!updateRequester.getPositionType().equals("OWNER")) {
-			throw new CustomException("OWNER_AUTHORIZATION_FAILED", "프로젝트 소유자 권한이 없습니다.");
-		}
-
-		ProjectMember newOwner = projectMemberRepository.findById(targetMemberId)
-			.orElseThrow(() -> new CustomException("PROJECTMEMBER_NOT_FOUND", "프로젝트 멤버를 찾을 수 없습니다."));
-
-		updateRequester.updatePositionType("ADMIN");
-		projectMemberRepository.save(newOwner);
-
-		newOwner.updatePositionType("OWNER");
-		ProjectMember updatedProjectMember = projectMemberRepository.save(newOwner);
-		Member updatedMember = updatedProjectMember.getMember();
-
-		return ProjectMemberResponse.builder()
-			.projectMemberId(updatedMember.getId())
-			.name(updatedMember.getFullName())
-			.email(updatedMember.getEmail())
-			.state(updatedProjectMember.getState())
-			.positionType(updatedProjectMember.getPositionType())
-			.build();
 	}
 
 	@Override
@@ -490,10 +454,6 @@ public class ProjectServiceImpl implements ProjectService {
 
 	// ---private methods---
 	private void validateUpperCasePermission(ProjectMember controllerMember, ProjectMember targetMember) {
-		// OWNER는 모든 멤버의 포지션과 상태를 변경할 수 있다.
-		if ("OWNER".equals(controllerMember.getPositionType())) {
-			return;
-		}
 		// ADMIN은 ADMIN과 MEMBER의 포지션과 상태를 변경할 수 있다.
 		if ("ADMIN".equals(controllerMember.getPositionType()) &&
 			("ADMIN".equals(targetMember.getPositionType()) || "MEMBER".equals(targetMember.getPositionType()))) {
@@ -517,9 +477,9 @@ public class ProjectServiceImpl implements ProjectService {
 		return new ArrayList<>(uniqueTags);
 	}
 
-	private void validateOwnerPermission(ProjectMember member, ProjectMember targetMember) {
-		if (member.getPositionType().equals("OWNER") && (member.equals(targetMember))) {
-			throw new CustomException("OWNER_EXCEPTION", "소유자 권한 이전이 필요합니다.");
+	private void validateAdminPermission(ProjectMember member, ProjectMember targetMember) {
+		if (member.getPositionType().equals("ADMIN") && (member.equals(targetMember))) {
+			throw new CustomException("ADMIN_EXCEPTION", "관리자 권한 이전이 필요합니다.");
 		}
 	}
 

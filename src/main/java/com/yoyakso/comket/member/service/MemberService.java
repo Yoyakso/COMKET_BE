@@ -89,7 +89,6 @@ public class MemberService {
 		Member member = memberOptional.get();
 
 		String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
-		String refreshToken = jwtTokenProvider.createRefreshToken(member.getEmail());
 
 		return LoginResponse.builder()
 			.memberId(member.getId())

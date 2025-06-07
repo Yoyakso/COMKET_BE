@@ -11,11 +11,12 @@ import org.springframework.stereotype.Repository;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.projectMember.entity.ProjectMember;
+import com.yoyakso.comket.projectMember.enums.ProjectMemberState;
 import com.yoyakso.comket.workspace.entity.Workspace;
 
 @Repository
 public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Long> {
-	Optional<ProjectMember> findByProjectIdAndMemberId(Long workspaceId, Long memberId);
+	Optional<ProjectMember> findByProjectIdAndMemberIdAndState(Long projectId, Long memberId, ProjectMemberState state);
 
 	Optional<ProjectMember> findByProjectIdAndMemberEmail(Long projectId, String email);
 
@@ -41,5 +42,6 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
 
 	List<ProjectMember> findAllByProjectId(Long projectId);
 
-	ProjectMember findByProjectIdAndPositionType(Long id, String positionType);
+	// 기존 OWNER는 Unique 값이라 상관 없었지만, ADMIN은 다수일 수 있기 때문에 가장 초기에 ADMIN인 유저 추출
+	ProjectMember findFirstByProjectIdAndPositionTypeOrderByUpdatedAtAsc(Long projectId, String positionType);
 }
