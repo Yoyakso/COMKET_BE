@@ -204,6 +204,22 @@ public class ProjectServiceTest {
 			.state(ProjectMemberState.ACTIVE)
 			.build();
 
+		ProjectMember mockProjectMember2 = ProjectMember.builder()
+			.id(2L)
+			.project(savedProject2)
+			.positionType("OWNER")
+			.member(member)
+			.state(ProjectMemberState.ACTIVE)
+			.build();
+
+		ProjectMember mockProjectMember3 = ProjectMember.builder()
+			.id(3L)
+			.project(savedProject3)
+			.positionType("OWNER")
+			.member(member)
+			.state(ProjectMemberState.ACTIVE)
+			.build();
+
 		WorkspaceMember mockWorkspaceMember = WorkspaceMember.builder()
 			.id(1L)
 			.workspace(mockWorkspace)
@@ -212,23 +228,18 @@ public class ProjectServiceTest {
 			.positionType("MEMBER")
 			.build();
 
-		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
-		when(workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(mockWorkspace.getId(), member.getId()))
-			.thenReturn(mockWorkspaceMember);
-
-		// OWNER, ADMIN인 경우
-		// when(projectRepository.findAllByWorkspaceAndState(mockWorkspace, ProjectState.ACTIVE))
-		// 	.thenReturn(List.of(savedProject1, savedProject2, savedProject3));
-		// MEMBER인 경우
-		when(projectMemberService.getProjectListByMemberAndWorkspace(member, mockWorkspace))
-			.thenReturn(List.of(savedProject1, savedProject2, savedProject3));
-
 		when(projectMemberRepository.findByProjectIdAndPositionType(100L, "OWNER"))
 			.thenReturn(mockProjectMember1);
 		when(projectMemberRepository.findByProjectIdAndPositionType(101L, "OWNER"))
-			.thenReturn(mockProjectMember1);
+			.thenReturn(mockProjectMember2);
 		when(projectMemberRepository.findByProjectIdAndPositionType(102L, "OWNER"))
-			.thenReturn(mockProjectMember1);
+			.thenReturn(mockProjectMember3);
+
+		when(workspaceRepository.findByName("Test Workspace")).thenReturn(Optional.of(mockWorkspace));
+
+		when(projectRepository.findProjectsByWorkspaceAndMemberAndState(workspaceId, member.getId(),
+			ProjectState.ACTIVE)).thenReturn(List.of(savedProject1, savedProject2, savedProject3));
+
 		// when
 		List<ProjectInfoResponse> response = projectService.getAllProjects(mockWorkspace.getName(), member);
 
