@@ -31,6 +31,12 @@ public class ProjectMemberService {
 	private final WorkspaceMemberRepository workspaceMemberRepository;
 	private final WorkspaceMemberService workspaceMemberService;
 
+	public List<ProjectMemberResponse> buildProjectMemberInfoListResponse(Project project, List<Member> assigneeList) {
+		return assigneeList.stream()
+			.map(assignee -> buildProjectMemberInfoResponse(project, assignee))
+			.toList();
+	}
+
 	public ProjectMemberResponse buildProjectMemberInfoResponse(Project project, Member assignee) {
 		ProjectMember projectMember = getProjectMemberByProjectIdAndMemberId(project.getId(), assignee.getId());
 		return ProjectMemberResponse.builder()

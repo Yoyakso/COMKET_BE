@@ -18,11 +18,12 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
 	@Query("SELECT t FROM Ticket t " +
 		"JOIN t.project p " +
+		"JOIN t.assignees a " +
 		"WHERE p.name = :projectName " +
 		"AND t.isDeleted = false " +
 		"AND (:states IS NULL OR t.state IN :states) " +
 		"AND (:priorities IS NULL OR t.priority IN :priorities) " +
-		"AND (:assignees IS NULL OR t.assignee.id IN :assignees) " +
+		"AND (:assignees IS NULL OR a.id IN :assignees) " +
 		"AND (:endDate IS NULL OR t.endDate <= :endDate) " +
 		"AND (:keyword IS NULL OR t.name LIKE %:keyword%)"
 	)

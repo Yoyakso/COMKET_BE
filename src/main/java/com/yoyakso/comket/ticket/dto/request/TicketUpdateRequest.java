@@ -1,6 +1,7 @@
 package com.yoyakso.comket.ticket.dto.request;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -40,8 +41,8 @@ public class TicketUpdateRequest {
 	@JsonProperty("end_date")
 	private LocalDate endDate;
 
-	@JsonProperty("assignee_member_id")
-	private Long assigneeId;
+	@JsonProperty("assignee_member_id_list")
+	private List<Long> assigneeIdList;
 
 	@JsonProperty("additional_info")
 	private Map<String, Object> additionalInfo; // 템플릿별 추가 정보

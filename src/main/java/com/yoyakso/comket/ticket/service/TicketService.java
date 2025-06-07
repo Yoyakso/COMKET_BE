@@ -1,6 +1,7 @@
 package com.yoyakso.comket.ticket.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,7 +59,7 @@ public class TicketService {
 		setParentTicket(ticket, request.getParentTicketId());
 
 		// 담당자 정보 설정
-		setAssignee(ticket, request.getAssigneeId(), project);
+		setAssignee(ticket, request.getAssigneeIdList(), project);
 
 		// 티켓 저장
 		Ticket savedTicket = ticketRepository.save(ticket);
@@ -128,7 +129,7 @@ public class TicketService {
 		setParentTicket(ticket, request.getParentTicketId());
 
 		// 담당자 정보 설정
-		setAssignee(ticket, request.getAssigneeId(), project);
+		setAssignee(ticket, request.getAssigneeIdList(), project);
 
 		ticketRepository.save(ticket);
 
@@ -279,18 +280,23 @@ public class TicketService {
 		ticket.setParentTicket(parentTicket);
 	}
 
-	private void setAssignee(Ticket ticket, Long assigneeId, Project project) {
-		if (assigneeId == null)
+	private void setAssignee(Ticket ticket, List<Long> assigneeProjectMemberId, Project project) {
+		if (assigneeProjectMemberId == null)
 			return;
-		ProjectMember assigneeProjectMember = projectMemberService.getProjectMemberByProjectMemberId(assigneeId);
-		if (!project.equals(assigneeProjectMember.getProject())) {
-			// 티켓의 프로젝트와 담당자의 프로젝트가 일치하지 않음
-			throw new CustomException("INVALID_ASSIGNEE", "담당자가 해당 프로젝트에 속하지 않습니다.");
-		}
+		List<ProjectMember> assigneeProjectMemberList = assigneeProjectMemberId.stream()
+			.map(projectMemberService::getProjectMemberByProjectMemberId)
+			.toList();
 		// 알람 생성
-		alarmService.addTicketAlarm(assigneeProjectMember.getMember(), ticket, TicketAlarmType.ASSIGNEE_SETTING, "");
+		assigneeProjectMemberList.stream()
+			.map(ProjectMember::getMember)
+			.forEach(member -> alarmService.addTicketAlarm(member, ticket, TicketAlarmType.ASSIGNEE_SETTING, ""));
+		// alarmService.addTicketAlarm(assigneeProjectMember.getMember(), ticket, TicketAlarmType.ASSIGNEE_SETTING, "");
 		// 티켓에 담당자 설정
-		ticket.setAssignee(assigneeProjectMember.getMember());
+		ticket.setAssignees(
+			new ArrayList<>(assigneeProjectMemberList.stream()
+				.map(ProjectMember::getMember)
+				.toList())
+		);
 	}
 
 	private Ticket getValidTicket(Long ticketId) {
