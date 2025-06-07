@@ -1,5 +1,8 @@
 package com.yoyakso.comket.auth.controller;
 
+import java.util.Optional;
+
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,12 +43,17 @@ public class AuthController {
 		@RequestParam(value = "redirect") String redirectUri
 	) {
 		LoginResponse loginResponse = authService.handleGoogleLogin(code, redirectUri);
-		Member member = memberService.getMemberByEmail(loginResponse.getEmail());
 
-		return ResponseEntity
-			.ok()
-			.header(HttpHeaders.SET_COOKIE, refreshTokenService.getRefreshTokenCookie(member).toString())
-			.body(loginResponse);
+		Optional<Member> optionalMember = memberService.getMemberByEmailOptional(loginResponse.getEmail());
+
+		ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.ok();
+
+		optionalMember.ifPresent(member -> {
+			ResponseCookie cookie = refreshTokenService.getRefreshTokenCookie(member);
+			responseBuilder.header(HttpHeaders.SET_COOKIE, cookie.toString());
+		});
+
+		return responseBuilder.body(loginResponse);
 	}
 
 	@Operation(method = "POST", description = "자체 로그인 API")
