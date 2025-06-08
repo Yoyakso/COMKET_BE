@@ -18,8 +18,6 @@ import com.yoyakso.comket.workspace.entity.Workspace;
 public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Long> {
 	Optional<ProjectMember> findByProjectIdAndMemberIdAndState(Long projectId, Long memberId, ProjectMemberState state);
 
-	Optional<ProjectMember> findByProjectIdAndMemberEmail(Long projectId, String email);
-
 	@Query("SELECT pm FROM ProjectMember pm JOIN FETCH pm.member WHERE pm.project.id = :projectId")
 	List<ProjectMember> findAllByProjectIdWithMember(@Param("projectId") Long projectId);
 
@@ -44,4 +42,34 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
 
 	// 기존 OWNER는 Unique 값이라 상관 없었지만, ADMIN은 다수일 수 있기 때문에 가장 초기에 ADMIN인 유저 추출
 	ProjectMember findFirstByProjectIdAndPositionTypeOrderByUpdatedAtAsc(Long projectId, String positionType);
+
+	@Query("SELECT pm.id " +
+		"FROM ProjectMember pm " +
+		"JOIN WorkspaceMember wm ON pm.member.id = wm.member.id " +
+		"WHERE wm.id = :workspaceMemberId " +
+		"AND pm.project.id = :projectId " +
+		"AND pm.state = :state ")
+	Optional<Long> findActiveProjectMemberIdByWorkspaceMemberIdAndProjectId(
+		@Param("workspaceMemberId") Long workspaceMemberId,
+		@Param("projectId") Long projectId,
+		@Param("state") ProjectMemberState state
+	);
+
+	@Query("SELECT pm FROM ProjectMember pm " +
+		"WHERE pm.project.id = :projectId " +
+		"AND pm.member.email = :email " +
+		"AND pm.state = :state ")
+	Optional<ProjectMember> findActiveProjectMemberByProjectIdAndMemberEmail(
+		@Param("projectId") Long projectId,
+		@Param("email") String email,
+		@Param("state") ProjectMemberState state
+	);
+
+	@Query("SELECT wm.nickName " +
+		"FROM ProjectMember pm " +
+		"JOIN WorkspaceMember wm ON wm.member.id = pm.member.id " +
+		"WHERE pm.id = :projectMemberId " +
+		"AND wm.workspace.id = pm.project.workspace.id")
+	String findWorkspaceMemberIdByProjectMemberId(@Param("projectMemberId") Long projectMemberId);
+
 }
