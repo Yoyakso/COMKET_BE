@@ -27,12 +27,10 @@ public class KafkaConsumerService { // Kafka에서는
 	private ThreadSocketHandler threadSocketHandler; // 순환참조 발생으로 의존성 지연 주입
 
 	public void handleMessage(String jsonMessage, Long ticketId) {
-		System.out.println("[test] - listner2");
 		try {
 			JsonNode rootNode = objectMapper.readTree(jsonMessage);
 			String type = rootNode.get("type").asText();
 			JsonNode dataNode = rootNode.get("data");
-			System.out.println("[TEST] - type: " + type);
 
 			if ("message_created".equals(type)) {
 				ThreadMessageDto messageDto = objectMapper.treeToValue(dataNode, ThreadMessageDto.class);

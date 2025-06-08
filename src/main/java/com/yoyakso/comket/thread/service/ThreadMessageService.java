@@ -39,7 +39,6 @@ public class ThreadMessageService {
 			String senderName = memberService.findMemberNameById(message.getSenderMemberId());
 			List<String> resources = resourceJsonUtil.fromJson(message.getResources());
 
-			System.out.println("[test] - 3");
 			return ThreadMessageDto.builder()
 				.ticketId(message.getTicketId())
 				.parentThreadId(message.getParentThreadId())
@@ -57,7 +56,6 @@ public class ThreadMessageService {
 	// threadId를 넘겨줘야 하기 때문에 async -> sync 변경 / 추후 개선
 	// @Async("threadDbExecutor")
 	public ThreadMessage saveAsync(ThreadMessageDto dto) {
-		System.out.println("[test] - async");
 		String resourcesJson = resourceJsonUtil.toJson(dto.getResources());
 
 		ThreadMessage entity = ThreadMessage.builder()
