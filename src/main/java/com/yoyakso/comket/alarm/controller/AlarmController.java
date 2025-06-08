@@ -12,9 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.yoyakso.comket.alarm.dto.response.AlarmTicketResponse;
 import com.yoyakso.comket.alarm.dto.response.AlarmWorkspaceCountResponse;
+import com.yoyakso.comket.alarm.dto.response.AlarmWorkspaceResponse;
 import com.yoyakso.comket.alarm.entity.ProjectAlarm;
 import com.yoyakso.comket.alarm.entity.TicketAlarm;
+import com.yoyakso.comket.alarm.entity.WorkspaceAlarm;
 import com.yoyakso.comket.alarm.enums.TicketAlarmType;
+import com.yoyakso.comket.alarm.enums.WorkspaceAlarmType;
 import com.yoyakso.comket.alarm.mapper.AlarmMapper;
 import com.yoyakso.comket.alarm.service.AlarmService;
 import com.yoyakso.comket.member.entity.Member;
@@ -76,6 +79,31 @@ public class AlarmController {
 		Member member = memberService.getAuthenticatedMember();
 		alarmService.addTicketAlarm(member, ticketId, alarmType, alarmMessage);
 		return ResponseEntity.ok().build();
+	}
+
+	// 워크스페이스 알람 조회 API
+	@GetMapping("/workspace")
+	public ResponseEntity<List<AlarmWorkspaceResponse>> getWorkspaceAlarms(
+		@RequestParam Long workspaceId
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		List<WorkspaceAlarm> workspaceAlarmList = alarmService.getWorkspaceAlarms(member, workspaceId);
+		return ResponseEntity.ok(
+			workspaceAlarmList.stream()
+				.map(alarmMapper::toAlarmWorkspaceResponse)
+				.toList()
+		);
+	}
+
+	// 워크스페이스 알람 읽음 처리 API
+	@PutMapping("/workspace/read")
+	public ResponseEntity<Void> markWorkspaceAlarmAsRead(
+		@RequestParam Long workspaceId,
+		@RequestParam WorkspaceAlarmType alarmType
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		alarmService.markWorkspaceAlarmAsRead(member, workspaceId, alarmType);
+		return ResponseEntity.noContent().build();
 	}
 
 }
