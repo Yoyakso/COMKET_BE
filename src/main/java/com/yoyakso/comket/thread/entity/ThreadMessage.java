@@ -7,8 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,10 +32,15 @@ public class ThreadMessage {
 	@Column(nullable = false)
 	private Long senderMemberId;
 
-	@Column(nullable = false, length = 255)
-	@Size(min = 0, max = 255)
+	private Long parentThreadId;
+
+	@Column(nullable = false)
+	@Lob
 	private String content;
 
 	@Column(nullable = false)
 	private LocalDateTime sentAt;
+
+	@Column(nullable = false)
+	private Boolean isModified;
 }
