@@ -4,8 +4,12 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.yoyakso.comket.billing.entity.WorkspaceBilling;
+import com.yoyakso.comket.billing.enums.BillingPlan;
+import com.yoyakso.comket.billing.service.BillingService;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.file.entity.File;
 import com.yoyakso.comket.file.enums.FileCategory;
@@ -37,6 +41,9 @@ public class WorkspaceService {
 	private final MemberService memberService;
 	private final FileService fileService;
 
+	@Autowired(required = false)
+	private BillingService billingService;
+
 	public Workspace registerWorkspace(WorkspaceRegisterRequest workspaceRegisterRequest, Member member) {
 		Workspace workspace = Workspace.fromRequest(workspaceRegisterRequest);
 		if (workspaceRegisterRequest.getProfileFileId() != null) {
@@ -49,6 +56,12 @@ public class WorkspaceService {
 		workspace.setInviteCode(generateUniqueInviteCode()); // 중복 검사 후 초대 코드 설정
 		Workspace savedWorkspace = workspaceRepository.save(workspace);
 		workspaceMemberService.createWorkspaceMember(savedWorkspace, member, WorkspaceMemberState.ACTIVE, "ADMIN");
+
+		// 빌링 서비스 등록
+		if (billingService != null) {
+			billingService.initializeWorkspaceBilling(savedWorkspace);
+		}
+
 		return savedWorkspace;
 	}
 
@@ -312,6 +325,11 @@ public class WorkspaceService {
 		// 수정 요청 정보로 멤버 정보 업데이트
 		targetWorkspaceMember.setState(WorkspaceMemberState.DELETED);
 		workspaceMemberService.updateWorkspaceMemberAuthority(targetWorkspaceMember);
+
+		// Update billing information after removing a member
+		if (billingService != null) {
+			billingService.updateMemberCountAndPlan(workspaceId);
+		}
 	}
 
 	public List<WorkspaceMemberInfoResponse> inviteWorkspaceMember(Long id,
@@ -319,7 +337,39 @@ public class WorkspaceService {
 		Workspace workspace = findWorkspaceById(id);
 		validateAdminPermission(member, workspace);
 
-		return workspaceMemberService.inviteMembersToWorkspace(workspace, workspaceMemberCreateRequest);
+		// Check if adding new members would require a plan change
+		if (billingService != null) {
+			int newMembersCount = workspaceMemberCreateRequest.getMemberEmailList().size();
+			boolean planChangeRequired = billingService.checkIfPlanChangeRequired(id, newMembersCount);
+
+			if (planChangeRequired) {
+				WorkspaceBilling billing = billingService.getWorkspaceBilling(id);
+				BillingPlan currentPlan = billing.getCurrentPlan();
+				int currentMemberCount = billing.getMemberCount();
+				int newTotalCount = currentMemberCount + newMembersCount;
+				BillingPlan requiredPlan = BillingPlan.getPlanForMemberCount(newTotalCount);
+
+				// If moving to a paid plan, check if credit card is available
+				if (requiredPlan != BillingPlan.BASIC && billing.getCreditCard() == null) {
+					throw new CustomException("CREDIT_CARD_REQUIRED",
+						"유료 요금제(" + requiredPlan.getDisplayName() + ")로 변경하려면 신용 카드 정보가 필요합니다.");
+				}
+
+				throw new CustomException("PLAN_CHANGE_REQUIRED",
+					"멤버 초대 시 요금제 변경이 필요합니다. 현재 요금제: " + currentPlan.getDisplayName() +
+						", 필요 요금제: " + requiredPlan.getDisplayName());
+			}
+		}
+
+		List<WorkspaceMemberInfoResponse> responses = workspaceMemberService.inviteMembersToWorkspace(workspace,
+			workspaceMemberCreateRequest);
+
+		// Update billing information after adding members
+		if (billingService != null) {
+			billingService.updateMemberCountAndPlan(id);
+		}
+
+		return responses;
 	}
 
 	private void validateUpperCasePermission(WorkspaceMember controllerMember, WorkspaceMember targetMember) {
