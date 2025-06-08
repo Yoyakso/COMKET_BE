@@ -27,6 +27,7 @@ public class KafkaConsumerService { // Kafka에서는
 			JsonNode rootNode = objectMapper.readTree(jsonMessage);
 			String type = rootNode.get("type").asText(); // "message_created" or "message_updated"
 			JsonNode dataNode = rootNode.get("data");
+			System.out.println("[TEST] - type" + type);
 
 			if ("message_created".equals(type)) {
 				ThreadMessageDto messageDto = objectMapper.treeToValue(dataNode, ThreadMessageDto.class);
@@ -44,7 +45,10 @@ public class KafkaConsumerService { // Kafka에서는
 			} else if ("message_updated".equals(type)) {
 				ThreadMessageDto updatedMessage = objectMapper.treeToValue(dataNode, ThreadMessageDto.class);
 				threadSocketHandler.sendToTicket(ticketId, updatedMessage); // DB 저장 없이 broadcast만
-			} else { // Delete 등의 상태도 추가
+			} else if ("message_deleted".equals(type)) { // Delete 등의 상태도 추가
+				ThreadMessageDto deletedMessage = objectMapper.treeToValue(dataNode, ThreadMessageDto.class);
+				threadSocketHandler.sendToTicket(ticketId, deletedMessage);
+			} else {
 				System.out.println("@@@ 알 수 없는 메시지 타입 수신: " + type);
 			}
 		} catch (Exception e) {

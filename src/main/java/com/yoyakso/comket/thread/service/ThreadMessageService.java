@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.member.service.MemberService;
+import com.yoyakso.comket.thread.dto.ThreadMessageDeleteRequestDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageEditRequestDto;
 import com.yoyakso.comket.thread.entity.ThreadMessage;
@@ -87,6 +88,30 @@ public class ThreadMessageService {
 		try {
 			Map<String, Object> messageWrapper = new HashMap<>();
 			messageWrapper.put("type", "message_updated"); // or "message_updated"
+			messageWrapper.put("data", responseMessage); // 기존 DTO를 감싸줌
+
+			String serializedEvent = objectMapper.writeValueAsString(messageWrapper);
+			threadMessageProducer.sendMessage(topic, serializedEvent);
+		} catch (Exception e) {
+			throw new CustomException("THREAD_MESSAGE_EDIT_ERROR", "스레드 메시지 수정에 실패했습니다.");
+		}
+	}
+
+	public void deleteMessage(ThreadMessageDeleteRequestDto dto) {
+		ThreadMessage message = threadMessageRepository.findById(dto.getThreadId())
+			.orElseThrow(() -> new CustomException("THREAD_NOT_FOUND", "스레드를 찾을 수 없습니다."));
+
+		ThreadMessageDto responseMessage = ThreadMessageDto.builder()
+			.threadId(dto.getThreadId())
+			.messageState(ThreadMessageState.DELETE)
+			.build();
+
+		threadMessageRepository.delete(message);
+
+		String topic = "thread-ticket-" + message.getTicketId();
+		try {
+			Map<String, Object> messageWrapper = new HashMap<>();
+			messageWrapper.put("type", "message_deleted"); // or "message_updated"
 			messageWrapper.put("data", responseMessage); // 기존 DTO를 감싸줌
 
 			String serializedEvent = objectMapper.writeValueAsString(messageWrapper);
