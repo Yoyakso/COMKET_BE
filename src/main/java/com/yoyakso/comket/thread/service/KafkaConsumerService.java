@@ -1,5 +1,7 @@
 package com.yoyakso.comket.thread.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -8,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yoyakso.comket.thread.dto.ThreadMessageDto;
 import com.yoyakso.comket.thread.entity.ThreadMessage;
+import com.yoyakso.comket.thread.util.ResourceJsonUtil;
 import com.yoyakso.comket.thread.util.ThreadSocketHandler;
 
 import lombok.RequiredArgsConstructor;
@@ -18,27 +21,28 @@ public class KafkaConsumerService { // Kafka에서는
 
 	private final ThreadMessageService threadMessageService;
 	private final ObjectMapper objectMapper;
+	private final ResourceJsonUtil resourceJsonUtil;
 	@Lazy
 	@Autowired
 	private ThreadSocketHandler threadSocketHandler; // 순환참조 발생으로 의존성 지연 주입
 
 	public void handleMessage(String jsonMessage, Long ticketId) {
-		System.out.println("[test] - listner2");
 		try {
 			JsonNode rootNode = objectMapper.readTree(jsonMessage);
 			String type = rootNode.get("type").asText();
 			JsonNode dataNode = rootNode.get("data");
-			System.out.println("[TEST] - type: " + type);
 
 			if ("message_created".equals(type)) {
 				ThreadMessageDto messageDto = objectMapper.treeToValue(dataNode, ThreadMessageDto.class);
 				ThreadMessage savedEntity = threadMessageService.saveAsync(messageDto);
+				List<String> resources = resourceJsonUtil.fromJson(savedEntity.getResources());
 				ThreadMessageDto updatedDto = ThreadMessageDto.builder()
 					.threadId(savedEntity.getId())   // 저장된 id로 세팅
 					.ticketId(savedEntity.getTicketId())
 					.senderMemberId(savedEntity.getSenderMemberId())
 					.senderName(messageDto.getSenderName()) // 이름은 요청에서
 					.content(savedEntity.getContent())
+					.resources(resources)
 					.sentAt(savedEntity.getSentAt())
 					.isModified(savedEntity.getIsModified())
 					.parentThreadId(savedEntity.getParentThreadId())

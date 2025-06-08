@@ -47,11 +47,20 @@ public class ThreadMessage {
 	@Column(nullable = false)
 	private Boolean isModified;
 
+	@Lob
+	@Nullable
+	@Column(nullable = true)
+	private String resources;
+
 	public void editContent(String content) {
 		this.content = content;
 	}
 
 	public void setIsModified() {
 		this.isModified = true;
+	}
+
+	public void editResources(String resourcesJson) {
+		this.resources = resourcesJson;
 	}
 }

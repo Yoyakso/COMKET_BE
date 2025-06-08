@@ -9,7 +9,10 @@ public enum FileCategory {
 	WORKSPACE_PROFILE("profile/workspace"),
 	PROJECT_PROFILE("profile/project"),
 	// 프로젝트 파일
-	PROJECT_FILE("project/file");
+	PROJECT_FILE("project/file"),
+
+	// 스레드 파일
+	THREAD_FILE("thread/file");
 
 	private final String directoryName;
 

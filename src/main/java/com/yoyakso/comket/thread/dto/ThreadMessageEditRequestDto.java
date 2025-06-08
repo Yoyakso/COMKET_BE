@@ -1,5 +1,8 @@
 package com.yoyakso.comket.thread.dto;
 
+import java.util.List;
+
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,4 +16,7 @@ public class ThreadMessageEditRequestDto {
 	private Long threadId;
 	private Long senderMemberId;
 	private String content;
+
+	@Nullable
+	private List<String> resources;
 }

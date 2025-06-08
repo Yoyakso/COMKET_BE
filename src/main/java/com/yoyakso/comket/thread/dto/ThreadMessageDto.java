@@ -1,6 +1,7 @@
 package com.yoyakso.comket.thread.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.yoyakso.comket.thread.enums.ThreadMessageState;
@@ -30,6 +31,9 @@ public class ThreadMessageDto {
 	private String content;
 	private Boolean isModified;
 	private ThreadMessageState messageState;
+
+	@Nullable
+	private List<String> resources;
 
 	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
 	private LocalDateTime sentAt;
