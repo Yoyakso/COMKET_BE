@@ -77,6 +77,10 @@ public class WorkspaceMemberService {
 		return workspaceMemberRepository.findAll();
 	}
 
+	public List<WorkspaceMember> getAllWorkspaceMembersByMember(Member member) {
+		return workspaceMemberRepository.findByMember(member);
+	}
+
 	public WorkspaceMember updateWorkspaceMemberAuthority(WorkspaceMember updatedWorkspaceMember) {
 		WorkspaceMember existingWorkspaceMember = workspaceMemberRepository.findById(updatedWorkspaceMember.getId())
 			.orElseThrow(() -> new CustomException("CANNOT_FOUND_WORKSPACEMEMBER", "워크스페이스 멤버를 찾을 수 없습니다."));
@@ -146,17 +150,32 @@ public class WorkspaceMemberService {
 				emailService.sendInvitationEmail(workspace, memberEmail);
 				continue;
 			}
-			Member member = memberOptional.orElseThrow(() ->
-				new CustomException("MEMBER_NOT_FOUND", "멤버를 찾을 수 없습니다.")
-			);
-			WorkspaceMember workspaceMember = WorkspaceMember.builder()
-				.workspace(workspace)
-				.member(member)
-				.nickName(member.getFullName())
-				.state(workspaceMemberCreateRequest.getState())
-				.positionType(workspaceMemberCreateRequest.getPositionType())
-				.build();
-			workspaceMemberRepository.save(workspaceMember);
+
+			Member member = memberOptional.get();
+
+			// 이미 삭제된 워크스페이스 멤버인지 확인
+			Optional<WorkspaceMember> existingDeletedMember = workspaceMemberRepository
+				.findByWorkspaceIdAndMemberId(workspace.getId(), member.getId());
+
+			if (existingDeletedMember.isPresent()
+				&& existingDeletedMember.get().getState() == WorkspaceMemberState.DELETED) {
+				// 삭제된 워크스페이스 멤버 재활성화
+				WorkspaceMember deletedMember = existingDeletedMember.get();
+				deletedMember.setNickName(member.getFullName());
+				deletedMember.setState(WorkspaceMemberState.ACTIVE);
+				deletedMember.setPositionType(workspaceMemberCreateRequest.getPositionType());
+				workspaceMemberRepository.save(deletedMember);
+			} else if (existingDeletedMember.isEmpty()) {
+				// 새 워크스페이스 멤버 생성
+				WorkspaceMember workspaceMember = WorkspaceMember.builder()
+					.workspace(workspace)
+					.member(member)
+					.nickName(member.getFullName())
+					.state(workspaceMemberCreateRequest.getState())
+					.positionType(workspaceMemberCreateRequest.getPositionType())
+					.build();
+				workspaceMemberRepository.save(workspaceMember);
+			}
 		}
 	}
 

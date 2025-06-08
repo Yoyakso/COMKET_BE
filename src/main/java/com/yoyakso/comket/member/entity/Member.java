@@ -43,11 +43,22 @@ public class Member {
 	@NotNull
 	private String password;
 
-	private Boolean isDeleted = false;
+	@Builder.Default
+	private boolean isDeleted = false;
 
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 
 	@UpdateTimestamp
 	private LocalDateTime updatedAt;
+
+	// Custom getter and setter for backward compatibility
+	public Boolean getIsDeleted() {
+		return isDeleted;
+	}
+
+	public void setIsDeleted(Boolean isDeleted) {
+		this.isDeleted = isDeleted != null ? isDeleted : false;
+	}
+
 }

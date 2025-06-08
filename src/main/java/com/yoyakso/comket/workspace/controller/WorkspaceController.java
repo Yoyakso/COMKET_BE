@@ -176,4 +176,12 @@ public class WorkspaceController {
 		workspaceService.deleteWorkspaceMember(workspaceId, controllMember, targetMember);
 		return ResponseEntity.noContent().build();
 	}
+
+	@DeleteMapping("/leave-all")
+	@Operation(summary = "모든 워크스페이스 탈퇴 API", description = "자신이 소속된 모든 워크스페이스에서 탈퇴하는 API")
+	public ResponseEntity<Void> leaveAllWorkspaces() {
+		Member member = memberService.getAuthenticatedMember();
+		workspaceService.leaveAllWorkspaces(member);
+		return ResponseEntity.noContent().build();
+	}
 }
