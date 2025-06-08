@@ -281,22 +281,34 @@ public class TicketService {
 	}
 
 	private void setAssignee(Ticket ticket, List<Long> assigneeProjectMemberId, Project project) {
+		// Check if assignees is null and initialize it if necessary
+		if (ticket.getAssignees() == null) {
+			ticket.setAssignees(new ArrayList<>());
+		} else {
+			// Clear existing assignees to avoid duplicates
+			ticket.getAssignees().clear();
+		}
+
 		if (assigneeProjectMemberId == null)
 			return;
+
 		List<ProjectMember> assigneeProjectMemberList = assigneeProjectMemberId.stream()
 			.map(projectMemberService::getProjectMemberByProjectMemberId)
 			.toList();
+
 		// 알람 생성
 		assigneeProjectMemberList.stream()
 			.map(ProjectMember::getMember)
 			.forEach(member -> alarmService.addTicketAlarm(member, ticket, TicketAlarmType.ASSIGNEE_SETTING, ""));
-		// alarmService.addTicketAlarm(assigneeProjectMember.getMember(), ticket, TicketAlarmType.ASSIGNEE_SETTING, "");
-		// 티켓에 담당자 설정
-		ticket.setAssignees(
-			new ArrayList<>(assigneeProjectMemberList.stream()
-				.map(ProjectMember::getMember)
-				.toList())
-		);
+
+		// 티켓에 담당자 설정 - add each member individually to avoid collection replacement issues
+		assigneeProjectMemberList.stream()
+			.map(ProjectMember::getMember)
+			.forEach(member -> {
+				if (!ticket.getAssignees().contains(member)) {
+					ticket.getAssignees().add(member);
+				}
+			});
 	}
 
 	private Ticket getValidTicket(Long ticketId) {
