@@ -43,6 +43,7 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
 	// 기존 OWNER는 Unique 값이라 상관 없었지만, ADMIN은 다수일 수 있기 때문에 가장 초기에 ADMIN인 유저 추출
 	ProjectMember findFirstByProjectIdAndPositionTypeOrderByUpdatedAtAsc(Long projectId, String positionType);
 
+	// 프로젝트멤버는 나갔다 들어올 경우 하나의 워크스페이스멤버Id로 여러명이 조회될 수 있기 때문에 ACTIVE인 멤버만 조회
 	@Query("SELECT pm.id " +
 		"FROM ProjectMember pm " +
 		"JOIN WorkspaceMember wm ON pm.member.id = wm.member.id " +
@@ -55,6 +56,7 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
 		@Param("state") ProjectMemberState state
 	);
 
+	// 프로젝트멤버는 나갔다 들어올 경우 하나의 이메일로 여러명이 조회될 수 있기 때문에 ACTIVE인 멤버만 조회
 	@Query("SELECT pm FROM ProjectMember pm " +
 		"WHERE pm.project.id = :projectId " +
 		"AND pm.member.email = :email " +
@@ -65,6 +67,7 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
 		@Param("state") ProjectMemberState state
 	);
 
+	// 프로젝트멤버ID로 워크스페이스멤버의 이름 조회 -> 요약 시 담당자 이름으로 사용
 	@Query("SELECT wm.nickName " +
 		"FROM ProjectMember pm " +
 		"JOIN WorkspaceMember wm ON wm.member.id = pm.member.id " +
