@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ThreadMessageEditDto {
+public class ThreadMessageEditRequestDto {
 	private Long threadId;
 	private Long senderMemberId;
 	private String content;
