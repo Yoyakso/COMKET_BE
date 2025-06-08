@@ -59,11 +59,9 @@ public class ThreadSocketHandler extends TextWebSocketHandler {
 		// 클라이언트로부터 받은 메시지 JSON → DTO
 		ThreadMessageDto messageDto = objectMapper.readValue(message.getPayload(), ThreadMessageDto.class);
 
-		System.out.println("[test] - message1");
 		Map<String, Object> messageWrapper = new HashMap<>();
 		messageWrapper.put("type", "message_created"); // or "message_updated"
 		messageWrapper.put("data", messageDto); // 기존 DTO를 감싸줌
-		System.out.println("[test] - message2: " + messageDto);
 
 		// Kafka topic: thread-ticket-{ticketId}
 		String topic = "thread-ticket-" + ticketId;
