@@ -7,8 +7,12 @@ import org.springframework.stereotype.Component;
 import com.yoyakso.comket.alarm.dto.response.AlarmProjectCountResponse;
 import com.yoyakso.comket.alarm.dto.response.AlarmTicketResponse;
 import com.yoyakso.comket.alarm.dto.response.AlarmWorkspaceCountResponse;
+import com.yoyakso.comket.alarm.dto.response.AlarmWorkspaceResponse;
+import com.yoyakso.comket.alarm.dto.response.ProjectAlarmResponse;
 import com.yoyakso.comket.alarm.entity.ProjectAlarm;
+import com.yoyakso.comket.alarm.entity.ProjectEventAlarm;
 import com.yoyakso.comket.alarm.entity.TicketAlarm;
+import com.yoyakso.comket.alarm.entity.WorkspaceAlarm;
 import com.yoyakso.comket.member.entity.Member;
 
 @Component
@@ -40,6 +44,26 @@ public class AlarmMapper {
 			.ticketId(ticketAlarm.getTicket().getId())
 			.ticketAlarmType(ticketAlarm.getAlarmType())
 			.alarmMessage(ticketAlarm.getAlarmMessage())
+			.build();
+	}
+
+	public AlarmWorkspaceResponse toAlarmWorkspaceResponse(WorkspaceAlarm workspaceAlarm) {
+		return AlarmWorkspaceResponse.builder()
+			.memberId(workspaceAlarm.getMember().getId())
+			.workspaceId(workspaceAlarm.getWorkspace().getId())
+			.workspaceName(workspaceAlarm.getWorkspace().getName())
+			.alarmType(workspaceAlarm.getAlarmType())
+			.alarmMessage(workspaceAlarm.getAlarmMessage())
+			.build();
+	}
+
+	public ProjectAlarmResponse toProjectAlarmResponse(ProjectEventAlarm projectEventAlarm) {
+		return ProjectAlarmResponse.builder()
+			.memberId(projectEventAlarm.getMember().getId())
+			.projectId(projectEventAlarm.getProject().getId())
+			.projectName(projectEventAlarm.getProject().getName())
+			.alarmType(projectEventAlarm.getAlarmType())
+			.alarmMessage(projectEventAlarm.getAlarmMessage())
 			.build();
 	}
 }
