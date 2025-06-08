@@ -3,6 +3,7 @@ package com.yoyakso.comket.projectMember.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.exception.CustomException;
@@ -11,6 +12,7 @@ import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.project.dto.ProjectMemberInviteRequest;
 import com.yoyakso.comket.project.dto.ProjectMemberResponse;
 import com.yoyakso.comket.project.entity.Project;
+import com.yoyakso.comket.project.event.ProjectInviteEvent;
 import com.yoyakso.comket.project.repository.ProjectRepository;
 import com.yoyakso.comket.projectMember.entity.ProjectMember;
 import com.yoyakso.comket.projectMember.enums.ProjectMemberState;
@@ -25,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ProjectMemberService {
+	private final ApplicationEventPublisher eventPublisher;
 	private final ProjectMemberRepository projectMemberRepository;
 	private final MemberService memberService;
 	private final ProjectRepository projectRepository;
@@ -56,7 +59,12 @@ public class ProjectMemberService {
 			.positionType(positionType)
 			.build();
 
-		return projectMemberRepository.save(projectMember);
+		ProjectMember savedProjectMember = projectMemberRepository.save(projectMember);
+
+		// 프로젝트 초대 이벤트 발행
+		eventPublisher.publishEvent(new ProjectInviteEvent(project, member));
+
+		return savedProjectMember;
 	}
 
 	public ProjectMember getProjectMemberByProjectMemberId(Long projectMemberId) {
@@ -150,6 +158,9 @@ public class ProjectMemberService {
 				.build();
 
 			ProjectMember newProjectMember = projectMemberRepository.save(projectMember);
+
+			// 프로젝트 초대 이벤트 발행
+			eventPublisher.publishEvent(new ProjectInviteEvent(project, member));
 
 			ProjectMemberResponse response = ProjectMemberResponse.builder()
 				.projectMemberId(newProjectMember.getId())

@@ -8,8 +8,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.alarm.entity.ProjectAlarm;
+import com.yoyakso.comket.alarm.entity.ProjectEventAlarm;
 import com.yoyakso.comket.alarm.entity.TicketAlarm;
 import com.yoyakso.comket.alarm.entity.WorkspaceAlarm;
+import com.yoyakso.comket.alarm.enums.ProjectAlarmType;
 import com.yoyakso.comket.alarm.enums.TicketAlarmType;
 import com.yoyakso.comket.alarm.enums.WorkspaceAlarmType;
 import com.yoyakso.comket.alarm.repository.AlarmRepository;
@@ -135,12 +137,28 @@ public class AlarmService {
 		return alarmRepository.findWorkspaceAlarmsByMember(member, workspace);
 	}
 
+	// 프로젝트 이벤트 알람 조회
+	public List<ProjectEventAlarm> getProjectEventAlarms(Member member, Long projectId) {
+		// 프로젝트 접근 가능 여부 확인
+		Project project = projectService.getProjectByProjectId(projectId, member);
+
+		return alarmRepository.findProjectEventAlarmsByMember(member, project);
+	}
+
 	// 워크스페이스 알람 읽음 처리
 	public void markWorkspaceAlarmAsRead(Member member, Long workspaceId, WorkspaceAlarmType alarmType) {
 		// 워크스페이스 접근 가능 여부 확인
 		workspaceService.getWorkspaceById(workspaceId, member);
 
 		alarmRepository.markWorkspaceAlarmAsRead(member, workspaceId, alarmType);
+	}
+
+	// 프로젝트 이벤트 알람 읽음 처리
+	public void markProjectEventAlarmAsRead(Member member, Long projectId, ProjectAlarmType alarmType) {
+		// 프로젝트 접근 가능 여부 확인
+		projectService.getProjectByProjectId(projectId, member);
+
+		alarmRepository.markProjectEventAlarmAsRead(member, projectId, alarmType);
 	}
 
 	// 워크스페이스 초대 알람 추가
@@ -159,6 +177,24 @@ public class AlarmService {
 		// FCM 알림 전송
 		sendWorkspaceFcmNotification(member, workspace, WorkspaceAlarmType.WORKSPACE_INVITE,
 			workspaceAlarm.getAlarmMessage());
+	}
+
+	// 프로젝트 초대 알람 추가
+	public void addProjectInviteAlarm(Member member, Project project) {
+		// 프로젝트 알람 생성
+		ProjectEventAlarm projectEventAlarm = ProjectEventAlarm.builder()
+			.member(member)
+			.project(project)
+			.alarmType(ProjectAlarmType.PROJECT_INVITE)
+			.alarmMessage(project.getName() + " 프로젝트에 멤버로 추가되었습니다.")
+			.build();
+
+		// 프로젝트 알람 저장
+		alarmRepository.createProjectEventAlarm(member, projectEventAlarm);
+
+		// FCM 알림 전송
+		sendProjectEventFcmNotification(member, project, ProjectAlarmType.PROJECT_INVITE,
+			projectEventAlarm.getAlarmMessage());
 	}
 
 	// 워크스페이스 역할 변경 알람 추가
@@ -200,13 +236,35 @@ public class AlarmService {
 					alarmMessage,
 					data
 				);
-
-				log.info("FCM 워크스페이스 알림 전송 완료: memberId={}, workspaceId={}, alarmType={}",
-					member.getId(), workspace.getId(), alarmType);
 			} catch (Exception e) {
-				// 알림 전송 실패 시 로그만 남기고 예외는 전파하지 않음
-				log.error("FCM 워크스페이스 알림 전송 실패: memberId={}, workspaceId={}, alarmType={}, error={}",
-					member.getId(), workspace.getId(), alarmType, e.getMessage());
+				// 알림 전송 실패 시 예외는 전파하지 않음
+			}
+		}
+	}
+
+	// FCM 프로젝트 이벤트 알림 전송 메서드
+	private void sendProjectEventFcmNotification(Member member, Project project, ProjectAlarmType alarmType,
+		String alarmMessage) {
+		// 사용자의 FCM 토큰 조회
+		String fcmToken = fcmService.getFcmToken(member.getId());
+
+		// FCM 토큰이 있는 경우에만 알림 전송
+		if (fcmToken != null && !fcmToken.isEmpty()) {
+			try {
+				// 알림 데이터 설정
+				Map<String, String> data = new HashMap<>();
+				data.put("projectId", project.getId().toString());
+				data.put("alarmType", alarmType.name());
+
+				// FCM 알림 전송
+				fcmService.sendNotification(
+					fcmToken,
+					"프로젝트 알림",
+					alarmMessage,
+					data
+				);
+			} catch (Exception e) {
+				// 알림 전송 실패 시 예외는 전파하지 않음
 			}
 		}
 	}

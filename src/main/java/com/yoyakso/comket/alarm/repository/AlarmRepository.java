@@ -8,8 +8,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.yoyakso.comket.alarm.entity.ProjectAlarm;
+import com.yoyakso.comket.alarm.entity.ProjectEventAlarm;
 import com.yoyakso.comket.alarm.entity.TicketAlarm;
 import com.yoyakso.comket.alarm.entity.WorkspaceAlarm;
+import com.yoyakso.comket.alarm.enums.ProjectAlarmType;
 import com.yoyakso.comket.alarm.enums.TicketAlarmType;
 import com.yoyakso.comket.alarm.enums.WorkspaceAlarmType;
 import com.yoyakso.comket.member.entity.Member;
@@ -121,6 +123,11 @@ public class AlarmRepository {
 		return "workspace:" + workspaceId + ":member:" + memberId + ":alarmType:" + alarmType.name();
 	}
 
+	// Redis 키 생성 (프로젝트 이벤트)
+	private String generateProjectEventKey(Long projectId, Long memberId, ProjectAlarmType alarmType) {
+		return "projectEvent:" + projectId + ":member:" + memberId + ":alarmType:" + alarmType.name();
+	}
+
 	public boolean existsTicketAlarm(TicketAlarm ticketAlarm) {
 		String key = generateTicketKey(ticketAlarm.getTicket().getId(), ticketAlarm.getMember().getId(),
 			ticketAlarm.getAlarmType());
@@ -133,15 +140,33 @@ public class AlarmRepository {
 		return redisTemplate.hasKey(key);
 	}
 
+	public boolean existsProjectEventAlarm(ProjectEventAlarm projectEventAlarm) {
+		String key = generateProjectEventKey(projectEventAlarm.getProject().getId(), projectEventAlarm.getMember().getId(),
+			projectEventAlarm.getAlarmType());
+		return redisTemplate.hasKey(key);
+	}
+
 	// Redis 워크스페이스 알람 생성
 	public void createWorkspaceAlarm(Member member, WorkspaceAlarm workspaceAlarm) {
 		String key = generateWorkspaceKey(workspaceAlarm.getWorkspace().getId(), member.getId(), workspaceAlarm.getAlarmType());
 		redisTemplate.opsForValue().set(key, workspaceAlarm.getAlarmMessage());
 	}
 
+	// Redis 프로젝트 이벤트 알람 생성
+	public void createProjectEventAlarm(Member member, ProjectEventAlarm projectEventAlarm) {
+		String key = generateProjectEventKey(projectEventAlarm.getProject().getId(), member.getId(), projectEventAlarm.getAlarmType());
+		redisTemplate.opsForValue().set(key, projectEventAlarm.getAlarmMessage());
+	}
+
 	// 워크스페이스 알람 읽음 처리
 	public void markWorkspaceAlarmAsRead(Member member, Long workspaceId, WorkspaceAlarmType alarmType) {
 		String key = generateWorkspaceKey(workspaceId, member.getId(), alarmType);
+		redisTemplate.delete(key);
+	}
+
+	// 프로젝트 이벤트 알람 읽음 처리
+	public void markProjectEventAlarmAsRead(Member member, Long projectId, ProjectAlarmType alarmType) {
+		String key = generateProjectEventKey(projectId, member.getId(), alarmType);
 		redisTemplate.delete(key);
 	}
 
@@ -179,5 +204,28 @@ public class AlarmRepository {
 			// 카운트가 0인 경우, 키를 삭제
 			redisTemplate.delete(key);
 		}
+	}
+
+	// 프로젝트 이벤트 알람 조회
+	public List<ProjectEventAlarm> findProjectEventAlarmsByMember(Member member, Project project) {
+		// 모든 프로젝트 알람 타입에 대한 키 생성
+		List<String> keys = Arrays.stream(ProjectAlarmType.values())
+			.map(alarmType -> generateProjectEventKey(project.getId(), member.getId(), alarmType))
+			.toList();
+
+		// Redis에서 알람 정보 조회
+		return keys.stream()
+			.filter(key -> redisTemplate.opsForValue().get(key) != null) // Redis에서 값이 존재하는 경우만 필터링
+			.map(key -> {
+				ProjectAlarmType alarmType = ProjectAlarmType.valueOf(key.split(":")[5]); // key에서 alarmType 추출
+				String alarmMessage = redisTemplate.opsForValue().get(key);
+				return ProjectEventAlarm.builder()
+					.member(member)
+					.project(project)
+					.alarmType(alarmType)
+					.alarmMessage(alarmMessage)
+					.build();
+			})
+			.toList();
 	}
 }

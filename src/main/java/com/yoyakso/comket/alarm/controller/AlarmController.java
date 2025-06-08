@@ -13,9 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.yoyakso.comket.alarm.dto.response.AlarmTicketResponse;
 import com.yoyakso.comket.alarm.dto.response.AlarmWorkspaceCountResponse;
 import com.yoyakso.comket.alarm.dto.response.AlarmWorkspaceResponse;
+import com.yoyakso.comket.alarm.dto.response.ProjectAlarmResponse;
 import com.yoyakso.comket.alarm.entity.ProjectAlarm;
+import com.yoyakso.comket.alarm.entity.ProjectEventAlarm;
 import com.yoyakso.comket.alarm.entity.TicketAlarm;
 import com.yoyakso.comket.alarm.entity.WorkspaceAlarm;
+import com.yoyakso.comket.alarm.enums.ProjectAlarmType;
 import com.yoyakso.comket.alarm.enums.TicketAlarmType;
 import com.yoyakso.comket.alarm.enums.WorkspaceAlarmType;
 import com.yoyakso.comket.alarm.mapper.AlarmMapper;
@@ -106,4 +109,28 @@ public class AlarmController {
 		return ResponseEntity.noContent().build();
 	}
 
+	// 프로젝트 이벤트 알람 조회 API
+	@GetMapping("/project-event")
+	public ResponseEntity<List<ProjectAlarmResponse>> getProjectEventAlarms(
+		@RequestParam Long projectId
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		List<ProjectEventAlarm> projectEventAlarmList = alarmService.getProjectEventAlarms(member, projectId);
+		return ResponseEntity.ok(
+			projectEventAlarmList.stream()
+				.map(alarmMapper::toProjectAlarmResponse)
+				.toList()
+		);
+	}
+
+	// 프로젝트 이벤트 알람 읽음 처리 API
+	@PutMapping("/project-event/read")
+	public ResponseEntity<Void> markProjectEventAlarmAsRead(
+		@RequestParam Long projectId,
+		@RequestParam ProjectAlarmType alarmType
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		alarmService.markProjectEventAlarmAsRead(member, projectId, alarmType);
+		return ResponseEntity.noContent().build();
+	}
 }

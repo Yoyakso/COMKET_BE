@@ -8,7 +8,9 @@ import com.yoyakso.comket.alarm.dto.response.AlarmProjectCountResponse;
 import com.yoyakso.comket.alarm.dto.response.AlarmTicketResponse;
 import com.yoyakso.comket.alarm.dto.response.AlarmWorkspaceCountResponse;
 import com.yoyakso.comket.alarm.dto.response.AlarmWorkspaceResponse;
+import com.yoyakso.comket.alarm.dto.response.ProjectAlarmResponse;
 import com.yoyakso.comket.alarm.entity.ProjectAlarm;
+import com.yoyakso.comket.alarm.entity.ProjectEventAlarm;
 import com.yoyakso.comket.alarm.entity.TicketAlarm;
 import com.yoyakso.comket.alarm.entity.WorkspaceAlarm;
 import com.yoyakso.comket.member.entity.Member;
@@ -52,6 +54,16 @@ public class AlarmMapper {
 			.workspaceName(workspaceAlarm.getWorkspace().getName())
 			.alarmType(workspaceAlarm.getAlarmType())
 			.alarmMessage(workspaceAlarm.getAlarmMessage())
+			.build();
+	}
+
+	public ProjectAlarmResponse toProjectAlarmResponse(ProjectEventAlarm projectEventAlarm) {
+		return ProjectAlarmResponse.builder()
+			.memberId(projectEventAlarm.getMember().getId())
+			.projectId(projectEventAlarm.getProject().getId())
+			.projectName(projectEventAlarm.getProject().getName())
+			.alarmType(projectEventAlarm.getAlarmType())
+			.alarmMessage(projectEventAlarm.getAlarmMessage())
 			.build();
 	}
 }
