@@ -17,7 +17,7 @@ import com.yoyakso.comket.billing.dto.request.CreditCardUpdateRequest;
 import com.yoyakso.comket.billing.dto.response.BillingStatusResponse;
 import com.yoyakso.comket.billing.dto.response.CreditCardResponse;
 import com.yoyakso.comket.billing.entity.CreditCard;
-import com.yoyakso.comket.billing.entity.WorkspaceBilling;
+import com.yoyakso.comket.billing.entity.WorkspacePlan;
 import com.yoyakso.comket.billing.mapper.BillingMapper;
 import com.yoyakso.comket.billing.service.BillingService;
 import com.yoyakso.comket.member.entity.Member;
@@ -59,8 +59,8 @@ public class BillingController {
 		// 관리자 권한 확인
 		workspaceService.validateAdminPermission(authenticatedMember, workspace);
 
-		// 빌링 정보 조회
-		WorkspaceBilling workspaceBilling = billingService.getWorkspaceBilling(workspaceId);
+		// 요금제 정보 조회
+		WorkspacePlan workspacePlan = billingService.getWorkspacePlan(workspaceId);
 
 		// 멤버 수 히스토리 조회
 		Map<String, Integer> memberCountHistory = billingService.getMemberCountHistory(workspaceId);
@@ -70,7 +70,7 @@ public class BillingController {
 
 		// 응답 생성
 		return ResponseEntity.ok(billingMapper.toBillingStatusResponse(
-			workspaceBilling, memberCountHistory, billingAmountHistory));
+			workspacePlan, memberCountHistory, billingAmountHistory));
 	}
 
 	@PostMapping("/credit-card")
@@ -137,6 +137,24 @@ public class BillingController {
 		return ResponseEntity.ok(billingMapper.toCreditCardResponse(updatedCreditCard));
 	}
 
+	@PostMapping("/admin/record")
+	@Operation(summary = "워크스페이스 빌링 히스토리 수동 기록 API", description = "워크스페이스 빌링 데이터를 수동으로 기록하는 API")
+	public ResponseEntity<Void> recordWorkspaceBillingHistory(@PathVariable Long workspaceId) {
+		// 인증된 사용자 확인
+		Member authenticatedMember = memberService.getAuthenticatedMember();
+
+		// 워크스페이스 접근 권한 확인
+		Workspace workspace = workspaceService.getWorkspaceById(workspaceId, authenticatedMember);
+
+		// 관리자 권한 확인
+		workspaceService.validateAdminPermission(authenticatedMember, workspace);
+
+		// 워크스페이스 빌링 히스토리 기록
+		billingService.recordMonthlyWorkspaceBillingData();
+
+		return ResponseEntity.ok().build();
+	}
+
 	@PutMapping("/plan")
 	@Operation(
 		summary = "요금제 변경 API",
@@ -161,7 +179,7 @@ public class BillingController {
 		workspaceService.validateAdminPermission(authenticatedMember, workspace);
 
 		// 요금제 변경
-		WorkspaceBilling workspaceBilling = billingService.changeBillingPlan(workspaceId, request.getPlan());
+		WorkspacePlan workspacePlan = billingService.changeBillingPlan(workspaceId, request.getPlan());
 
 		// 멤버 수 히스토리 조회
 		var memberCountHistory = billingService.getMemberCountHistory(workspaceId);
@@ -171,6 +189,6 @@ public class BillingController {
 
 		// 응답 생성
 		return ResponseEntity.ok(billingMapper.toBillingStatusResponse(
-			workspaceBilling, memberCountHistory, billingAmountHistory));
+			workspacePlan, memberCountHistory, billingAmountHistory));
 	}
 }

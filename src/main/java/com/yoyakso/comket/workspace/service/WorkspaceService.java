@@ -4,11 +4,10 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.yoyakso.comket.billing.entity.WorkspaceBilling;
-import com.yoyakso.comket.billing.enums.BillingPlan;
 import com.yoyakso.comket.billing.service.BillingService;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.file.entity.File;
@@ -25,6 +24,7 @@ import com.yoyakso.comket.workspace.dto.response.WorkspaceInfoResponse;
 import com.yoyakso.comket.workspace.dto.response.WorkspaceMemberInfoResponse;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.enums.WorkspaceState;
+import com.yoyakso.comket.workspace.event.WorkspaceCreatedEvent;
 import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
@@ -40,9 +40,9 @@ public class WorkspaceService {
 	private final WorkspaceMemberService workspaceMemberService;
 	private final MemberService memberService;
 	private final FileService fileService;
+	private final BillingService billingService;
 
-	@Autowired(required = false)
-	private BillingService billingService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	public Workspace registerWorkspace(WorkspaceRegisterRequest workspaceRegisterRequest, Member member) {
 		Workspace workspace = Workspace.fromRequest(workspaceRegisterRequest);
@@ -57,10 +57,8 @@ public class WorkspaceService {
 		Workspace savedWorkspace = workspaceRepository.save(workspace);
 		workspaceMemberService.createWorkspaceMember(savedWorkspace, member, WorkspaceMemberState.ACTIVE, "ADMIN");
 
-		// 빌링 서비스 등록
-		if (billingService != null) {
-			billingService.initializeWorkspaceBilling(savedWorkspace);
-		}
+		// 워크스페이스 생성 이벤트 발행
+		eventPublisher.publishEvent(new WorkspaceCreatedEvent(savedWorkspace));
 
 		return savedWorkspace;
 	}
@@ -326,48 +324,23 @@ public class WorkspaceService {
 		targetWorkspaceMember.setState(WorkspaceMemberState.DELETED);
 		workspaceMemberService.updateWorkspaceMemberAuthority(targetWorkspaceMember);
 
-		// Update billing information after removing a member
-		if (billingService != null) {
-			billingService.updateMemberCountAndPlan(workspaceId);
-		}
 	}
 
+	@Transactional
 	public List<WorkspaceMemberInfoResponse> inviteWorkspaceMember(Long id,
 		WorkspaceMemberCreateRequest workspaceMemberCreateRequest, Member member) {
 		Workspace workspace = findWorkspaceById(id);
 		validateAdminPermission(member, workspace);
 
-		// Check if adding new members would require a plan change
-		if (billingService != null) {
-			int newMembersCount = workspaceMemberCreateRequest.getMemberEmailList().size();
-			boolean planChangeRequired = billingService.checkIfPlanChangeRequired(id, newMembersCount);
+		// 요금제 변경 및 신용 카드 필요 여부 확인
+		// 이 검증은 멤버 추가 전에 수행되어야 함
+		// 예외가 발생하면 트랜잭션이 롤백되어 멤버가 추가되지 않음
+		// 사용자는 별도의 요금제 변경 API를 사용하여 요금제를 변경해야 함
+		billingService.validatePlanChangeForNewMembers(id, workspaceMemberCreateRequest.getMemberEmailList().size());
 
-			if (planChangeRequired) {
-				WorkspaceBilling billing = billingService.getWorkspaceBilling(id);
-				BillingPlan currentPlan = billing.getCurrentPlan();
-				int currentMemberCount = billing.getMemberCount();
-				int newTotalCount = currentMemberCount + newMembersCount;
-				BillingPlan requiredPlan = BillingPlan.getPlanForMemberCount(newTotalCount);
-
-				// If moving to a paid plan, check if credit card is available
-				if (requiredPlan != BillingPlan.BASIC && billing.getCreditCard() == null) {
-					throw new CustomException("CREDIT_CARD_REQUIRED",
-						"유료 요금제(" + requiredPlan.getDisplayName() + ")로 변경하려면 신용 카드 정보가 필요합니다.");
-				}
-
-				throw new CustomException("PLAN_CHANGE_REQUIRED",
-					"멤버 초대 시 요금제 변경이 필요합니다. 현재 요금제: " + currentPlan.getDisplayName() +
-						", 필요 요금제: " + requiredPlan.getDisplayName());
-			}
-		}
-
+		// Invite members to workspace
 		List<WorkspaceMemberInfoResponse> responses = workspaceMemberService.inviteMembersToWorkspace(workspace,
 			workspaceMemberCreateRequest);
-
-		// Update billing information after adding members
-		if (billingService != null) {
-			billingService.updateMemberCountAndPlan(id);
-		}
 
 		return responses;
 	}
