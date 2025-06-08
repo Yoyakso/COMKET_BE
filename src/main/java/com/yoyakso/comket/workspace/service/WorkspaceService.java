@@ -265,6 +265,12 @@ public class WorkspaceService {
 		}
 		// 수정 대상자 정보 조회
 		Member targetMember = memberService.getMemberByEmail(request.getWorkspaceMemberEmail());
+
+		// 탈퇴한 회원 검증 추가
+		if (targetMember.getIsDeleted()) {
+			throw new CustomException("MEMBER_DELETED", "탈퇴한 회원입니다.");
+		}
+
 		WorkspaceMember targetWorkspaceMember = workspaceMemberService.getWorkspaceMemberByWorkspaceIdAndMemberId(
 			workspaceId,
 			targetMember.getId()
@@ -357,5 +363,32 @@ public class WorkspaceService {
 			return;
 		}
 		throw new CustomException("WORKSPACE_AUTHORIZATION_FAILED", "워크스페이스에 대한 권한이 없습니다.");
+	}
+
+	/**
+	 * 사용자가 소속된 모든 워크스페이스에서 탈퇴
+	 * 단, 하나라도 관리자인 워크스페이스가 있으면 예외 발생
+	 */
+	@Transactional
+	public void leaveAllWorkspaces(Member member) {
+		// 사용자의 모든 워크스페이스 멤버십 조회
+		List<WorkspaceMember> workspaceMembers = workspaceMemberService.getAllWorkspaceMembersByMember(member);
+
+		// 활성 상태인 워크스페이스 멤버십 중 관리자인 것이 있는지 확인
+		boolean isAdminInAnyWorkspace = workspaceMembers.stream()
+			.filter(wm -> wm.getState() == WorkspaceMemberState.ACTIVE)
+			.anyMatch(wm -> "ADMIN".equals(wm.getPositionType()));
+
+		if (isAdminInAnyWorkspace) {
+			throw new CustomException("ADMIN_CANNOT_LEAVE_ALL", "관리자로 있는 워크스페이스가 있어 모든 워크스페이스를 탈퇴할 수 없습니다.");
+		}
+
+		// 모든 워크스페이스 멤버십의 상태를 DELETED로 변경
+		workspaceMembers.stream()
+			.filter(wm -> wm.getState() == WorkspaceMemberState.ACTIVE)
+			.forEach(wm -> {
+				wm.setState(WorkspaceMemberState.DELETED);
+				workspaceMemberService.updateWorkspaceMemberAuthority(wm);
+			});
 	}
 }
