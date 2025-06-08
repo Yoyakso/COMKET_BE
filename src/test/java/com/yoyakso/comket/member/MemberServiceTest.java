@@ -102,7 +102,8 @@ class MemberServiceTest {
 
 	@Test
 	void testRegisterMember_EmailDuplicate() {
-		when(memberRepository.existsByEmail(testMemberRegisterRequest.getEmail())).thenReturn(true);
+		when(memberRepository.findByEmailAndIsDeletedFalse(testMemberRegisterRequest.getEmail()))
+			.thenReturn(Optional.of(testMember));
 
 		CustomException exception = assertThrows(CustomException.class,
 			() -> memberService.registerMember(testMemberRegisterRequest));

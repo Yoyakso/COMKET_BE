@@ -31,19 +31,32 @@ public class MemberService {
 	private final MemberMapper memberMapper;
 
 	public MemberRegisterResponse registerMember(MemberRegisterRequest memberRegisterRequest) {
-		if (memberRepository.existsByEmail(memberRegisterRequest.getEmail())) {
+		// 삭제되지 않은 회원 중 동일 이메일이 있는지 확인
+		if (memberRepository.findByEmailAndIsDeletedFalse(memberRegisterRequest.getEmail()).isPresent()) {
 			throw new CustomException("EMAIL_DUPLICATE", "이미 사용 중인 이메일입니다.");
 		}
-		// Member 엔티티 생성
-		Member member = memberMapper.toEntity(memberRegisterRequest);
 
-		// password 암호화 & 저장
+		// 삭제된 회원인 경우 재활성화
+		Optional<Member> deletedMember = memberRepository.findByEmailAndIsDeletedTrue(memberRegisterRequest.getEmail());
+		if (deletedMember.isPresent()) {
+			Member member = deletedMember.get();
+			member.setIsDeleted(false);
+			member.setPassword(passwordEncoder.encode(memberRegisterRequest.getPassword()));
+			// 필요한 정보 업데이트
+			member.setFullName(memberRegisterRequest.getFullName());
+			memberRepository.save(member);
+
+			// JWT 토큰 생성
+			String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
+			return memberMapper.toMemberRegisterResponse(member, accessToken);
+		}
+
+		// 신규 회원 등록 (기존 로직)
+		Member member = memberMapper.toEntity(memberRegisterRequest);
 		member.setPassword(passwordEncoder.encode(member.getPassword()));
 		memberRepository.save(member);
 
-		// JWT 토큰 생성 및 RefreshToken 저장
 		String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
-		// MemberRegisterResponse 생성
 		return memberMapper.toMemberRegisterResponse(member, accessToken);
 	}
 
@@ -82,11 +95,23 @@ public class MemberService {
 				.name(null)
 				.email(googleUserInfo.getEmail())
 				.accessToken(null)
-				.accessToken(null)
 				.loginPlatformInfo(null)
 				.build();
 		}
+
 		Member member = memberOptional.get();
+
+		// 탈퇴한 회원 검증 추가
+		if (member.getIsDeleted()) {
+			return LoginResponse.builder()
+				.memberId(null)
+				.name(null)
+				.email(googleUserInfo.getEmail())
+				.accessToken(null)
+				.loginPlatformInfo(null)
+				.isDeleted(true) // 탈퇴 상태 표시
+				.build();
+		}
 
 		String accessToken = jwtTokenProvider.createAccessToken(member.getEmail());
 
@@ -105,8 +130,15 @@ public class MemberService {
 	}
 
 	public Member getMemberById(Long targetMemberId) {
-		return memberRepository.findById(targetMemberId)
+		Member member = memberRepository.findById(targetMemberId)
 			.orElseThrow(() -> new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다."));
+
+		// 탈퇴한 회원 검증 추가
+		if (member.getIsDeleted()) {
+			throw new CustomException("MEMBER_DELETED", "탈퇴한 회원입니다.");
+		}
+
+		return member;
 	}
 
 	public Member getMemberByEmail(String email) {
@@ -114,6 +146,12 @@ public class MemberService {
 		if (member.isEmpty()) {
 			throw new CustomException("MEMBER_NOT_FOUND", "회원 정보를 찾을 수 없습니다.");
 		}
+
+		// 탈퇴한 회원 검증 추가
+		if (member.get().getIsDeleted()) {
+			throw new CustomException("MEMBER_DELETED", "탈퇴한 회원입니다.");
+		}
+
 		return member.get();
 	}
 

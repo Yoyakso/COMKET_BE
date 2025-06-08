@@ -45,6 +45,11 @@ public class AuthService {
 		Member member = memberService.getMemberByEmailOptional(loginRequest.getEmail())
 			.orElseThrow(() -> new CustomException("LOGIN_VALIDATE_FAILED", "로그인 정보가 정확하지 않습니다."));
 
+		// 탈퇴한 회원 검증 추가
+		if (member.getIsDeleted()) {
+			throw new CustomException("MEMBER_DELETED", "탈퇴한 회원입니다. 재가입이 필요합니다.");
+		}
+
 		if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
 			throw new CustomException("LOGIN_VALIDATE_FAILED", "로그인 정보가 정확하지 않습니다.");
 		}
