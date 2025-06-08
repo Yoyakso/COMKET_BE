@@ -32,7 +32,7 @@ public class ThreadMessage {
 	@Column(nullable = false)
 	private Long senderMemberId;
 
-	private Long parentThreadId;
+	// private Long parentThreadId;
 
 	@Column(nullable = false)
 	@Lob
@@ -46,5 +46,9 @@ public class ThreadMessage {
 
 	public void editContent(String content) {
 		this.content = content;
+	}
+
+	public void setIsModified() {
+		this.isModified = true;
 	}
 }
