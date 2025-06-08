@@ -1,21 +1,24 @@
 package com.yoyakso.comket.billing.entity;
 
 import java.time.LocalDateTime;
-import java.time.YearMonth;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.yoyakso.comket.billing.enums.BillingPlan;
 import com.yoyakso.comket.workspace.entity.Workspace;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -30,29 +33,28 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "workspace_member_history")
-public class WorkspaceMemberHistory {
+@Table(name = "workspace_plan")
+public class WorkspacePlan {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workspace_id", nullable = false)
     private Workspace workspace;
 
     @NotNull
-    @Column(nullable = false)
-    private Integer year;
+    @Enumerated(EnumType.STRING)
+    private BillingPlan currentPlan;
 
-    @NotNull
-    @Column(nullable = false)
-    private Integer month;
-
-    @NotNull
     @Column(nullable = false)
     private Integer memberCount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "credit_card_id")
+    private CreditCard creditCard;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -60,19 +62,13 @@ public class WorkspaceMemberHistory {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    // 현재 월에 대한 히스토리 기록을 생성하는 헬퍼 메소드
-    public static WorkspaceMemberHistory createForCurrentMonth(Workspace workspace, int memberCount) {
-        YearMonth currentMonth = YearMonth.now();
-        return WorkspaceMemberHistory.builder()
-            .workspace(workspace)
-            .year(currentMonth.getYear())
-            .month(currentMonth.getMonthValue())
-            .memberCount(memberCount)
-            .build();
+    // 현재 요금제와 멤버 수를 기준으로 월 비용을 계산하는 메소드
+    public int calculateMonthlyCost() {
+        return currentPlan.getPricePerMember() * memberCount;
     }
 
-    // YearMonth 표현을 가져오는 헬퍼 메소드
-    public YearMonth getYearMonth() {
-        return YearMonth.of(year, month);
+    // 현재 요금제에 신용 카드가 필요한지 확인하는 메소드
+    public boolean isCreditCardRequired() {
+        return currentPlan != BillingPlan.BASIC;
     }
 }
