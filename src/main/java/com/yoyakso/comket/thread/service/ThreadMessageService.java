@@ -16,6 +16,7 @@ import com.yoyakso.comket.thread.dto.ThreadMessageReplyRequestDto;
 import com.yoyakso.comket.thread.entity.ThreadMessage;
 import com.yoyakso.comket.thread.enums.ThreadMessageState;
 import com.yoyakso.comket.thread.repository.ThreadMessageRepository;
+import com.yoyakso.comket.thread.util.ResourceJsonUtil;
 import com.yoyakso.comket.thread.util.ThreadMessageProducer;
 
 import jakarta.transaction.Transactional;
@@ -29,12 +30,14 @@ public class ThreadMessageService {
 	private final MemberService memberService;
 	private final ThreadMessageProducer threadMessageProducer;
 	private final ObjectMapper objectMapper;
+	private final ResourceJsonUtil resourceJsonUtil;
 
 	public List<ThreadMessageDto> getMessagesByTicketId(Long ticketId) {
 		List<ThreadMessage> messages = threadMessageRepository.findAllByTicketIdOrderBySentAtAsc(ticketId);
 
 		return messages.stream().map(message -> {
 			String senderName = memberService.findMemberNameById(message.getSenderMemberId());
+			List<String> resources = resourceJsonUtil.fromJson(message.getResources());
 
 			System.out.println("[test] - 3");
 			return ThreadMessageDto.builder()
@@ -44,6 +47,7 @@ public class ThreadMessageService {
 				.senderMemberId(message.getSenderMemberId())
 				.senderName(senderName)
 				.content(message.getContent())
+				.resources(resources)
 				.sentAt(message.getSentAt())
 				.isModified(message.getIsModified())
 				.build();
@@ -54,6 +58,8 @@ public class ThreadMessageService {
 	// @Async("threadDbExecutor")
 	public ThreadMessage saveAsync(ThreadMessageDto dto) {
 		System.out.println("[test] - async");
+		String resourcesJson = resourceJsonUtil.toJson(dto.getResources());
+
 		ThreadMessage entity = ThreadMessage.builder()
 			.ticketId(dto.getTicketId())
 			.parentThreadId(dto.getParentThreadId())
@@ -61,6 +67,7 @@ public class ThreadMessageService {
 			.content(dto.getContent())
 			.isModified(false)
 			.sentAt(dto.getSentAt()) // 클라이언트 or Kafka timestamp 기준
+			.resources(resourcesJson)
 			.build();
 
 		return threadMessageRepository.save(entity);
@@ -72,9 +79,11 @@ public class ThreadMessageService {
 			.orElseThrow(() -> new CustomException("THREAD_NOT_FOUND", "스레드를 찾을 수 없습니다."));
 
 		String senderName = memberService.findMemberNameById(message.getSenderMemberId());
+		String resourcesJson = resourceJsonUtil.toJson(dto.getResources());
 
 		message.editContent(dto.getContent());
 		message.setIsModified();
+		message.editResources(resourcesJson);
 
 		ThreadMessageDto responseMessage = ThreadMessageDto.builder()
 			.ticketId(message.getTicketId())
@@ -83,6 +92,7 @@ public class ThreadMessageService {
 			.senderMemberId(message.getSenderMemberId())
 			.senderName(senderName)
 			.content(message.getContent())
+			.resources(dto.getResources())
 			.sentAt(message.getSentAt())
 			.isModified(true)
 			.messageState(ThreadMessageState.UPDATE)
@@ -131,11 +141,14 @@ public class ThreadMessageService {
 		ThreadMessage message = threadMessageRepository.findById(dto.getParentThreadId())
 			.orElseThrow(() -> new CustomException("THREAD_NOT_FOUND", "스레드를 찾을 수 없습니다."));
 
+		String resourcesJson = resourceJsonUtil.toJson(dto.getResources());
+
 		ThreadMessage entity = ThreadMessage.builder()
 			.ticketId(dto.getTicketId())
 			.parentThreadId(dto.getParentThreadId())
 			.senderMemberId(dto.getSenderMemberId())
 			.content(dto.getReply())
+			.resources(resourcesJson)
 			.isModified(false)
 			.sentAt(dto.getSentAt()) // 클라이언트 or Kafka timestamp 기준
 			.build();
@@ -150,6 +163,7 @@ public class ThreadMessageService {
 			.senderMemberId(SavedThreadMeesage.getSenderMemberId())
 			.senderName(senderName)
 			.content(SavedThreadMeesage.getContent())
+			.resources(dto.getResources())
 			.sentAt(SavedThreadMeesage.getSentAt())
 			.isModified(false)
 			.build();
