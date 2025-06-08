@@ -28,10 +28,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -75,11 +76,12 @@ public class Ticket {
 	@JoinColumn(name = "parent_ticket_id")
 	private Ticket parentTicket;
 
-	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	@JoinTable(
 		name = "ticket_assignee",
 		joinColumns = @JoinColumn(name = "ticket_id"),
-		inverseJoinColumns = @JoinColumn(name = "member_id")
+		inverseJoinColumns = @JoinColumn(name = "member_id"),
+		uniqueConstraints = @UniqueConstraint(columnNames = {"ticket_id", "member_id"})
 	)
 	private List<Member> assignees = new ArrayList<>();
 
