@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yoyakso.comket.exception.CustomException;
-import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.thread.dto.ThreadMessageDeleteRequestDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageEditRequestDto;
@@ -18,6 +17,7 @@ import com.yoyakso.comket.thread.enums.ThreadMessageState;
 import com.yoyakso.comket.thread.repository.ThreadMessageRepository;
 import com.yoyakso.comket.thread.util.ResourceJsonUtil;
 import com.yoyakso.comket.thread.util.ThreadMessageProducer;
+import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,23 +27,24 @@ import lombok.RequiredArgsConstructor;
 public class ThreadMessageService {
 
 	private final ThreadMessageRepository threadMessageRepository;
-	private final MemberService memberService;
 	private final ThreadMessageProducer threadMessageProducer;
 	private final ObjectMapper objectMapper;
 	private final ResourceJsonUtil resourceJsonUtil;
+	private final WorkspaceMemberService workspaceMemberService;
 
 	public List<ThreadMessageDto> getMessagesByTicketId(Long ticketId) {
 		List<ThreadMessage> messages = threadMessageRepository.findAllByTicketIdOrderBySentAtAsc(ticketId);
 
 		return messages.stream().map(message -> {
-			String senderName = memberService.findMemberNameById(message.getSenderMemberId());
+			String senderName = workspaceMemberService.getWorkspaceMemberById(message.getSenderWorkspaceMemberId())
+				.getNickName();
 			List<String> resources = resourceJsonUtil.fromJson(message.getResources());
 
 			return ThreadMessageDto.builder()
 				.ticketId(message.getTicketId())
 				.parentThreadId(message.getParentThreadId())
 				.threadId(message.getId())
-				.senderMemberId(message.getSenderMemberId())
+				.senderWorkspaceMemberId(message.getSenderWorkspaceMemberId())
 				.senderName(senderName)
 				.content(message.getContent())
 				.resources(resources)
@@ -61,7 +62,7 @@ public class ThreadMessageService {
 		ThreadMessage entity = ThreadMessage.builder()
 			.ticketId(dto.getTicketId())
 			.parentThreadId(dto.getParentThreadId())
-			.senderMemberId(dto.getSenderMemberId())
+			.senderWorkspaceMemberId(dto.getSenderWorkspaceMemberId())
 			.content(dto.getContent())
 			.isModified(false)
 			.sentAt(dto.getSentAt()) // 클라이언트 or Kafka timestamp 기준
@@ -76,7 +77,8 @@ public class ThreadMessageService {
 		ThreadMessage message = threadMessageRepository.findById(dto.getThreadId())
 			.orElseThrow(() -> new CustomException("THREAD_NOT_FOUND", "스레드를 찾을 수 없습니다."));
 
-		String senderName = memberService.findMemberNameById(message.getSenderMemberId());
+		String senderName = workspaceMemberService.getWorkspaceMemberById(message.getSenderWorkspaceMemberId())
+			.getNickName();
 		String resourcesJson = resourceJsonUtil.toJson(dto.getResources());
 
 		message.editContent(dto.getContent());
@@ -87,7 +89,7 @@ public class ThreadMessageService {
 			.ticketId(message.getTicketId())
 			.threadId(message.getId())
 			.parentThreadId(null)
-			.senderMemberId(message.getSenderMemberId())
+			.senderWorkspaceMemberId(message.getSenderWorkspaceMemberId())
 			.senderName(senderName)
 			.content(message.getContent())
 			.resources(dto.getResources())
@@ -144,7 +146,7 @@ public class ThreadMessageService {
 		ThreadMessage entity = ThreadMessage.builder()
 			.ticketId(dto.getTicketId())
 			.parentThreadId(dto.getParentThreadId())
-			.senderMemberId(dto.getSenderMemberId())
+			.senderWorkspaceMemberId(dto.getSenderMemberId())
 			.content(dto.getReply())
 			.resources(resourcesJson)
 			.isModified(false)
@@ -153,12 +155,13 @@ public class ThreadMessageService {
 
 		ThreadMessage SavedThreadMeesage = threadMessageRepository.save(entity);
 
-		String senderName = memberService.findMemberNameById(SavedThreadMeesage.getSenderMemberId());
+		String senderName = workspaceMemberService.getWorkspaceMemberById(message.getSenderWorkspaceMemberId())
+			.getNickName();
 
 		ThreadMessageDto responseMessage = ThreadMessageDto.builder()
 			.ticketId(SavedThreadMeesage.getTicketId())
 			.parentThreadId(SavedThreadMeesage.getParentThreadId())
-			.senderMemberId(SavedThreadMeesage.getSenderMemberId())
+			.senderWorkspaceMemberId(SavedThreadMeesage.getSenderWorkspaceMemberId())
 			.senderName(senderName)
 			.content(SavedThreadMeesage.getContent())
 			.resources(dto.getResources())

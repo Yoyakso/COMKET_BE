@@ -39,7 +39,7 @@ public class KafkaConsumerService { // Kafka에서는
 				ThreadMessageDto updatedDto = ThreadMessageDto.builder()
 					.threadId(savedEntity.getId())   // 저장된 id로 세팅
 					.ticketId(savedEntity.getTicketId())
-					.senderMemberId(savedEntity.getSenderMemberId())
+					.senderWorkspaceMemberId(savedEntity.getSenderWorkspaceMemberId())
 					.senderName(messageDto.getSenderName()) // 이름은 요청에서
 					.content(savedEntity.getContent())
 					.resources(resources)
