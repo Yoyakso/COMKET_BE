@@ -43,4 +43,8 @@ public class ThreadMessage {
 
 	@Column(nullable = false)
 	private Boolean isModified;
+
+	public void editContent(String content) {
+		this.content = content;
+	}
 }
