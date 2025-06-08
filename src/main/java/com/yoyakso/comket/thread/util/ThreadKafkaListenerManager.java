@@ -31,6 +31,7 @@ public class ThreadKafkaListenerManager {
 
 		ContainerProperties containerProps = new ContainerProperties(topic);
 		containerProps.setMessageListener((MessageListener<String, String>)record -> {
+			System.out.println("[test] - listner");
 			kafkaConsumerService.handleMessage(record.value(), ticketId);
 		});
 
