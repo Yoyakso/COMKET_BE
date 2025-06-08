@@ -106,3 +106,15 @@ management:
         include: health
   security:
     enabled: false
+
+# Firebase Configuration
+firebase:
+  credentials:
+    path: /app/config/firebase-service-account.json
+
+# Logging Configuration
+logging:
+  file:
+    name: logs/application.log
+  level:
+    root: INFO

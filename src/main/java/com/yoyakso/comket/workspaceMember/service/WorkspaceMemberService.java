@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,16 +18,21 @@ import com.yoyakso.comket.workspace.dto.request.WorkspaceMemberCreateRequest;
 import com.yoyakso.comket.workspace.dto.response.WorkspaceMemberInfoResponse;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.enums.WorkspaceState;
+import com.yoyakso.comket.workspace.event.WorkspaceInviteEvent;
+import com.yoyakso.comket.workspace.event.WorkspaceRoleChangedEvent;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.enums.WorkspaceMemberState;
 import com.yoyakso.comket.workspaceMember.repository.WorkspaceMemberRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class WorkspaceMemberService {
+	private final ApplicationEventPublisher eventPublisher;
 
 	private final WorkspaceMemberRepository workspaceMemberRepository;
 
@@ -84,11 +90,32 @@ public class WorkspaceMemberService {
 	public WorkspaceMember updateWorkspaceMemberAuthority(WorkspaceMember updatedWorkspaceMember) {
 		WorkspaceMember existingWorkspaceMember = workspaceMemberRepository.findById(updatedWorkspaceMember.getId())
 			.orElseThrow(() -> new CustomException("CANNOT_FOUND_WORKSPACEMEMBER", "워크스페이스 멤버를 찾을 수 없습니다."));
+
+		// 역할 변경 이벤트를 위해 이전 역할 저장
+		String oldPositionType = existingWorkspaceMember.getPositionType();
+		String newPositionType = updatedWorkspaceMember.getPositionType();
+
 		existingWorkspaceMember.setWorkspace(updatedWorkspaceMember.getWorkspace());
 		existingWorkspaceMember.setMember(updatedWorkspaceMember.getMember());
 		existingWorkspaceMember.setState(updatedWorkspaceMember.getState());
-		existingWorkspaceMember.setPositionType(updatedWorkspaceMember.getPositionType());
-		return workspaceMemberRepository.save(existingWorkspaceMember);
+		existingWorkspaceMember.setPositionType(newPositionType);
+
+		WorkspaceMember savedMember = workspaceMemberRepository.save(existingWorkspaceMember);
+
+		// 역할이 변경된 경우에만 이벤트 발행
+		if (!oldPositionType.equals(newPositionType)) {
+			log.info("워크스페이스 멤버 역할 변경: memberId={}, workspaceId={}, oldRole={}, newRole={}",
+				savedMember.getMember().getId(), savedMember.getWorkspace().getId(), oldPositionType, newPositionType);
+
+			eventPublisher.publishEvent(new WorkspaceRoleChangedEvent(
+				savedMember.getWorkspace(),
+				savedMember.getMember(),
+				oldPositionType,
+				newPositionType
+			));
+		}
+
+		return savedMember;
 	}
 
 	public WorkspaceMember updateWorkspaceMemberInfo(WorkspaceMember workspaceMember) {
@@ -165,6 +192,10 @@ public class WorkspaceMemberService {
 				deletedMember.setState(WorkspaceMemberState.ACTIVE);
 				deletedMember.setPositionType(workspaceMemberCreateRequest.getPositionType());
 				workspaceMemberRepository.save(deletedMember);
+
+				// 워크스페이스 초대 이벤트 발행 (재활성화)
+				log.info("워크스페이스 멤버 재활성화: memberId={}, workspaceId={}", member.getId(), workspace.getId());
+				eventPublisher.publishEvent(new WorkspaceInviteEvent(workspace, member));
 			} else if (existingDeletedMember.isEmpty()) {
 				// 새 워크스페이스 멤버 생성
 				WorkspaceMember workspaceMember = WorkspaceMember.builder()
@@ -175,6 +206,10 @@ public class WorkspaceMemberService {
 					.positionType(workspaceMemberCreateRequest.getPositionType())
 					.build();
 				workspaceMemberRepository.save(workspaceMember);
+
+				// 워크스페이스 초대 이벤트 발행 (신규 생성)
+				log.info("워크스페이스 멤버 초대: memberId={}, workspaceId={}", member.getId(), workspace.getId());
+				eventPublisher.publishEvent(new WorkspaceInviteEvent(workspace, member));
 			}
 		}
 	}

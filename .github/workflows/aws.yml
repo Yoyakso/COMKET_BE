@@ -51,7 +51,15 @@ jobs:
         run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: 📦 Build Docker Image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/comket:latest .
+        run: |
+          # Firebase 서비스 계정 파일 생성
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > firebase-service-account.json
+
+          # Docker 빌드
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/comket:latest .
+
+          # 민감한 파일 삭제
+          rm firebase-service-account.json
 
       - name: 🚀 Push Docker Image to DockerHub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/comket:latest
@@ -80,8 +88,17 @@ jobs:
             echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
             echo "KAFKA_EC2_HOST_IP=${{ secrets.KAFKA_EC2_HOST_IP }}" >> .env
             echo "GPT_SECRET=${{secrets.GPT_SECRET}}" >> .env
-            
+
+            # Firebase 서비스 계정 파일 생성
+            echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > firebase-service-account.json
+
+            # 디렉토리 생성 (없는 경우)
+            mkdir -p app/config
+
+            # Firebase 서비스 계정 파일 복사
+            cp firebase-service-account.json app/config/
+
             docker pull ${{ secrets.DOCKER_USERNAME }}/comket:latest  
             docker stop comket || true  
             docker rm comket || true  
-            docker run -d --env-file .env -p 80:8080 --name comket ${{ secrets.DOCKER_USERNAME }}/comket:latest
+            docker run -d --env-file .env -p 80:8080 -v $(pwd)/app/config:/app/config --name comket ${{ secrets.DOCKER_USERNAME }}/comket:latest
