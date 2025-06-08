@@ -3,6 +3,7 @@ package com.yoyakso.comket.thread.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +13,7 @@ import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.thread.dto.ThreadMessageDeleteRequestDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageEditRequestDto;
+import com.yoyakso.comket.thread.dto.ThreadMessageReplyRequestDto;
 import com.yoyakso.comket.thread.service.ThreadMessageService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,4 +54,17 @@ public class ThreadMessageController {
 		return ResponseEntity.ok().build();
 	}
 
+	@Operation(method = "POST", description = "스레드 답글 작성 API")
+	@PostMapping("/thread/reply")
+	public ResponseEntity<Void> replyThreadMessage(
+		@RequestBody ThreadMessageReplyRequestDto requestData
+	) {
+		Member member = memberService.getAuthenticatedMember();
+		if (!member.getId().equals(requestData.getSenderMemberId())) {
+			throw new CustomException("MEMBER_NOT_SENDER", "스레드 작성자가 아닙니다.");
+		}
+
+		threadMessageService.replyMessage(requestData);
+		return ResponseEntity.ok().build();
+	}
 }

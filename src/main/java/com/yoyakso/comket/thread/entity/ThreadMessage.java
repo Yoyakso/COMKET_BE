@@ -2,6 +2,7 @@ package com.yoyakso.comket.thread.entity;
 
 import java.time.LocalDateTime;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -32,7 +33,9 @@ public class ThreadMessage {
 	@Column(nullable = false)
 	private Long senderMemberId;
 
-	// private Long parentThreadId;
+	@Nullable
+	@Column(nullable = true)
+	private Long parentThreadId;
 
 	@Column(nullable = false)
 	@Lob

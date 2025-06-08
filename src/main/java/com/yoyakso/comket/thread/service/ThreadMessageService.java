@@ -12,6 +12,7 @@ import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.thread.dto.ThreadMessageDeleteRequestDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageEditRequestDto;
+import com.yoyakso.comket.thread.dto.ThreadMessageReplyRequestDto;
 import com.yoyakso.comket.thread.entity.ThreadMessage;
 import com.yoyakso.comket.thread.enums.ThreadMessageState;
 import com.yoyakso.comket.thread.repository.ThreadMessageRepository;
@@ -38,6 +39,7 @@ public class ThreadMessageService {
 			System.out.println("[test] - 3");
 			return ThreadMessageDto.builder()
 				.ticketId(message.getTicketId())
+				.parentThreadId(message.getParentThreadId())
 				.threadId(message.getId())
 				.senderMemberId(message.getSenderMemberId())
 				.senderName(senderName)
@@ -54,10 +56,11 @@ public class ThreadMessageService {
 		System.out.println("[test] - async");
 		ThreadMessage entity = ThreadMessage.builder()
 			.ticketId(dto.getTicketId())
+			.parentThreadId(dto.getParentThreadId())
 			.senderMemberId(dto.getSenderMemberId())
 			.content(dto.getContent())
-			.sentAt(dto.getSentAt()) // 클라이언트 or Kafka timestamp 기준
 			.isModified(false)
+			.sentAt(dto.getSentAt()) // 클라이언트 or Kafka timestamp 기준
 			.build();
 
 		return threadMessageRepository.save(entity);
@@ -76,6 +79,7 @@ public class ThreadMessageService {
 		ThreadMessageDto responseMessage = ThreadMessageDto.builder()
 			.ticketId(message.getTicketId())
 			.threadId(message.getId())
+			.parentThreadId(null)
 			.senderMemberId(message.getSenderMemberId())
 			.senderName(senderName)
 			.content(message.getContent())
@@ -97,6 +101,7 @@ public class ThreadMessageService {
 		}
 	}
 
+	@Transactional
 	public void deleteMessage(ThreadMessageDeleteRequestDto dto) {
 		ThreadMessage message = threadMessageRepository.findById(dto.getThreadId())
 			.orElseThrow(() -> new CustomException("THREAD_NOT_FOUND", "스레드를 찾을 수 없습니다."));
@@ -117,7 +122,48 @@ public class ThreadMessageService {
 			String serializedEvent = objectMapper.writeValueAsString(messageWrapper);
 			threadMessageProducer.sendMessage(topic, serializedEvent);
 		} catch (Exception e) {
-			throw new CustomException("THREAD_MESSAGE_EDIT_ERROR", "스레드 메시지 수정에 실패했습니다.");
+			throw new CustomException("THREAD_MESSAGE_DELETE_ERROR", "스레드 메시지 삭제에 실패했습니다.");
+		}
+	}
+
+	@Transactional
+	public void replyMessage(ThreadMessageReplyRequestDto dto) {
+		ThreadMessage message = threadMessageRepository.findById(dto.getParentThreadId())
+			.orElseThrow(() -> new CustomException("THREAD_NOT_FOUND", "스레드를 찾을 수 없습니다."));
+
+		ThreadMessage entity = ThreadMessage.builder()
+			.ticketId(dto.getTicketId())
+			.parentThreadId(dto.getParentThreadId())
+			.senderMemberId(dto.getSenderMemberId())
+			.content(dto.getReply())
+			.isModified(false)
+			.sentAt(dto.getSentAt()) // 클라이언트 or Kafka timestamp 기준
+			.build();
+
+		ThreadMessage SavedThreadMeesage = threadMessageRepository.save(entity);
+
+		String senderName = memberService.findMemberNameById(SavedThreadMeesage.getSenderMemberId());
+
+		ThreadMessageDto responseMessage = ThreadMessageDto.builder()
+			.ticketId(SavedThreadMeesage.getTicketId())
+			.parentThreadId(SavedThreadMeesage.getParentThreadId())
+			.senderMemberId(SavedThreadMeesage.getSenderMemberId())
+			.senderName(senderName)
+			.content(SavedThreadMeesage.getContent())
+			.sentAt(SavedThreadMeesage.getSentAt())
+			.isModified(false)
+			.build();
+
+		String topic = "thread-ticket-" + message.getTicketId();
+		try {
+			Map<String, Object> messageWrapper = new HashMap<>();
+			messageWrapper.put("type", "message_replied");
+			messageWrapper.put("data", responseMessage);
+
+			String serializedEvent = objectMapper.writeValueAsString(messageWrapper);
+			threadMessageProducer.sendMessage(topic, serializedEvent);
+		} catch (Exception e) {
+			throw new CustomException("THREAD_MESSAGE_REPLY_ERROR", "스레드 메시지 답글 작성에 실패했습니다.");
 		}
 	}
 }
