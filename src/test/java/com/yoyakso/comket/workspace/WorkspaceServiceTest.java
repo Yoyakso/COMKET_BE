@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.workspace.dto.request.WorkspaceRegisterRequest;
@@ -28,6 +29,18 @@ class WorkspaceServiceTest {
 
 	@Mock
 	private WorkspaceMemberService workspaceMemberService; // Mock 선언
+
+	@Mock
+	private ApplicationEventPublisher eventPublisher;
+
+	@Mock
+	private com.yoyakso.comket.file.service.FileService fileService;
+
+	@Mock
+	private com.yoyakso.comket.member.service.MemberService memberService;
+
+	@Mock
+	private com.yoyakso.comket.billing.service.BillingService billingService;
 
 	@InjectMocks
 	private WorkspaceService workspaceService;
