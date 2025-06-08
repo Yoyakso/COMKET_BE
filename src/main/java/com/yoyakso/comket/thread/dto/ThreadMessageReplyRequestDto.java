@@ -3,9 +3,7 @@ package com.yoyakso.comket.thread.dto;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.yoyakso.comket.thread.enums.ThreadMessageState;
 
-import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,21 +13,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ThreadMessageDto {
+public class ThreadMessageReplyRequestDto {
 	private Long ticketId;
-
-	@Nullable
-	private Long threadId;
-
-	private Long senderMemberId;
-
-	@Nullable
 	private Long parentThreadId;
-
+	private Long senderMemberId;
 	private String senderName;
-	private String content;
-	private Boolean isModified;
-	private ThreadMessageState messageState;
+	private String reply;
 
 	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
 	private LocalDateTime sentAt;

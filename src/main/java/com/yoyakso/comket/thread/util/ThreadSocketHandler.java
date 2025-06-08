@@ -1,6 +1,7 @@
 package com.yoyakso.comket.thread.util;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,11 +59,17 @@ public class ThreadSocketHandler extends TextWebSocketHandler {
 		// 클라이언트로부터 받은 메시지 JSON → DTO
 		ThreadMessageDto messageDto = objectMapper.readValue(message.getPayload(), ThreadMessageDto.class);
 
+		System.out.println("[test] - message1");
+		Map<String, Object> messageWrapper = new HashMap<>();
+		messageWrapper.put("type", "message_created"); // or "message_updated"
+		messageWrapper.put("data", messageDto); // 기존 DTO를 감싸줌
+		System.out.println("[test] - message2: " + messageDto);
+
 		// Kafka topic: thread-ticket-{ticketId}
 		String topic = "thread-ticket-" + ticketId;
 
 		// Kafka로 전송
-		String serialized = objectMapper.writeValueAsString(messageDto);
+		String serialized = objectMapper.writeValueAsString(messageWrapper);
 		threadMessageProducer.sendMessage(topic, serialized);
 	}
 
@@ -73,7 +80,6 @@ public class ThreadSocketHandler extends TextWebSocketHandler {
 
 		String payload = objectMapper.writeValueAsString(List.of(messageDto));
 		TextMessage textMessage = new TextMessage(payload);
-
 		for (WebSocketSession session : sessions) {
 			if (session.isOpen()) {
 				session.sendMessage(textMessage);
@@ -89,6 +95,28 @@ public class ThreadSocketHandler extends TextWebSocketHandler {
 		List<WebSocketSession> sessions = sessionPool.get(ticketId);
 		if (sessions != null) {
 			sessions.remove(session);
+		}
+	}
+
+	public void sendEditedMessageToTicket(Long ticketId, ThreadMessageDto messageDto) throws IOException {
+		List<WebSocketSession> sessions = sessionPool.get(ticketId);
+		if (sessions == null)
+			return;
+
+		// 클라이언트에 보낼 payload
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("type", "message_updated");
+		payload.put("threadId", messageDto.getThreadId());
+		payload.put("content", messageDto.getContent());
+		payload.put("sentAt", messageDto.getSentAt());
+
+		String serialized = objectMapper.writeValueAsString(payload);
+		TextMessage textMessage = new TextMessage(serialized);
+
+		for (WebSocketSession session : sessions) {
+			if (session.isOpen()) {
+				session.sendMessage(textMessage);
+			}
 		}
 	}
 }
