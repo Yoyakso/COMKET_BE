@@ -3,8 +3,10 @@ package com.yoyakso.comket.ticket.service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.alarm.enums.TicketAlarmType;
@@ -24,6 +26,9 @@ import com.yoyakso.comket.ticket.dto.request.TicketTypeUpdateRequest;
 import com.yoyakso.comket.ticket.dto.request.TicketUpdateRequest;
 import com.yoyakso.comket.ticket.dto.response.TicketInfoResponse;
 import com.yoyakso.comket.ticket.entity.Ticket;
+import com.yoyakso.comket.ticket.event.TicketAssignedEvent;
+import com.yoyakso.comket.ticket.event.TicketStateChangedEvent;
+import com.yoyakso.comket.ticket.event.TicketUpdatedEvent;
 import com.yoyakso.comket.ticket.mapper.TicketMapper;
 import com.yoyakso.comket.ticket.repository.TicketRepository;
 import com.yoyakso.comket.workspace.entity.Workspace;
@@ -43,6 +48,7 @@ public class TicketService {
 	private final AlarmService alarmService;
 	private final KafkaTopicService kafkaTopicService;
 	private final WorkspaceService workspaceService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public TicketInfoResponse createTicket(String projectName, TicketCreateRequest request,
@@ -122,6 +128,12 @@ public class TicketService {
 			throw new CustomException("INVALID_PROJECT", "요청한 프로젝트와 티켓의 프로젝트가 일치하지 않습니다.");
 		}
 
+		// 변경 전 값 저장
+		String oldName = ticket.getName();
+		LocalDate oldStartDate = ticket.getStartDate();
+		LocalDate oldEndDate = ticket.getEndDate();
+		Object oldPriority = ticket.getPriority();
+
 		// 티켓의 정보를 변경해주기
 		ticketMapper.updateTicketFromRequest(ticket, request);
 
@@ -130,6 +142,36 @@ public class TicketService {
 
 		// 담당자 정보 설정
 		setAssignee(ticket, request.getAssigneeIdList(), project);
+
+		// 변경된 필드에 따라 이벤트 발행
+		// 이름 변경 이벤트
+		if (request.getName() != null && !request.getName().equals(oldName)) {
+			String message = "티켓 이름이 '" + oldName + "'에서 '" + ticket.getName() + "'로 변경되었습니다.";
+			eventPublisher.publishEvent(new TicketUpdatedEvent(
+				ticket, member, TicketAlarmType.TICKET_NAME_CHANGED, "name", oldName, ticket.getName(), message));
+		}
+
+		// 우선순위 변경 이벤트
+		if (request.getPriority() != null && !request.getPriority().equals(oldPriority)) {
+			String message = "티켓 우선순위가 변경되었습니다.";
+			eventPublisher.publishEvent(new TicketUpdatedEvent(
+				ticket, member, TicketAlarmType.TICKET_PRIORITY_CHANGED, "priority", oldPriority, ticket.getPriority(), message));
+		}
+
+		// 일정 변경 이벤트 (시작일 또는 종료일 변경)
+		boolean startDateChanged = (request.getStartDate() != null && !request.getStartDate().equals(oldStartDate)) 
+			|| (oldStartDate != null && request.getStartDate() == null);
+		boolean endDateChanged = (request.getEndDate() != null && !request.getEndDate().equals(oldEndDate))
+			|| (oldEndDate != null && request.getEndDate() == null);
+
+		if (startDateChanged || endDateChanged) {
+			String message = "티켓 일정이 변경되었습니다.";
+			eventPublisher.publishEvent(new TicketUpdatedEvent(
+				ticket, member, TicketAlarmType.TICKET_DATE_CHANGED, "date", 
+				Map.of("startDate", oldStartDate, "endDate", oldEndDate),
+				Map.of("startDate", ticket.getStartDate(), "endDate", ticket.getEndDate()),
+				message));
+		}
 
 		ticketRepository.save(ticket);
 
@@ -193,7 +235,14 @@ public class TicketService {
 			throw new CustomException("INVALID_PROJECT", "요청한 프로젝트와 티켓의 프로젝트가 일치하지 않습니다.");
 		}
 		// 티켓 상태 변경
-		tickets.forEach(ticket -> ticket.setState(request.getState()));
+		tickets.forEach(ticket -> {
+			ticket.setState(request.getState());
+
+			// 티켓 상태 변경 이벤트 발행
+			eventPublisher.publishEvent(new TicketStateChangedEvent(
+				ticket, member, request.getState()));
+		});
+
 		ticketRepository.saveAll(tickets);
 		//subTicketCount를 설정
 		tickets.forEach(t -> {
@@ -296,10 +345,12 @@ public class TicketService {
 			.map(projectMemberService::getProjectMemberByProjectMemberId)
 			.toList();
 
-		// 알람 생성
+		// 티켓 담당자 지정 이벤트 발행
 		assigneeProjectMemberList.stream()
 			.map(ProjectMember::getMember)
-			.forEach(member -> alarmService.addTicketAlarm(member, ticket, TicketAlarmType.ASSIGNEE_SETTING, ""));
+			.forEach(assignee -> eventPublisher.publishEvent(
+				new TicketAssignedEvent(ticket, assignee)
+			));
 
 		// 티켓에 담당자 설정 - add each member individually to avoid collection replacement issues
 		assigneeProjectMemberList.stream()
@@ -318,6 +369,35 @@ public class TicketService {
 			throw new CustomException("CANNOT_FOUND_TICKET", "삭제된 티켓입니다.");
 		}
 		return ticket;
+	}
+
+	/**
+	 * 티켓 업데이트 이벤트를 발행하는 헬퍼 메서드
+	 * 티켓 업데이트 이벤트를 발행하여 리스너가 알람을 처리하도록 한다
+	 */
+	private void sendTicketUpdateAlarm(Ticket ticket, Member updater, TicketAlarmType alarmType, String message) {
+		// 필드 이름 결정
+		String field;
+		Object oldValue = null;
+		Object newValue = null;
+
+		switch (alarmType) {
+			case TICKET_NAME_CHANGED:
+				field = "name";
+				break;
+			case TICKET_PRIORITY_CHANGED:
+				field = "priority";
+				break;
+			case TICKET_DATE_CHANGED:
+				field = "date";
+				break;
+			default:
+				field = "unknown";
+		}
+
+		// 티켓 업데이트 이벤트 발행
+		eventPublisher.publishEvent(new TicketUpdatedEvent(
+			ticket, updater, alarmType, field, oldValue, newValue, message));
 	}
 
 }
