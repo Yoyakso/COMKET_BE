@@ -18,7 +18,8 @@ import lombok.NoArgsConstructor;
 public class ThreadMessageReplyRequestDto {
 	private Long ticketId;
 	private Long parentThreadId;
-	private Long senderMemberId;
+	private Long senderWorkspaceMemberId;
+	private Long workspaceId;
 	private String senderName;
 	private String reply;
 

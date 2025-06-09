@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ThreadMessageDeleteRequestDto {
 	private Long threadId;
-	private Long senderMemberId;
+	private Long senderWorkspaceMemberId;
+	private Long workspaceId;
 }

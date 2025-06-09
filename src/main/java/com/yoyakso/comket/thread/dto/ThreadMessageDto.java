@@ -22,7 +22,7 @@ public class ThreadMessageDto {
 	@Nullable
 	private Long threadId;
 
-	private Long senderMemberId;
+	private Long senderWorkspaceMemberId;
 
 	@Nullable
 	private Long parentThreadId;

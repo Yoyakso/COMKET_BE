@@ -13,4 +13,7 @@ public class ProjectMemberResponse {
 	private String email;        // Member에서 가져옴
 	private String positionType; // ProjectMember에서 가져옴
 	private ProjectMemberState state;    // ProjectMember에서 가져옴
+
+	private Long workspaceMemberId;
+	private String profileUri;
 }

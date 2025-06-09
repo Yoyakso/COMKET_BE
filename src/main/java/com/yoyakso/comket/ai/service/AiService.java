@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -20,13 +19,16 @@ import com.yoyakso.comket.ai.enums.SummaryType;
 import com.yoyakso.comket.ai.repository.AiActionItemsRepository;
 import com.yoyakso.comket.ai.repository.AiSummaryRepository;
 import com.yoyakso.comket.exception.CustomException;
-import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
+import com.yoyakso.comket.projectMember.entity.ProjectMember;
+import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.thread.entity.ThreadMessage;
 import com.yoyakso.comket.thread.repository.ThreadMessageRepository;
 import com.yoyakso.comket.ticket.entity.Ticket;
 import com.yoyakso.comket.ticket.repository.TicketRepository;
+import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
+import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,6 +43,8 @@ public class AiService {
 	private final AiSummaryRepository aiSummaryRepository;
 	private final AiActionItemsRepository aiActionItemsRepository;
 	private final ProjectMemberService projectMemberService;
+	private final WorkspaceMemberService workspaceMemberService;
+	private final ProjectMemberRepository projectMemberRepository;
 
 	public AiSummaryWithActionItemsResponse getAiSummaryAndActionItems(Long ticketId) {
 		Ticket ticket = ticketRepository.findById(ticketId)
@@ -59,17 +63,13 @@ public class AiService {
 		AiSummary savedSummary = aiSummaryRepository.save(summary);
 
 		for (ActionItemContentDto actionItemData : response.getActionItems()) {
-			Member member = Optional.ofNullable(actionItemData.getMemberInfo())
-				.map(info -> {
-					Long memberId = projectMemberService.getMemberIdByProjectMemberId(info.getProjectMemberId());
-					return memberService.getMemberById(memberId);
-				})
-				.orElse(null);
+			ProjectMember pm = projectMemberService.getProjectMemberByProjectMemberId(actionItemData.getMemberInfo()
+				.getProjectMemberId());
 
 			AiActionItem item = AiActionItem.builder()
 				.aiSummary(savedSummary)
 				.title(actionItemData.getTitle())
-				.assignee(member)
+				.assignee(pm)
 				.priority(actionItemData.getPriority())
 				.dueDate(actionItemData.getDueDate())
 				.build();
@@ -118,17 +118,14 @@ public class AiService {
 				.map(item -> {
 					ActionItemAssigneeDto memberInfo = null;
 					if (item.getAssignee() != null) {
-						Long memberId = item.getAssignee().getId();
-						Member member = memberService.getMemberById(memberId);
-
-						Long projectMemberId = projectMemberService.findProjectMemberIdByProjectIdAndMemberId(
-							ticket.getProject().getId(),
-							memberId
-						);
+						ProjectMember pm = item.getAssignee();
+						Long workspaceMemberId = projectMemberRepository.findWorkspaceMemberIdByProjectMemberId(
+							pm.getId());
+						WorkspaceMember wm = workspaceMemberService.getWorkspaceMemberById(workspaceMemberId);
 
 						memberInfo = ActionItemAssigneeDto.builder()
-							.projectMemberId(projectMemberId)
-							.name(member.getFullName())
+							.projectMemberId(pm.getId())
+							.name(wm.getNickName())
 							.build();
 					}
 
@@ -157,11 +154,12 @@ public class AiService {
 		StringBuilder promptBuilder = createStringBuilderWithTicketInfo(ticket);
 
 		for (ThreadMessage message : messages) {
-			String name = memberService.findMemberNameById(message.getSenderMemberId());
-			Long projectMemberId = projectMemberService.findProjectMemberIdByProjectIdAndMemberId(
-				ticket.getProject().getId(),
-				message.getSenderMemberId()
+			Long projectMemberId = projectMemberService.findProjectMemberIdByWorkspaceMemberIdAndProjectId(
+				message.getSenderWorkspaceMemberId(),
+				ticket.getProject().getId()
 			);
+			String name = workspaceMemberService.getWorkspaceMemberById(message.getSenderWorkspaceMemberId())
+				.getNickName();
 			promptBuilder.append("{").append(name).append("-").append(projectMemberId).append("}: ")
 				.append(message.getContent()).append("\n");
 		}
@@ -216,11 +214,12 @@ public class AiService {
 		StringBuilder promptBuilder = createStringBuilderWithTicketInfo(ticket);
 
 		for (ThreadMessage message : messages) {
-			String name = memberService.findMemberNameById(message.getSenderMemberId());
-			Long projectMemberId = projectMemberService.findProjectMemberIdByProjectIdAndMemberId(
-				ticket.getProject().getId(),
-				message.getSenderMemberId()
+			Long projectMemberId = projectMemberService.findProjectMemberIdByWorkspaceMemberIdAndProjectId(
+				message.getSenderWorkspaceMemberId(),
+				ticket.getProject().getId()
 			);
+			String name = workspaceMemberService.getWorkspaceMemberById(message.getSenderWorkspaceMemberId())
+				.getNickName();
 			promptBuilder.append("{").append(name).append("-").append(projectMemberId).append("}: ")
 				.append(message.getContent()).append("\n");
 		}

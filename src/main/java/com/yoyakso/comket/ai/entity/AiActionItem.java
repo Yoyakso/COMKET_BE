@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import com.yoyakso.comket.member.entity.Member;
+import com.yoyakso.comket.projectMember.entity.ProjectMember;
 import com.yoyakso.comket.ticket.enums.TicketPriority;
 
 import jakarta.annotation.Nullable;
@@ -46,7 +46,7 @@ public class AiActionItem {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "assignee_id")
 	@Nullable
-	private Member assignee;
+	private ProjectMember assignee;
 
 	@Enumerated(EnumType.STRING)
 	private TicketPriority priority;
