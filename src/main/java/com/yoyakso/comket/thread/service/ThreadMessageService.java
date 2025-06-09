@@ -146,7 +146,7 @@ public class ThreadMessageService {
 		ThreadMessage entity = ThreadMessage.builder()
 			.ticketId(dto.getTicketId())
 			.parentThreadId(dto.getParentThreadId())
-			.senderWorkspaceMemberId(dto.getSenderMemberId())
+			.senderWorkspaceMemberId(dto.getSenderWorkspaceMemberId())
 			.content(dto.getReply())
 			.resources(resourcesJson)
 			.isModified(false)
