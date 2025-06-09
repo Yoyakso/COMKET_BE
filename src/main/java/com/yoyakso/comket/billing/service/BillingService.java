@@ -62,7 +62,6 @@ public class BillingService {
 		WorkspacePlan workspacePlan = WorkspacePlan.builder()
 			.workspace(workspace)
 			.currentPlan(plan)
-			.memberCount(memberCount)
 			.build();
 
 		return workspacePlanRepository.save(workspacePlan);
@@ -82,16 +81,16 @@ public class BillingService {
 	public WorkspacePlan updateWorkspacePlan(Long workspaceId, int memberCountChange) {
 		WorkspacePlan workspacePlan = getWorkspacePlan(workspaceId);
 
-		// 현재 멤버 수 업데이트
+		// 현재 멤버 수 계산
 		int newMemberCount;
 		if (memberCountChange != 0) {
 			// 이벤트에서 전달된 변경 수 적용
-			newMemberCount = workspacePlan.getMemberCount() + memberCountChange;
+			int currentMemberCount = countActiveWorkspaceMembers(workspaceId);
+			newMemberCount = currentMemberCount + memberCountChange;
 		} else {
 			// 직접 계산 (멤버 수 동기화 목적)
 			newMemberCount = countActiveWorkspaceMembers(workspaceId);
 		}
-		workspacePlan.setMemberCount(newMemberCount);
 
 		// 적절한 요금제 결정
 		BillingPlan requiredPlan = BillingPlan.getPlanForMemberCount(newMemberCount);
@@ -172,10 +171,6 @@ public class BillingService {
 			throw new CustomException("CREDIT_CARD_REQUIRED", "유료 요금제로 변경하려면 신용 카드 정보가 필요합니다.");
 		}
 
-		// 현재 활성 멤버 수 계산하여 업데이트
-		int currentMemberCount = countActiveWorkspaceMembers(workspaceId);
-		workspacePlan.setMemberCount(currentMemberCount);
-
 		// 요금제 업데이트
 		workspacePlan.setCurrentPlan(newPlan);
 		return workspacePlanRepository.save(workspacePlan);
@@ -186,7 +181,7 @@ public class BillingService {
 	 */
 	public boolean checkIfPlanChangeRequired(Long workspaceId, int newMembersCount) {
 		WorkspacePlan workspacePlan = getWorkspacePlan(workspaceId);
-		int currentMemberCount = workspacePlan.getMemberCount();
+		int currentMemberCount = countActiveWorkspaceMembers(workspaceId);
 		int newTotalCount = currentMemberCount + newMembersCount;
 
 		BillingPlan currentPlan = workspacePlan.getCurrentPlan();
@@ -201,7 +196,7 @@ public class BillingService {
 	 */
 	public void validatePlanChangeForNewMembers(Long workspaceId, int newMembersCount) {
 		WorkspacePlan workspacePlan = getWorkspacePlan(workspaceId);
-		int currentMemberCount = workspacePlan.getMemberCount();
+		int currentMemberCount = countActiveWorkspaceMembers(workspaceId);
 		int newTotalCount = currentMemberCount + newMembersCount;
 
 		BillingPlan currentPlan = workspacePlan.getCurrentPlan();
@@ -244,7 +239,7 @@ public class BillingService {
 
 				if (existingHistory.isEmpty()) {
 					// 이전 달 멤버 수 계산 (현재 멤버 수 사용)
-					int memberCount = workspacePlan.getMemberCount();
+					int memberCount = countActiveWorkspaceMembers(workspace.getId());
 
 					// 요금제 정보 가져오기
 					BillingPlan plan = workspacePlan.getCurrentPlan();
@@ -293,7 +288,7 @@ public class BillingService {
 		WorkspacePlan workspacePlan = getWorkspacePlan(workspaceId);
 
 		// 현재 월에 대해서는 현재 멤버 수로 업데이트 (실시간 데이터 사용)
-		int currentMemberCount = workspacePlan.getMemberCount();
+		int currentMemberCount = countActiveWorkspaceMembers(workspaceId);
 
 		// 현재 월 데이터 업데이트 또는 추가
 		history.put(currentMonthStr, currentMemberCount);
@@ -324,8 +319,11 @@ public class BillingService {
 		// 현재 워크스페이스 요금제 정보 가져오기
 		WorkspacePlan workspacePlan = getWorkspacePlan(workspaceId);
 
+		// 현재 멤버 수 계산
+		int currentMemberCount = countActiveWorkspaceMembers(workspaceId);
+
 		// 현재 월에 대해서는 현재 요금제로 계산 (실시간 데이터 사용)
-		int currentBillingAmount = workspacePlan.calculateMonthlyCost();
+		int currentBillingAmount = workspacePlan.calculateMonthlyCost(currentMemberCount);
 
 		// 현재 월 데이터 업데이트 또는 추가
 		billingHistory.put(currentMonthStr, currentBillingAmount);
@@ -336,7 +334,7 @@ public class BillingService {
 	/**
 	 * 워크스페이스의 활성 멤버 수 계산
 	 */
-	private int countActiveWorkspaceMembers(Long workspaceId) {
+	public int countActiveWorkspaceMembers(Long workspaceId) {
 		List<WorkspaceMember> members = workspaceMemberService.getWorkspaceMembersByWorkspaceId(workspaceId);
 		return (int)members.stream()
 			.filter(member -> member.getState() == WorkspaceMemberState.ACTIVE)
