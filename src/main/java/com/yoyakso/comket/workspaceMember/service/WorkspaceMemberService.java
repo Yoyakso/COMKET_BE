@@ -231,4 +231,15 @@ public class WorkspaceMemberService {
 				.build())
 			.toList();
 	}
+
+	/**
+	 * 워크스페이스의 활성 멤버 수를 계산하는 메소드
+	 * @param workspaceId 워크스페이스 ID
+	 * @return 활성 멤버 수
+	 */
+	public int countActiveWorkspaceMembers(Long workspaceId) {
+		return (int) workspaceMemberRepository.findByWorkspaceId(workspaceId).stream()
+			.filter(workspaceMember -> workspaceMember.getState() == WorkspaceMemberState.ACTIVE)
+			.count();
+	}
 }

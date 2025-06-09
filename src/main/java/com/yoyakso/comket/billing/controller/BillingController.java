@@ -68,9 +68,12 @@ public class BillingController {
 		// 빌링 금액 히스토리 조회
 		Map<String, Integer> billingAmountHistory = billingService.getBillingAmountHistory(workspaceId);
 
+		// 현재 활성 멤버 수 계산
+		int memberCount = billingService.countActiveWorkspaceMembers(workspaceId);
+
 		// 응답 생성
 		return ResponseEntity.ok(billingMapper.toBillingStatusResponse(
-			workspacePlan, memberCountHistory, billingAmountHistory));
+			workspacePlan, memberCountHistory, billingAmountHistory, memberCount));
 	}
 
 	@PostMapping("/credit-card")
@@ -187,8 +190,11 @@ public class BillingController {
 		// 빌링 금액 히스토리 조회
 		var billingAmountHistory = billingService.getBillingAmountHistory(workspaceId);
 
+		// 현재 활성 멤버 수 계산
+		int memberCount = billingService.countActiveWorkspaceMembers(workspaceId);
+
 		// 응답 생성
 		return ResponseEntity.ok(billingMapper.toBillingStatusResponse(
-			workspacePlan, memberCountHistory, billingAmountHistory));
+			workspacePlan, memberCountHistory, billingAmountHistory, memberCount));
 	}
 }

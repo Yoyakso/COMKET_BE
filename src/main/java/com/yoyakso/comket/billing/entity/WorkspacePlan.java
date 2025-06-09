@@ -8,7 +8,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import com.yoyakso.comket.billing.enums.BillingPlan;
 import com.yoyakso.comket.workspace.entity.Workspace;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -36,39 +35,36 @@ import lombok.Setter;
 @Table(name = "workspace_plan")
 public class WorkspacePlan {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @NotNull
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workspace_id", nullable = false)
-    private Workspace workspace;
+	@NotNull
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "workspace_id", nullable = false)
+	private Workspace workspace;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    private BillingPlan currentPlan;
+	@NotNull
+	@Enumerated(EnumType.STRING)
+	private BillingPlan currentPlan;
 
-    @Column(nullable = false)
-    private Integer memberCount;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "credit_card_id")
+	private CreditCard creditCard;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "credit_card_id")
-    private CreditCard creditCard;
+	@CreationTimestamp
+	private LocalDateTime createdAt;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+	@UpdateTimestamp
+	private LocalDateTime updatedAt;
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+	// 현재 요금제와 멤버 수를 기준으로 월 비용을 계산하는 메소드
+	public int calculateMonthlyCost(int memberCount) {
+		return currentPlan.getPricePerMember() * memberCount;
+	}
 
-    // 현재 요금제와 멤버 수를 기준으로 월 비용을 계산하는 메소드
-    public int calculateMonthlyCost() {
-        return currentPlan.getPricePerMember() * memberCount;
-    }
-
-    // 현재 요금제에 신용 카드가 필요한지 확인하는 메소드
-    public boolean isCreditCardRequired() {
-        return currentPlan != BillingPlan.BASIC;
-    }
+	// 현재 요금제에 신용 카드가 필요한지 확인하는 메소드
+	public boolean isCreditCardRequired() {
+		return currentPlan != BillingPlan.BASIC;
+	}
 }

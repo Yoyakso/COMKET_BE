@@ -80,7 +80,8 @@ public class BillingMapper {
 	public BillingStatusResponse toBillingStatusResponse(
 		WorkspacePlan workspacePlan,
 		Map<String, Integer> memberCountHistory,
-		Map<String, Integer> billingAmountHistory
+		Map<String, Integer> billingAmountHistory,
+		int memberCount
 	) {
 		// 현재 월 정보 가져오기
 		YearMonth currentMonth = YearMonth.now();
@@ -88,10 +89,10 @@ public class BillingMapper {
 
 		// 이번달 예상 금액 (현재 월의 빌링 금액)
 		int estimatedAmount = billingAmountHistory.getOrDefault(currentMonthStr,
-			workspacePlan.calculateMonthlyCost());
+			workspacePlan.calculateMonthlyCost(memberCount));
 
 		// 확정 금액
-		int confirmedAmount = workspacePlan.calculateMonthlyCost();
+		int confirmedAmount = workspacePlan.calculateMonthlyCost(memberCount);
 
 		// 현재 날짜 확인
 		LocalDate currentDate = LocalDate.now();
@@ -105,7 +106,7 @@ public class BillingMapper {
 			.workspaceName(workspacePlan.getWorkspace().getName())
 			.currentPlan(workspacePlan.getCurrentPlan())
 			.currentPlanDisplayName(workspacePlan.getCurrentPlan().getDisplayName())
-			.memberCount(workspacePlan.getMemberCount())
+			.memberCount(memberCount)
 			.confirmedAmount(confirmedAmount)
 			.hasCreditCard(workspacePlan.getCreditCard() != null)
 			.memberCountHistory(memberCountHistory)
