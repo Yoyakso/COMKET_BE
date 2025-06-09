@@ -155,11 +155,12 @@ public class TicketService {
 		if (request.getPriority() != null && !request.getPriority().equals(oldPriority)) {
 			String message = "티켓 우선순위가 변경되었습니다.";
 			eventPublisher.publishEvent(new TicketUpdatedEvent(
-				ticket, member, TicketAlarmType.TICKET_PRIORITY_CHANGED, "priority", oldPriority, ticket.getPriority(), message));
+				ticket, member, TicketAlarmType.TICKET_PRIORITY_CHANGED, "priority", oldPriority, ticket.getPriority(),
+				message));
 		}
 
 		// 일정 변경 이벤트 (시작일 또는 종료일 변경)
-		boolean startDateChanged = (request.getStartDate() != null && !request.getStartDate().equals(oldStartDate)) 
+		boolean startDateChanged = (request.getStartDate() != null && !request.getStartDate().equals(oldStartDate))
 			|| (oldStartDate != null && request.getStartDate() == null);
 		boolean endDateChanged = (request.getEndDate() != null && !request.getEndDate().equals(oldEndDate))
 			|| (oldEndDate != null && request.getEndDate() == null);
@@ -167,7 +168,7 @@ public class TicketService {
 		if (startDateChanged || endDateChanged) {
 			String message = "티켓 일정이 변경되었습니다.";
 			eventPublisher.publishEvent(new TicketUpdatedEvent(
-				ticket, member, TicketAlarmType.TICKET_DATE_CHANGED, "date", 
+				ticket, member, TicketAlarmType.TICKET_DATE_CHANGED, "date",
 				Map.of("startDate", oldStartDate, "endDate", oldEndDate),
 				Map.of("startDate", ticket.getStartDate(), "endDate", ticket.getEndDate()),
 				message));
@@ -344,14 +345,6 @@ public class TicketService {
 		List<ProjectMember> assigneeProjectMemberList = assigneeProjectMemberId.stream()
 			.map(projectMemberService::getProjectMemberByProjectMemberId)
 			.toList();
-
-		// 티켓 담당자 지정 이벤트 발행
-		assigneeProjectMemberList.stream()
-			.map(ProjectMember::getMember)
-			.forEach(assignee -> eventPublisher.publishEvent(
-				new TicketAssignedEvent(ticket, assignee)
-			));
-
 		// 티켓에 담당자 설정 - add each member individually to avoid collection replacement issues
 		assigneeProjectMemberList.stream()
 			.map(ProjectMember::getMember)
@@ -360,6 +353,12 @@ public class TicketService {
 					ticket.getAssignees().add(member);
 				}
 			});
+		// 티켓 담당자 지정 이벤트 발행
+		assigneeProjectMemberList.stream()
+			.map(ProjectMember::getMember)
+			.forEach(assignee -> eventPublisher.publishEvent(
+				new TicketAssignedEvent(ticket, assignee)
+			));
 	}
 
 	private Ticket getValidTicket(Long ticketId) {
