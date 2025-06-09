@@ -68,11 +68,11 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
 	);
 
 	// 프로젝트멤버ID로 워크스페이스멤버의 이름 조회 -> 요약 시 담당자 이름으로 사용
-	@Query("SELECT wm.nickName " +
+	@Query("SELECT wm.id " +
 		"FROM ProjectMember pm " +
 		"JOIN WorkspaceMember wm ON wm.member.id = pm.member.id " +
 		"WHERE pm.id = :projectMemberId " +
 		"AND wm.workspace.id = pm.project.workspace.id")
-	String findWorkspaceMemberIdByProjectMemberId(@Param("projectMemberId") Long projectMemberId);
+	Long findWorkspaceMemberIdByProjectMemberId(@Param("projectMemberId") Long projectMemberId);
 
 }

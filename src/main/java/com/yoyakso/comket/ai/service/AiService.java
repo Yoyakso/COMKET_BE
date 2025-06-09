@@ -27,6 +27,7 @@ import com.yoyakso.comket.thread.entity.ThreadMessage;
 import com.yoyakso.comket.thread.repository.ThreadMessageRepository;
 import com.yoyakso.comket.ticket.entity.Ticket;
 import com.yoyakso.comket.ticket.repository.TicketRepository;
+import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import lombok.RequiredArgsConstructor;
@@ -118,11 +119,13 @@ public class AiService {
 					ActionItemAssigneeDto memberInfo = null;
 					if (item.getAssignee() != null) {
 						ProjectMember pm = item.getAssignee();
-						String name = projectMemberRepository.findWorkspaceMemberIdByProjectMemberId(pm.getId());
+						Long workspaceMemberId = projectMemberRepository.findWorkspaceMemberIdByProjectMemberId(
+							pm.getId());
+						WorkspaceMember wm = workspaceMemberService.getWorkspaceMemberById(workspaceMemberId);
 
 						memberInfo = ActionItemAssigneeDto.builder()
 							.projectMemberId(pm.getId())
-							.name(name)
+							.name(wm.getNickName())
 							.build();
 					}
 
