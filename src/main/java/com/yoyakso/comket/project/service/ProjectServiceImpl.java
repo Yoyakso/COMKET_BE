@@ -63,7 +63,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 		File profileFile =
 			request.getProfileFileId() != null ? fileService.getFileById(request.getProfileFileId()) : null;
-		fileService.validateFileCategory(profileFile, FileCategory.PROJECT_PROFILE);
+		fileService.validateFileCategory(profileFile, FileCategory.MEMBER_PROFILE);
 		String profileFileUrl = profileFile != null ? fileService.getFileUrlByPath(profileFile.getFilePath()) : null;
 
 		Project project = Project.builder()
@@ -103,7 +103,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 		File profileFile =
 			request.getProfileFileId() != null ? fileService.getFileById(request.getProfileFileId()) : null;
-		fileService.validateFileCategory(profileFile, FileCategory.PROJECT_PROFILE);
+		fileService.validateFileCategory(profileFile, FileCategory.MEMBER_PROFILE);
 		String profileFileUrl = profileFile != null ? fileService.getFileUrlByPath(profileFile.getFilePath()) : null;
 
 		ProjectMember updateRequester = projectMemberService.getProjectMemberByProjectIdAndMemberId(projectId,
@@ -314,11 +314,13 @@ public class ProjectServiceImpl implements ProjectService {
 				Long workspaceMemberId = projectMemberRepository.findWorkspaceMemberIdByProjectMemberId(
 					pm.getId());
 				WorkspaceMember wm = workspaceMemberService.getWorkspaceMemberById(workspaceMemberId);
+
 				File profileFile =
 					wm.getProfileFile() != null ? fileService.getFileById(wm.getProfileFile().getId()) : null;
-				fileService.validateFileCategory(profileFile, FileCategory.PROJECT_PROFILE);
+				fileService.validateFileCategory(profileFile, FileCategory.MEMBER_PROFILE);
 				String profileFileUrl =
 					profileFile != null ? fileService.getFileUrlByPath(profileFile.getFilePath()) : null;
+
 				Member member = pm.getMember();
 				return ProjectMemberResponse.builder()
 					.projectMemberId(pm.getId())
