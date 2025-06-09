@@ -15,6 +15,9 @@ import com.yoyakso.comket.thread.dto.ThreadMessageDeleteRequestDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageEditRequestDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageReplyRequestDto;
 import com.yoyakso.comket.thread.service.ThreadMessageService;
+import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
+import com.yoyakso.comket.workspaceMember.repository.WorkspaceMemberRepository;
+import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
@@ -25,6 +28,8 @@ import lombok.AllArgsConstructor;
 public class ThreadMessageController {
 	private final ThreadMessageService threadMessageService;
 	private final MemberService memberService;
+	private final WorkspaceMemberService workspaceMemberService;
+	private final WorkspaceMemberRepository workspaceMemberRepository;
 
 	@Operation(method = "PATCH", description = "스레드 메시지 수정 API")
 	@PatchMapping("/thread/edit")
@@ -32,7 +37,10 @@ public class ThreadMessageController {
 		@RequestBody ThreadMessageEditRequestDto requestData
 	) {
 		Member member = memberService.getAuthenticatedMember();
-		if (!member.getId().equals(requestData.getSenderMemberId())) {
+		WorkspaceMember wm = workspaceMemberRepository.findByMemberIdAndWorkspaceId(
+			member.getId(), requestData.getWorkspaceId()
+		);
+		if (!wm.getId().equals(requestData.getSenderWorkspaceMemberId())) {
 			throw new CustomException("MEMBER_NOT_SENDER", "스레드 작성자가 아닙니다.");
 		}
 
@@ -46,7 +54,10 @@ public class ThreadMessageController {
 		@RequestBody ThreadMessageDeleteRequestDto requestData
 	) {
 		Member member = memberService.getAuthenticatedMember();
-		if (!member.getId().equals(requestData.getSenderMemberId())) {
+		WorkspaceMember wm = workspaceMemberRepository.findByMemberIdAndWorkspaceId(
+			member.getId(), requestData.getWorkspaceId()
+		);
+		if (!wm.getId().equals(requestData.getSenderWorkspaceMemberId())) {
 			throw new CustomException("MEMBER_NOT_SENDER", "스레드 작성자가 아닙니다.");
 		}
 
@@ -60,7 +71,10 @@ public class ThreadMessageController {
 		@RequestBody ThreadMessageReplyRequestDto requestData
 	) {
 		Member member = memberService.getAuthenticatedMember();
-		if (!member.getId().equals(requestData.getSenderMemberId())) {
+		WorkspaceMember wm = workspaceMemberRepository.findByMemberIdAndWorkspaceId(
+			member.getId(), requestData.getWorkspaceId()
+		);
+		if (!wm.getId().equals(requestData.getSenderWorkspaceMemberId())) {
 			throw new CustomException("MEMBER_NOT_SENDER", "스레드 작성자가 아닙니다.");
 		}
 

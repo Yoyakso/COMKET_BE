@@ -31,7 +31,7 @@ public class ThreadMessage {
 	private Long ticketId;
 
 	@Column(nullable = false)
-	private Long senderMemberId;
+	private Long senderWorkspaceMemberId;
 
 	@Nullable
 	@Column(nullable = true)

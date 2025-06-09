@@ -100,13 +100,23 @@ public class ProjectMemberService {
 		return returnInvitedMembersToProject(projectId, request.getPositionType(), newMemberIds);
 	}
 
-	public ProjectMember findByMemberEmail(Long projectId, String email) {
-		return projectMemberRepository.findByProjectIdAndMemberEmail(projectId, email)
+	public ProjectMember findActiveProjectMemberByEmail(Long projectId, String email) {
+		return projectMemberRepository.findActiveProjectMemberByProjectIdAndMemberEmail(projectId, email,
+				ProjectMemberState.ACTIVE)
 			.orElseThrow(() -> new CustomException("CANNOT_FOUND_PROJECTMEMBER", "프로젝트 멤버를 찾을 수 없습니다."));
 	}
 
 	public Long findProjectMemberIdByProjectIdAndMemberId(Long projectId, Long memberId) {
 		return projectMemberRepository.findIdByProjectIdAndMemberId(projectId, memberId)
+			.orElseThrow(() -> new CustomException("CANNOT_FOUND_PROJECTMEMBER", "프로젝트 멤버를 찾을 수 없습니다."));
+	}
+
+	public Long findProjectMemberIdByWorkspaceMemberIdAndProjectId(Long workspaceMemberId, Long projectId) {
+		return projectMemberRepository.findActiveProjectMemberIdByWorkspaceMemberIdAndProjectId(
+				workspaceMemberId,
+				projectId,
+				ProjectMemberState.ACTIVE
+			)
 			.orElseThrow(() -> new CustomException("CANNOT_FOUND_PROJECTMEMBER", "프로젝트 멤버를 찾을 수 없습니다."));
 	}
 

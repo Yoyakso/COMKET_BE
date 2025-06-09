@@ -29,6 +29,7 @@ import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.projectMember.service.ProjectMemberService;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.repository.WorkspaceRepository;
+import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import jakarta.transaction.Transactional;
@@ -310,6 +311,14 @@ public class ProjectServiceImpl implements ProjectService {
 
 		return projectMembers.stream()
 			.map(pm -> {
+				Long workspaceMemberId = projectMemberRepository.findWorkspaceMemberIdByProjectMemberId(
+					pm.getId());
+				WorkspaceMember wm = workspaceMemberService.getWorkspaceMemberById(workspaceMemberId);
+				File profileFile =
+					wm.getProfileFile() != null ? fileService.getFileById(wm.getProfileFile().getId()) : null;
+				fileService.validateFileCategory(profileFile, FileCategory.PROJECT_PROFILE);
+				String profileFileUrl =
+					profileFile != null ? fileService.getFileUrlByPath(profileFile.getFilePath()) : null;
 				Member member = pm.getMember();
 				return ProjectMemberResponse.builder()
 					.projectMemberId(pm.getId())
@@ -317,6 +326,8 @@ public class ProjectServiceImpl implements ProjectService {
 					.email(member.getEmail())
 					.positionType(pm.getPositionType())
 					.state(pm.getState())
+					.workspaceMemberId(wm.getId())
+					.profileUri(profileFileUrl)
 					.build();
 			})
 			.collect(Collectors.toList());

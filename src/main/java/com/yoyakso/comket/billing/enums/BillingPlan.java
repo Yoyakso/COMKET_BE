@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum BillingPlan {
 	BASIC("Basic", 1, 5, 0),
-	STARTUP("Startup", 6, 20, 9900),
+	STARTUP("Startup", 6, 20, 7500),
 	PROFESSIONAL("Professional", 21, 50, 8500),
-	ENTERPRISE("Enterprise", 51, Integer.MAX_VALUE, 7500);
+	ENTERPRISE("Enterprise", 51, Integer.MAX_VALUE, 9900);
 
 	private final String displayName;
 	private final int minMembers;
