@@ -70,6 +70,9 @@ public class TicketService {
 		// 티켓 저장
 		Ticket savedTicket = ticketRepository.save(ticket);
 
+		// 티켓 저장 후 이벤트 발행
+		publishTicketAssignedEvents(savedTicket);
+
 		kafkaTopicService.createThreadTopicIfNotExists(savedTicket.getId());
 
 		return ticketMapper.toResponse(ticket);
@@ -353,12 +356,6 @@ public class TicketService {
 					ticket.getAssignees().add(member);
 				}
 			});
-		// 티켓 담당자 지정 이벤트 발행
-		assigneeProjectMemberList.stream()
-			.map(ProjectMember::getMember)
-			.forEach(assignee -> eventPublisher.publishEvent(
-				new TicketAssignedEvent(ticket, assignee)
-			));
 	}
 
 	private Ticket getValidTicket(Long ticketId) {
@@ -368,6 +365,13 @@ public class TicketService {
 			throw new CustomException("CANNOT_FOUND_TICKET", "삭제된 티켓입니다.");
 		}
 		return ticket;
+	}
+
+	private void publishTicketAssignedEvents(Ticket ticket) {
+		// 티켓 담당자 지정 이벤트 발행
+		ticket.getAssignees().forEach(assignee ->
+			eventPublisher.publishEvent(new TicketAssignedEvent(ticket, assignee))
+		);
 	}
 
 	/**
