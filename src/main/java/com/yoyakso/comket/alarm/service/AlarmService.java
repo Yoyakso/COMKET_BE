@@ -312,6 +312,8 @@ public class AlarmService {
 				Map<String, String> data = new HashMap<>();
 				data.put("threadMessageId", message.getId().toString());
 				data.put("alarmType", alarmType.name());
+				data.put("projectId", mentionedMember.getProject().getId().toString());
+				data.put("ticketId", message.getTicketId().toString());
 
 				// FCM 알림 전송
 				fcmService.sendNotification(

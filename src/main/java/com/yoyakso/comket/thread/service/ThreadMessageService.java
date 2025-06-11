@@ -86,7 +86,7 @@ public class ThreadMessageService {
 			.build();
 
 		ThreadMessage saved = threadMessageRepository.save(entity);
-		
+
 		// Mentions 저장
 		if (dto.getMentionedProjectMemberIds() != null && !dto.getMentionedProjectMemberIds().isEmpty()) {
 			List<ThreadMessageMention> mentions = dto.getMentionedProjectMemberIds().stream()
@@ -128,6 +128,9 @@ public class ThreadMessageService {
 				}).toList();
 			message.getMentions().clear();
 			message.getMentions().addAll(newMentions);
+
+			newMentions.forEach(mention ->
+				eventPublisher.publishEvent(new ThreadMentionedEvent(message, mention.getMentionedMember())));
 		}
 
 		String senderName = workspaceMemberService.getWorkspaceMemberById(message.getSenderWorkspaceMemberId())
@@ -220,7 +223,9 @@ public class ThreadMessageService {
 						.build();
 				}).collect(Collectors.toCollection(ArrayList::new));
 			savedReply.setMentions(mentions);
-			threadMessageRepository.save(savedReply);
+			ThreadMessage saved = threadMessageRepository.save(savedReply);
+			mentions.forEach(mention ->
+				eventPublisher.publishEvent(new ThreadMentionedEvent(saved, mention.getMentionedMember())));
 		}
 
 		String senderName = workspaceMemberService.getWorkspaceMemberById(message.getSenderWorkspaceMemberId())
