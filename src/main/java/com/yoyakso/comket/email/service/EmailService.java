@@ -11,6 +11,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.inquiry.entity.ServiceInquiry;
 import com.yoyakso.comket.member.service.MemberService;
 import com.yoyakso.comket.workspace.entity.Workspace;
 
@@ -152,4 +153,44 @@ public class EmailService {
 		return templateEngine.process("EmailWorkspaceInviteFormat", context);
 	}
 
+	/**
+	 * 문의 답변 이메일 전송
+	 */
+	public void sendInquiryAnswerEmail(ServiceInquiry inquiry) {
+		String subject = "[COMKET] 문의에 대한 답변입니다.";
+		String content = setInquiryAnswerContent(inquiry);
+		sendEmail(inquiry.getEmail(), content, subject);
+	}
+
+	/**
+	 * 문의 답변 이메일 내용 생성
+	 */
+	private String setInquiryAnswerContent(ServiceInquiry inquiry) {
+		Context context = new Context();
+		context.setVariable("name", inquiry.getName());
+		context.setVariable("inquiryType", inquiry.getType().getType());
+		context.setVariable("message", inquiry.getMessage());
+		context.setVariable("answer", inquiry.getAnswer());
+
+		// 실제 구현에서는 Thymeleaf 템플릿을 사용하여 HTML 이메일을 생성할 수 있습니다.
+		// 여기서는 간단한 문자열 포맷팅을 사용합니다.
+		try {
+			return templateEngine.process("EmailInquiryAnswerFormat", context);
+		} catch (Exception e) {
+			// 템플릿이 없는 경우 fallback 문자열 생성
+			return String.format(
+				"안녕하세요, %s님.\n\n" +
+				"문의하신 내용에 대한 답변입니다.\n\n" +
+				"문의 유형: %s\n" +
+				"문의 내용: %s\n\n" +
+				"답변: %s\n\n" +
+				"감사합니다.\n" +
+				"COMKET 팀",
+				inquiry.getName(),
+				inquiry.getType().getType(),
+				inquiry.getMessage(),
+				inquiry.getAnswer()
+			);
+		}
+	}
 }
