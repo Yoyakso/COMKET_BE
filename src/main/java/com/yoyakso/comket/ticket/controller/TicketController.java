@@ -76,11 +76,12 @@ public class TicketController {
 	// 티켓 상세 조회
 	@GetMapping("/{ticket_id}")
 	public ResponseEntity<TicketInfoResponse> getTicket(
-		@RequestParam("project_name") String projectName,
+		@RequestParam(value = "project_name", required = false) String projectName,
+		@RequestParam(value = "project_id", required = false) Long projectId,
 		@PathVariable("ticket_id") Long ticketId
 	) {
 		Member member = memberService.getAuthenticatedMember();
-		Ticket ticket = ticketService.getTicket(projectName, ticketId, member);
+		Ticket ticket = ticketService.getTicket(projectName, projectId, ticketId, member);
 		return ResponseEntity.ok(ticketMapper.toResponse(ticket));
 	}
 
