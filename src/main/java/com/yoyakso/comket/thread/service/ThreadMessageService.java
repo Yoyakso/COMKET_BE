@@ -87,12 +87,12 @@ public class ThreadMessageService {
 
 		ThreadMessage saved = threadMessageRepository.save(entity);
 		// Mentions 저장
+		// Mentions 저장
 		if (dto.getMentionedProjectMemberIds() != null && !dto.getMentionedProjectMemberIds().isEmpty()) {
 			List<ThreadMessageMention> mentions = dto.getMentionedProjectMemberIds().stream()
 				.map(id -> {
 					ProjectMember pm = projectMemberRepository.findById(id)
 						.orElseThrow(() -> new CustomException("PROJECT_MEMBER_NOT_FOUND", "존재하지 않는 멤버입니다."));
-					eventPublisher.publishEvent(new ThreadMentionedEvent(saved, pm));
 					return ThreadMessageMention.builder()
 						.threadMessage(saved)
 						.mentionedMember(pm)
@@ -101,6 +101,9 @@ public class ThreadMessageService {
 
 			saved.setMentions(mentions);
 			threadMessageRepository.save(saved);
+
+			mentions.forEach(mention ->
+				eventPublisher.publishEvent(new ThreadMentionedEvent(saved, mention.getMentionedMember())));
 		}
 
 		return saved;

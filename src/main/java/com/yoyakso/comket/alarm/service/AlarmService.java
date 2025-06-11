@@ -106,7 +106,7 @@ public class AlarmService {
 			.build();
 
 		alarmRepository.createThreadMentionedAlarm(threadAlarm, mentionedProjectMember);
-
+		System.out.println("[INFO] - 1");
 		sendThreadEventFcmNotification(threadMessage, memberId, mentionedProjectMember,
 			ThreadAlarmType.THREAD_MENTIONED,
 			message);
@@ -323,6 +323,7 @@ public class AlarmService {
 				);
 			} catch (Exception e) {
 				// 알림 전송 실패 시 예외는 전파하지 않음
+				log.info("스레드 fcm 알림 전송에 실패했습니다." + "멤버Id:" + memberId + "에러 메세지:" + e.getMessage());
 			}
 		}
 	}
