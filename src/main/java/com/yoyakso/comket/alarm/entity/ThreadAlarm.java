@@ -12,6 +12,8 @@ import lombok.Data;
 public class ThreadAlarm {
 	private ThreadMessage threadMessage;
 
+	private Long memberId;
+
 	private ProjectMember mentionedProjectMember;
 
 	private String alarmMessage = "";

@@ -4,6 +4,7 @@ import static org.springframework.security.config.Customizer.*;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -37,6 +38,7 @@ public class SecurityConfig {
 				.requestMatchers("/actuator/health").permitAll()
 				.requestMatchers("/api/v1/email/**").permitAll()
 				.requestMatchers("/api/v1/members/register").permitAll()
+				.requestMatchers(HttpMethod.POST, "/api/v1/inquiries").permitAll() // 문의 접수 API만 인증 없이 접근 가능
 				.requestMatchers( // logout, leave 제외
 					"/api/v1/auth/login",
 					"/api/v1/auth/reissue",
