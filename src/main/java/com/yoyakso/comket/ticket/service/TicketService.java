@@ -98,9 +98,15 @@ public class TicketService {
 
 	// 티켓 상세 조회
 	@Transactional
-	public Ticket getTicket(String projectName, Long ticketId, Member member) {
-		// 프로젝트 정보를 가져오기
-		Project project = projectService.getProjectByProjectName(projectName);
+	public Ticket getTicket(String projectName, Long projectId, Long ticketId, Member member) {
+		// 프로젝트 정보를 가져오기 (project_id가 우선)
+		Project project = (projectId != null)
+			? projectService.getProjectByProjectId(projectId, member)
+			: projectService.getProjectByProjectName(projectName);
+
+		if (project == null) {
+			throw new CustomException("INVALID_PROJECT", "프로젝트 정보(project_id 또는 project_name)가 필요합니다.");
+		}
 		projectService.validateProjectAccess(project, member, "티켓 조회자");
 
 		// 티켓 정보를 가져오기
@@ -114,6 +120,12 @@ public class TicketService {
 		ticket.setSubTicketCount(ticketRepository.countByParentTicket(ticket));
 
 		return ticket;
+	}
+
+	// 이전 버전과의 호환성을 위한 메서드
+	@Transactional
+	public Ticket getTicket(String projectName, Long ticketId, Member member) {
+		return getTicket(projectName, null, ticketId, member);
 	}
 
 	@Transactional
