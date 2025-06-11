@@ -11,13 +11,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.yoyakso.comket.billing.entity.CreditCard;
 import com.yoyakso.comket.billing.entity.WorkspaceBilling;
 import com.yoyakso.comket.billing.entity.WorkspacePlan;
 import com.yoyakso.comket.billing.enums.BillingPlan;
-import com.yoyakso.comket.billing.repository.CreditCardRepository;
 import com.yoyakso.comket.billing.repository.WorkspaceBillingRepository;
 import com.yoyakso.comket.billing.repository.WorkspacePlanRepository;
+import com.yoyakso.comket.billing.service.PaymentService;
 import com.yoyakso.comket.exception.CustomException;
 import com.yoyakso.comket.workspace.entity.Workspace;
 import com.yoyakso.comket.workspace.event.WorkspaceCreatedEvent;
@@ -35,9 +34,9 @@ public class BillingService {
 
 	private final WorkspaceBillingRepository workspaceBillingRepository;
 	private final WorkspacePlanRepository workspacePlanRepository;
-	private final CreditCardRepository creditCardRepository;
 	private final WorkspaceMemberService workspaceMemberService;
 	private final WorkspaceRepository workspaceRepository;
+	private final PaymentService paymentService;
 
 	/**
 	 * 워크스페이스 생성 이벤트를 수신하여 요금제 초기화
@@ -46,7 +45,6 @@ public class BillingService {
 	public void handleWorkspaceCreatedEvent(WorkspaceCreatedEvent event) {
 		initializeWorkspacePlan(event.getWorkspace());
 	}
-
 
 	/**
 	 * 새 워크스페이스에 대한 요금제 초기화
@@ -97,9 +95,13 @@ public class BillingService {
 
 		// 요금제 변경 필요 여부 확인
 		if (workspacePlan.getCurrentPlan() != requiredPlan) {
-			// 유료 요금제로 변경 시 신용 카드 정보 확인
-			if (requiredPlan != BillingPlan.BASIC && workspacePlan.getCreditCard() == null) {
-				throw new CustomException("CREDIT_CARD_REQUIRED", "유료 요금제로 변경하려면 신용 카드 정보가 필요합니다.");
+			// 유료 요금제로 변경 시 결제 정보 확인
+			if (requiredPlan != BillingPlan.BASIC) {
+				// 결제 정보가 등록되어 있는지 확인
+				boolean isPaymentRegistered = paymentService.isPaymentRegistered(workspacePlan.getWorkspace());
+				if (!isPaymentRegistered) {
+					throw new CustomException("PAYMENT_REQUIRED", "유료 요금제로 변경하려면 결제 정보가 필요합니다.");
+				}
 			}
 			workspacePlan.setCurrentPlan(requiredPlan);
 		}
@@ -107,68 +109,21 @@ public class BillingService {
 		return workspacePlanRepository.save(workspacePlan);
 	}
 
-	/**
-	 * 워크스페이스에 신용 카드 등록
-	 */
-	public CreditCard registerCreditCard(Long workspaceId, CreditCard creditCard) {
-		WorkspacePlan workspacePlan = getWorkspacePlan(workspaceId);
-
-		// 신용 카드 저장
-		CreditCard savedCreditCard = creditCardRepository.save(creditCard);
-
-		// 워크스페이스 요금제에 신용 카드 정보 업데이트
-		workspacePlan.setCreditCard(savedCreditCard);
-		workspacePlanRepository.save(workspacePlan);
-
-		return savedCreditCard;
-	}
-
-	/**
-	 * 워크스페이스의 신용 카드 정보 조회
-	 */
-	public CreditCard getCreditCard(Long workspaceId) {
-		WorkspacePlan workspacePlan = getWorkspacePlan(workspaceId);
-
-		if (workspacePlan.getCreditCard() == null) {
-			throw new CustomException("CREDIT_CARD_NOT_FOUND", "등록된 신용 카드 정보가 없습니다.");
-		}
-
-		return workspacePlan.getCreditCard();
-	}
-
-	/**
-	 * 워크스페이스의 신용 카드 정보 업데이트
-	 */
-	public CreditCard updateCreditCard(Long workspaceId, CreditCard creditCard) {
-		WorkspacePlan workspacePlan = getWorkspacePlan(workspaceId);
-
-		// 기존 신용 카드 정보 확인
-		if (workspacePlan.getCreditCard() == null) {
-			throw new CustomException("CREDIT_CARD_NOT_FOUND", "업데이트할 신용 카드 정보가 없습니다.");
-		}
-
-		// 기존 ID 유지
-		creditCard.setId(workspacePlan.getCreditCard().getId());
-
-		// 신용 카드 정보 업데이트
-		CreditCard updatedCreditCard = creditCardRepository.save(creditCard);
-
-		// 워크스페이스 요금제에 업데이트된 신용 카드 정보 설정
-		workspacePlan.setCreditCard(updatedCreditCard);
-		workspacePlanRepository.save(workspacePlan);
-
-		return updatedCreditCard;
-	}
 
 	/**
 	 * 워크스페이스의 요금제 변경
 	 */
 	public WorkspacePlan changeBillingPlan(Long workspaceId, BillingPlan newPlan) {
 		WorkspacePlan workspacePlan = getWorkspacePlan(workspaceId);
+		Workspace workspace = workspacePlan.getWorkspace();
 
-		// 새 요금제에 신용 카드가 필요한지 확인
-		if (newPlan != BillingPlan.BASIC && workspacePlan.getCreditCard() == null) {
-			throw new CustomException("CREDIT_CARD_REQUIRED", "유료 요금제로 변경하려면 신용 카드 정보가 필요합니다.");
+		// 새 요금제에 결제 정보가 필요한지 확인
+		if (newPlan != BillingPlan.BASIC) {
+			// 결제 정보가 등록되어 있는지 확인
+			boolean isPaymentRegistered = paymentService.isPaymentRegistered(workspace);
+			if (!isPaymentRegistered) {
+				throw new CustomException("PAYMENT_REQUIRED", "유료 요금제로 변경하려면 결제 정보가 필요합니다.");
+			}
 		}
 
 		// 요금제 업데이트
@@ -204,10 +159,14 @@ public class BillingService {
 
 		// 요금제 변경이 필요한 경우
 		if (currentPlan != requiredPlan) {
-			// 유료 요금제로 변경 시 신용 카드 정보 확인
-			if (requiredPlan != BillingPlan.BASIC && workspacePlan.getCreditCard() == null) {
-				throw new CustomException("CREDIT_CARD_REQUIRED", 
-					"유료 요금제(" + requiredPlan.getDisplayName() + ")로 변경하려면 신용 카드 정보가 필요합니다.");
+			// 유료 요금제로 변경 시 결제 정보 확인
+			if (requiredPlan != BillingPlan.BASIC) {
+				// 결제 정보가 등록되어 있는지 확인
+				boolean isPaymentRegistered = paymentService.isPaymentRegistered(workspacePlan.getWorkspace());
+				if (!isPaymentRegistered) {
+					throw new CustomException("PAYMENT_REQUIRED",
+						"유료 요금제(" + requiredPlan.getDisplayName() + ")로 변경하려면 결제 정보가 필요합니다.");
+				}
 			}
 
 			throw new CustomException("PLAN_CHANGE_REQUIRED",
@@ -233,7 +192,7 @@ public class BillingService {
 				WorkspacePlan workspacePlan = getWorkspacePlan(workspace.getId());
 
 				// 이전 달에 대한 히스토리가 이미 있는지 확인
-				Optional<WorkspaceBilling> existingHistory = 
+				Optional<WorkspaceBilling> existingHistory =
 					workspaceBillingRepository.findByWorkspaceIdAndYearAndMonth(
 						workspace.getId(), year, month);
 
@@ -251,11 +210,6 @@ public class BillingService {
 					WorkspaceBilling history = WorkspaceBilling.createForMonth(
 						workspace, plan, memberCount, year, month, amount);
 
-					// 신용카드 정보 복사 (있는 경우)
-					if (workspacePlan.getCreditCard() != null) {
-						history.setCreditCard(workspacePlan.getCreditCard());
-					}
-
 					workspaceBillingRepository.save(history);
 				}
 			} catch (Exception e) {
@@ -269,7 +223,7 @@ public class BillingService {
 	 */
 	public Map<String, Integer> getMemberCountHistory(Long workspaceId) {
 		// WorkspaceBilling 테이블에서 히스토리 데이터 조회
-		List<WorkspaceBilling> historyList = 
+		List<WorkspaceBilling> historyList =
 			workspaceBillingRepository.findHistoryByWorkspaceIdOrderByYearMonthDesc(workspaceId);
 
 		Map<String, Integer> history = historyList.stream()
@@ -301,7 +255,7 @@ public class BillingService {
 	 */
 	public Map<String, Integer> getBillingAmountHistory(Long workspaceId) {
 		// WorkspaceBilling 테이블에서 히스토리 데이터 조회
-		List<WorkspaceBilling> historyList = 
+		List<WorkspaceBilling> historyList =
 			workspaceBillingRepository.findHistoryByWorkspaceIdOrderByYearMonthDesc(workspaceId);
 
 		Map<String, Integer> billingHistory = historyList.stream()

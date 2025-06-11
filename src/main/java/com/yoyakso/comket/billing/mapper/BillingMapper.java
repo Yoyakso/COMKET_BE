@@ -6,65 +6,12 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import com.yoyakso.comket.billing.dto.request.CreditCardRegisterRequest;
-import com.yoyakso.comket.billing.dto.request.CreditCardUpdateRequest;
 import com.yoyakso.comket.billing.dto.response.BillingStatusResponse;
-import com.yoyakso.comket.billing.dto.response.CreditCardResponse;
-import com.yoyakso.comket.billing.entity.CreditCard;
 import com.yoyakso.comket.billing.entity.WorkspacePlan;
 
 @Component
 public class BillingMapper {
 
-	/**
-	 * CreditCardRegisterRequest를 CreditCard 엔티티로 변환
-	 */
-	public CreditCard toEntity(CreditCardRegisterRequest request) {
-		return CreditCard.builder()
-			.cardNumber(request.getCardNumber())
-			.cardholderName(request.getCardholderName())
-			.expiryDate(request.getExpiryDate())
-			.cvc(request.getCvc())
-			.build();
-	}
-
-	/**
-	 * CreditCardUpdateRequest를 CreditCard 엔티티로 변환
-	 */
-	public CreditCard toEntity(CreditCardUpdateRequest request) {
-		return CreditCard.builder()
-			.cardNumber(request.getCardNumber())
-			.cardholderName(request.getCardholderName())
-			.expiryDate(request.getExpiryDate())
-			.cvc(request.getCvc())
-			.build();
-	}
-
-	/**
-	 * CreditCard 엔티티를 CreditCardResponse로 변환
-	 * 보안을 위해 카드 번호를 마스킹 처리
-	 */
-	public CreditCardResponse toCreditCardResponse(CreditCard creditCard) {
-		// 카드 번호 마스킹 (앞 6자리와 뒤 4자리만 표시)
-		String cardNumber = creditCard.getCardNumber();
-		String maskedCardNumber;
-
-		if (cardNumber.length() >= 10) {
-			String firstSix = cardNumber.substring(0, 6);
-			String lastFour = cardNumber.substring(cardNumber.length() - 4);
-			maskedCardNumber = firstSix + "******" + lastFour;
-		} else {
-			// 카드 번호가 예상보다 짧은 경우를 위한 대체 처리
-			maskedCardNumber = "************" + cardNumber.substring(Math.max(0, cardNumber.length() - 4));
-		}
-
-		return CreditCardResponse.builder()
-			.id(creditCard.getId())
-			.maskedCardNumber(maskedCardNumber)
-			.cardholderName(creditCard.getCardholderName())
-			.expiryDate(creditCard.getExpiryDate())
-			.build();
-	}
 
 	/**
 	 * Convert WorkspacePlan entity to BillingStatusResponse
@@ -108,7 +55,7 @@ public class BillingMapper {
 			.currentPlanDisplayName(workspacePlan.getCurrentPlan().getDisplayName())
 			.memberCount(memberCount)
 			.confirmedAmount(confirmedAmount)
-			.hasCreditCard(workspacePlan.getCreditCard() != null)
+			.hasCreditCard(false) // 신용카드 기능 제거
 			.memberCountHistory(memberCountHistory)
 			.billingAmountHistory(billingAmountHistory)
 			.estimatedAmount(estimatedAmount)
