@@ -1,5 +1,6 @@
 package com.yoyakso.comket.thread.service;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,7 @@ public class KafkaConsumerService { // Kafka에서는
 					.sentAt(savedEntity.getSentAt())
 					.isModified(savedEntity.getIsModified())
 					.parentThreadId(savedEntity.getParentThreadId())
+					.mentionedProjectMemberIds(extractMentionIds(savedEntity))
 					.build();
 				threadSocketHandler.sendToTicket(ticketId, updatedDto); // WebSocket broadcast
 			} else if ("message_updated".equals(type)) {
@@ -64,5 +66,13 @@ public class KafkaConsumerService { // Kafka에서는
 			// TODO: 로그 추가
 			System.out.println("@@@ Kafka 메시지 처리 실패" + e.getMessage());
 		}
+	}
+
+	private List<Long> extractMentionIds(ThreadMessage message) {
+		if (message.getMentions() == null)
+			return Collections.emptyList();
+		return message.getMentions().stream()
+			.map(mention -> mention.getMentionedMember().getId()) // ProjectMember ID 추출
+			.toList();
 	}
 }
