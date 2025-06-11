@@ -17,6 +17,7 @@ public class ThreadMessageEditRequestDto {
 	private Long senderWorkspaceMemberId;
 	private Long workspaceId;
 	private String content;
+	private List<Long> mentionedProjectMemberIds;
 
 	@Nullable
 	private List<String> resources;
