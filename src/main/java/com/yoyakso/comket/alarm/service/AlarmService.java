@@ -95,10 +95,11 @@ public class AlarmService {
 		sendFcmNotification(member, ticket, alarmType, alarmMessage);
 	}
 
-	public void addThreadMentionAlarm(ThreadMessage threadMessage, ProjectMember mentionedProjectMember,
+	public void addThreadMentionAlarm(ThreadMessage threadMessage, Long memberId, ProjectMember mentionedProjectMember,
 		String message) {
 		ThreadAlarm threadAlarm = ThreadAlarm.builder()
 			.threadMessage(threadMessage)
+			.memberId(memberId)
 			.mentionedProjectMember(mentionedProjectMember)
 			.alarmType(ThreadAlarmType.THREAD_MENTIONED)
 			.alarmMessage(message)
@@ -106,7 +107,8 @@ public class AlarmService {
 
 		alarmRepository.createThreadMentionedAlarm(threadAlarm, mentionedProjectMember);
 
-		sendThreadEventFcmNotification(threadMessage, mentionedProjectMember, ThreadAlarmType.THREAD_MENTIONED,
+		sendThreadEventFcmNotification(threadMessage, memberId, mentionedProjectMember,
+			ThreadAlarmType.THREAD_MENTIONED,
 			message);
 	}
 
@@ -239,20 +241,6 @@ public class AlarmService {
 			workspaceAlarm.getAlarmMessage());
 	}
 
-	public void threadMentionedAlarm(ThreadMessage message, ProjectMember mentionedMember) {
-		ThreadAlarm threadAlarm = ThreadAlarm.builder()
-			.threadMessage(message)
-			.mentionedProjectMember(mentionedMember)
-			.alarmMessage(message.getContent())
-			.alarmType(ThreadAlarmType.THREAD_MENTIONED)
-			.build();
-
-		alarmRepository.createThreadMentionedAlarm(threadAlarm, mentionedMember);
-
-		sendThreadEventFcmNotification(message, mentionedMember, ThreadAlarmType.THREAD_MENTIONED,
-			threadAlarm.getAlarmMessage());
-	}
-
 	// FCM 워크스페이스 알림 전송 메서드
 	private void sendWorkspaceFcmNotification(Member member, Workspace workspace, WorkspaceAlarmType alarmType,
 		String alarmMessage) {
@@ -310,12 +298,13 @@ public class AlarmService {
 	// FCM 스레드 이벤트 알림 전송 메서드
 	private void sendThreadEventFcmNotification(
 		ThreadMessage message,
+		Long memberId,
 		ProjectMember mentionedMember,
 		ThreadAlarmType alarmType,
 		String alarmMessage
 	) {
 		// 사용자의 FCM 토큰 조회
-		String fcmToken = fcmService.getFcmToken(mentionedMember.getId());
+		String fcmToken = fcmService.getFcmToken(memberId); // 여기 멤버ID로 수정
 
 		// FCM 토큰이 있는 경우에만 알림 전송
 		if (fcmToken != null && !fcmToken.isEmpty()) {
