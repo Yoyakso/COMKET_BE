@@ -25,6 +25,10 @@ import com.yoyakso.comket.alarm.mapper.AlarmMapper;
 import com.yoyakso.comket.alarm.service.AlarmService;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.member.service.MemberService;
+import com.yoyakso.comket.projectMember.entity.ProjectMember;
+import com.yoyakso.comket.projectMember.service.ProjectMemberService;
+import com.yoyakso.comket.thread.entity.ThreadMessage;
+import com.yoyakso.comket.thread.service.ThreadMessageService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,6 +40,8 @@ public class AlarmController {
 	private final AlarmService alarmService;
 	private final MemberService memberService;
 	private final AlarmMapper alarmMapper;
+	private final ThreadMessageService threadMessageService;
+	private final ProjectMemberService projectMemberService;
 
 	// 워크스페이스 내부 프로젝트별 알람 count 조회 API
 	@GetMapping("/project/count")
@@ -131,6 +137,19 @@ public class AlarmController {
 	) {
 		Member member = memberService.getAuthenticatedMember();
 		alarmService.markProjectEventAlarmAsRead(member, projectId, alarmType);
+		return ResponseEntity.noContent().build();
+	}
+
+	// 스레드 멘션 알람 읽음 처리
+	@PutMapping("/thread-mentioned/read")
+	public ResponseEntity<Void> markThreadMentionedAlarmAsRead(
+		@RequestParam Long threadMessageId,
+		@RequestParam Long projectMemberId
+	) {
+		ThreadMessage message = threadMessageService.getThreadMessageById(threadMessageId);
+		ProjectMember mentionedProjectMember = projectMemberService.getProjectMemberByProjectMemberId(projectMemberId);
+
+		alarmService.markThreadAlarmAsRead(message, mentionedProjectMember);
 		return ResponseEntity.noContent().build();
 	}
 }

@@ -9,13 +9,17 @@ import org.springframework.stereotype.Repository;
 
 import com.yoyakso.comket.alarm.entity.ProjectAlarm;
 import com.yoyakso.comket.alarm.entity.ProjectEventAlarm;
+import com.yoyakso.comket.alarm.entity.ThreadAlarm;
 import com.yoyakso.comket.alarm.entity.TicketAlarm;
 import com.yoyakso.comket.alarm.entity.WorkspaceAlarm;
 import com.yoyakso.comket.alarm.enums.ProjectAlarmType;
+import com.yoyakso.comket.alarm.enums.ThreadAlarmType;
 import com.yoyakso.comket.alarm.enums.TicketAlarmType;
 import com.yoyakso.comket.alarm.enums.WorkspaceAlarmType;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.entity.Project;
+import com.yoyakso.comket.projectMember.entity.ProjectMember;
+import com.yoyakso.comket.thread.entity.ThreadMessage;
 import com.yoyakso.comket.ticket.entity.Ticket;
 import com.yoyakso.comket.workspace.entity.Workspace;
 
@@ -128,6 +132,11 @@ public class AlarmRepository {
 		return "projectEvent:" + projectId + ":member:" + memberId + ":alarmType:" + alarmType.name();
 	}
 
+	// Redis 키 생성 (스레드 멘션)
+	private String generateThreadMentionedKey(Long threadId, Long projectMemberId, ThreadAlarmType alarmType) {
+		return "threadEvent:" + threadId + ":member:" + projectMemberId + ":alarmType:" + alarmType.name();
+	}
+
 	public boolean existsTicketAlarm(TicketAlarm ticketAlarm) {
 		String key = generateTicketKey(ticketAlarm.getTicket().getId(), ticketAlarm.getMember().getId(),
 			ticketAlarm.getAlarmType());
@@ -141,21 +150,31 @@ public class AlarmRepository {
 	}
 
 	public boolean existsProjectEventAlarm(ProjectEventAlarm projectEventAlarm) {
-		String key = generateProjectEventKey(projectEventAlarm.getProject().getId(), projectEventAlarm.getMember().getId(),
+		String key = generateProjectEventKey(projectEventAlarm.getProject().getId(),
+			projectEventAlarm.getMember().getId(),
 			projectEventAlarm.getAlarmType());
 		return redisTemplate.hasKey(key);
 	}
 
 	// Redis 워크스페이스 알람 생성
 	public void createWorkspaceAlarm(Member member, WorkspaceAlarm workspaceAlarm) {
-		String key = generateWorkspaceKey(workspaceAlarm.getWorkspace().getId(), member.getId(), workspaceAlarm.getAlarmType());
+		String key = generateWorkspaceKey(workspaceAlarm.getWorkspace().getId(), member.getId(),
+			workspaceAlarm.getAlarmType());
 		redisTemplate.opsForValue().set(key, workspaceAlarm.getAlarmMessage());
 	}
 
 	// Redis 프로젝트 이벤트 알람 생성
 	public void createProjectEventAlarm(Member member, ProjectEventAlarm projectEventAlarm) {
-		String key = generateProjectEventKey(projectEventAlarm.getProject().getId(), member.getId(), projectEventAlarm.getAlarmType());
+		String key = generateProjectEventKey(projectEventAlarm.getProject().getId(), member.getId(),
+			projectEventAlarm.getAlarmType());
 		redisTemplate.opsForValue().set(key, projectEventAlarm.getAlarmMessage());
+	}
+
+	// Redis 스레드 멘션 알람 생성
+	public void createThreadMentionedAlarm(ThreadAlarm threadAlarm, ProjectMember projectMember) {
+		String key = generateThreadMentionedKey(threadAlarm.getThreadMessage().getId(), projectMember.getId(),
+			threadAlarm.getAlarmType());
+		redisTemplate.opsForValue().set(key, threadAlarm.getAlarmMessage());
 	}
 
 	// 워크스페이스 알람 읽음 처리
@@ -167,6 +186,16 @@ public class AlarmRepository {
 	// 프로젝트 이벤트 알람 읽음 처리
 	public void markProjectEventAlarmAsRead(Member member, Long projectId, ProjectAlarmType alarmType) {
 		String key = generateProjectEventKey(projectId, member.getId(), alarmType);
+		redisTemplate.delete(key);
+	}
+
+	// 스레드 멘션 알람 읽음 처리
+	public void markThreadMentionedAlarmAsRead(ThreadMessage threadMessage, ProjectMember projectMember) {
+		String key = generateThreadMentionedKey(
+			threadMessage.getId(),
+			projectMember.getId(),
+			ThreadAlarmType.THREAD_MENTIONED
+		);
 		redisTemplate.delete(key);
 	}
 
