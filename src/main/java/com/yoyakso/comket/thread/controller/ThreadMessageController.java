@@ -17,7 +17,6 @@ import com.yoyakso.comket.thread.dto.ThreadMessageReplyRequestDto;
 import com.yoyakso.comket.thread.service.ThreadMessageService;
 import com.yoyakso.comket.workspaceMember.entity.WorkspaceMember;
 import com.yoyakso.comket.workspaceMember.repository.WorkspaceMemberRepository;
-import com.yoyakso.comket.workspaceMember.service.WorkspaceMemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
@@ -28,7 +27,6 @@ import lombok.AllArgsConstructor;
 public class ThreadMessageController {
 	private final ThreadMessageService threadMessageService;
 	private final MemberService memberService;
-	private final WorkspaceMemberService workspaceMemberService;
 	private final WorkspaceMemberRepository workspaceMemberRepository;
 
 	@Operation(method = "PATCH", description = "스레드 메시지 수정 API")
