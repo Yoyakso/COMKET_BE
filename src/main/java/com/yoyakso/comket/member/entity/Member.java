@@ -46,6 +46,9 @@ public class Member {
 	@Builder.Default
 	private boolean isDeleted = false;
 
+	@Builder.Default
+	private boolean isAdmin = false;
+
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 
@@ -59,6 +62,15 @@ public class Member {
 
 	public void setIsDeleted(Boolean isDeleted) {
 		this.isDeleted = isDeleted != null ? isDeleted : false;
+	}
+
+	// Custom getter and setter for isAdmin
+	public Boolean getIsAdmin() {
+		return isAdmin;
+	}
+
+	public void setIsAdmin(Boolean isAdmin) {
+		this.isAdmin = isAdmin != null ? isAdmin : false;
 	}
 
 }
