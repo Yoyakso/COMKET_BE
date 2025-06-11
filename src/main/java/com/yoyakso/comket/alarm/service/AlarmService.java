@@ -106,7 +106,6 @@ public class AlarmService {
 			.build();
 
 		alarmRepository.createThreadMentionedAlarm(threadAlarm, mentionedProjectMember);
-		System.out.println("[INFO] - 1");
 		sendThreadEventFcmNotification(threadMessage, memberId, mentionedProjectMember,
 			ThreadAlarmType.THREAD_MENTIONED,
 			message);

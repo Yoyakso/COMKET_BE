@@ -174,7 +174,6 @@ public class AlarmRepository {
 	public void createThreadMentionedAlarm(ThreadAlarm threadAlarm, ProjectMember projectMember) {
 		String key = generateThreadMentionedKey(threadAlarm.getThreadMessage().getId(), projectMember.getId(),
 			threadAlarm.getAlarmType());
-		System.out.println("[INFO] - 2");
 		redisTemplate.opsForValue().set(key, threadAlarm.getAlarmMessage());
 	}
 

@@ -86,7 +86,7 @@ public class ThreadMessageService {
 			.build();
 
 		ThreadMessage saved = threadMessageRepository.save(entity);
-		// Mentions 저장
+		
 		// Mentions 저장
 		if (dto.getMentionedProjectMemberIds() != null && !dto.getMentionedProjectMemberIds().isEmpty()) {
 			List<ThreadMessageMention> mentions = dto.getMentionedProjectMemberIds().stream()
