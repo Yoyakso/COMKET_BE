@@ -1,14 +1,18 @@
 package com.yoyakso.comket.thread.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -51,6 +55,14 @@ public class ThreadMessage {
 	@Nullable
 	@Column(nullable = true)
 	private String resources;
+
+	@OneToMany(mappedBy = "threadMessage", cascade = CascadeType.ALL, orphanRemoval = true)
+	@Builder.Default
+	private List<ThreadMessageMention> mentions = new ArrayList<>();
+
+	public void setMentions(List<ThreadMessageMention> mentions) {
+		this.mentions = mentions;
+	}
 
 	public void editContent(String content) {
 		this.content = content;

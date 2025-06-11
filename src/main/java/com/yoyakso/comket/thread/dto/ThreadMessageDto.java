@@ -35,6 +35,9 @@ public class ThreadMessageDto {
 	@Nullable
 	private List<String> resources;
 
+	@Nullable
+	private List<Long> mentionedProjectMemberIds;
+
 	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
 	private LocalDateTime sentAt;
 }

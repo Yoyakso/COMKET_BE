@@ -9,15 +9,19 @@ import org.springframework.stereotype.Service;
 
 import com.yoyakso.comket.alarm.entity.ProjectAlarm;
 import com.yoyakso.comket.alarm.entity.ProjectEventAlarm;
+import com.yoyakso.comket.alarm.entity.ThreadAlarm;
 import com.yoyakso.comket.alarm.entity.TicketAlarm;
 import com.yoyakso.comket.alarm.entity.WorkspaceAlarm;
 import com.yoyakso.comket.alarm.enums.ProjectAlarmType;
+import com.yoyakso.comket.alarm.enums.ThreadAlarmType;
 import com.yoyakso.comket.alarm.enums.TicketAlarmType;
 import com.yoyakso.comket.alarm.enums.WorkspaceAlarmType;
 import com.yoyakso.comket.alarm.repository.AlarmRepository;
 import com.yoyakso.comket.member.entity.Member;
 import com.yoyakso.comket.project.entity.Project;
 import com.yoyakso.comket.project.service.ProjectService;
+import com.yoyakso.comket.projectMember.entity.ProjectMember;
+import com.yoyakso.comket.thread.entity.ThreadMessage;
 import com.yoyakso.comket.ticket.entity.Ticket;
 import com.yoyakso.comket.ticket.service.InternalTicketService;
 import com.yoyakso.comket.workspace.entity.Workspace;
@@ -91,6 +95,21 @@ public class AlarmService {
 		sendFcmNotification(member, ticket, alarmType, alarmMessage);
 	}
 
+	public void addThreadMentionAlarm(ThreadMessage threadMessage, ProjectMember mentionedProjectMember,
+		String message) {
+		ThreadAlarm threadAlarm = ThreadAlarm.builder()
+			.threadMessage(threadMessage)
+			.mentionedProjectMember(mentionedProjectMember)
+			.alarmType(ThreadAlarmType.THREAD_MENTIONED)
+			.alarmMessage(message)
+			.build();
+
+		alarmRepository.createThreadMentionedAlarm(threadAlarm, mentionedProjectMember);
+
+		sendThreadEventFcmNotification(threadMessage, mentionedProjectMember, ThreadAlarmType.THREAD_MENTIONED,
+			message);
+	}
+
 	// FCM 알림 전송 메서드
 	private void sendFcmNotification(Member member, Ticket ticket, TicketAlarmType alarmType, String alarmMessage) {
 		// 사용자의 FCM 토큰 조회
@@ -161,6 +180,11 @@ public class AlarmService {
 		alarmRepository.markProjectEventAlarmAsRead(member, projectId, alarmType);
 	}
 
+	public void markThreadAlarmAsRead(ThreadMessage threadMessage, ProjectMember mentionedProjectMember) {
+
+		alarmRepository.markThreadMentionedAlarmAsRead(threadMessage, mentionedProjectMember);
+	}
+
 	// 워크스페이스 초대 알람 추가
 	public void addWorkspaceInviteAlarm(Member member, Workspace workspace) {
 		// 워크스페이스 알람 생성
@@ -215,6 +239,20 @@ public class AlarmService {
 			workspaceAlarm.getAlarmMessage());
 	}
 
+	public void threadMentionedAlarm(ThreadMessage message, ProjectMember mentionedMember) {
+		ThreadAlarm threadAlarm = ThreadAlarm.builder()
+			.threadMessage(message)
+			.mentionedProjectMember(mentionedMember)
+			.alarmMessage(message.getContent())
+			.alarmType(ThreadAlarmType.THREAD_MENTIONED)
+			.build();
+
+		alarmRepository.createThreadMentionedAlarm(threadAlarm, mentionedMember);
+
+		sendThreadEventFcmNotification(message, mentionedMember, ThreadAlarmType.THREAD_MENTIONED,
+			threadAlarm.getAlarmMessage());
+	}
+
 	// FCM 워크스페이스 알림 전송 메서드
 	private void sendWorkspaceFcmNotification(Member member, Workspace workspace, WorkspaceAlarmType alarmType,
 		String alarmMessage) {
@@ -260,6 +298,37 @@ public class AlarmService {
 				fcmService.sendNotification(
 					fcmToken,
 					"프로젝트 알림",
+					alarmMessage,
+					data
+				);
+			} catch (Exception e) {
+				// 알림 전송 실패 시 예외는 전파하지 않음
+			}
+		}
+	}
+
+	// FCM 스레드 이벤트 알림 전송 메서드
+	private void sendThreadEventFcmNotification(
+		ThreadMessage message,
+		ProjectMember mentionedMember,
+		ThreadAlarmType alarmType,
+		String alarmMessage
+	) {
+		// 사용자의 FCM 토큰 조회
+		String fcmToken = fcmService.getFcmToken(mentionedMember.getId());
+
+		// FCM 토큰이 있는 경우에만 알림 전송
+		if (fcmToken != null && !fcmToken.isEmpty()) {
+			try {
+				// 알림 데이터 설정
+				Map<String, String> data = new HashMap<>();
+				data.put("threadMessageId", message.getId().toString());
+				data.put("alarmType", alarmType.name());
+
+				// FCM 알림 전송
+				fcmService.sendNotification(
+					fcmToken,
+					"스레드 알림",
 					alarmMessage,
 					data
 				);

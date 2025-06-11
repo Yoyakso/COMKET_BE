@@ -22,6 +22,7 @@ public class ThreadMessageReplyRequestDto {
 	private Long workspaceId;
 	private String senderName;
 	private String reply;
+	private List<Long> mentionedProjectMemberIds;
 
 	@Nullable
 	private List<String> resources;

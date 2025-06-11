@@ -1,19 +1,27 @@
 package com.yoyakso.comket.thread.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yoyakso.comket.exception.CustomException;
+import com.yoyakso.comket.projectMember.entity.ProjectMember;
+import com.yoyakso.comket.projectMember.repository.ProjectMemberRepository;
 import com.yoyakso.comket.thread.dto.ThreadMessageDeleteRequestDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageEditRequestDto;
 import com.yoyakso.comket.thread.dto.ThreadMessageReplyRequestDto;
 import com.yoyakso.comket.thread.entity.ThreadMessage;
+import com.yoyakso.comket.thread.entity.ThreadMessageMention;
 import com.yoyakso.comket.thread.enums.ThreadMessageState;
+import com.yoyakso.comket.thread.event.ThreadMentionedEvent;
 import com.yoyakso.comket.thread.repository.ThreadMessageRepository;
 import com.yoyakso.comket.thread.util.ResourceJsonUtil;
 import com.yoyakso.comket.thread.util.ThreadMessageProducer;
@@ -31,7 +39,10 @@ public class ThreadMessageService {
 	private final ObjectMapper objectMapper;
 	private final ResourceJsonUtil resourceJsonUtil;
 	private final WorkspaceMemberService workspaceMemberService;
+	private final ProjectMemberRepository projectMemberRepository;
+	private final ApplicationEventPublisher eventPublisher;
 
+	@Transactional
 	public List<ThreadMessageDto> getMessagesByTicketId(Long ticketId) {
 		List<ThreadMessage> messages = threadMessageRepository.findAllByTicketIdOrderBySentAtAsc(ticketId);
 
@@ -50,8 +61,13 @@ public class ThreadMessageService {
 				.resources(resources)
 				.sentAt(message.getSentAt())
 				.isModified(message.getIsModified())
+				.mentionedProjectMemberIds(extractMentionIds(message))
 				.build();
 		}).toList();
+	}
+
+	public ThreadMessage getThreadMessageById(Long threadMessageId) {
+		return threadMessageRepository.findById(threadMessageId).orElse(null);
 	}
 
 	// threadId를 넘겨줘야 하기 때문에 async -> sync 변경 / 추후 개선
@@ -69,13 +85,47 @@ public class ThreadMessageService {
 			.resources(resourcesJson)
 			.build();
 
-		return threadMessageRepository.save(entity);
+		ThreadMessage saved = threadMessageRepository.save(entity);
+		// Mentions 저장
+		if (dto.getMentionedProjectMemberIds() != null && !dto.getMentionedProjectMemberIds().isEmpty()) {
+			List<ThreadMessageMention> mentions = dto.getMentionedProjectMemberIds().stream()
+				.map(id -> {
+					ProjectMember pm = projectMemberRepository.findById(id)
+						.orElseThrow(() -> new CustomException("PROJECT_MEMBER_NOT_FOUND", "존재하지 않는 멤버입니다."));
+					eventPublisher.publishEvent(new ThreadMentionedEvent(saved, pm));
+					return ThreadMessageMention.builder()
+						.threadMessage(saved)
+						.mentionedMember(pm)
+						.build();
+				}).toList();
+
+			saved.setMentions(mentions);
+			threadMessageRepository.save(saved);
+		}
+
+		return saved;
 	}
 
 	@Transactional
 	public void editMessage(ThreadMessageEditRequestDto dto) {
 		ThreadMessage message = threadMessageRepository.findById(dto.getThreadId())
 			.orElseThrow(() -> new CustomException("THREAD_NOT_FOUND", "스레드를 찾을 수 없습니다."));
+
+		message.getMentions().clear();
+
+		if (dto.getMentionedProjectMemberIds() != null && !dto.getMentionedProjectMemberIds().isEmpty()) {
+			List<ThreadMessageMention> newMentions = dto.getMentionedProjectMemberIds().stream()
+				.map(id -> {
+					ProjectMember member = projectMemberRepository.findById(id)
+						.orElseThrow(() -> new CustomException("PROJECT_MEMBER_NOT_FOUND", "존재하지 않는 멤버입니다."));
+					return ThreadMessageMention.builder()
+						.threadMessage(message)
+						.mentionedMember(member)
+						.build();
+				}).toList();
+			message.getMentions().clear();
+			message.getMentions().addAll(newMentions);
+		}
 
 		String senderName = workspaceMemberService.getWorkspaceMemberById(message.getSenderWorkspaceMemberId())
 			.getNickName();
@@ -96,6 +146,7 @@ public class ThreadMessageService {
 			.sentAt(message.getSentAt())
 			.isModified(true)
 			.messageState(ThreadMessageState.UPDATE)
+			.mentionedProjectMemberIds(extractMentionIds(message))
 			.build();
 
 		String topic = "thread-ticket-" + message.getTicketId();
@@ -153,20 +204,35 @@ public class ThreadMessageService {
 			.sentAt(dto.getSentAt()) // 클라이언트 or Kafka timestamp 기준
 			.build();
 
-		ThreadMessage SavedThreadMeesage = threadMessageRepository.save(entity);
+		ThreadMessage savedReply = threadMessageRepository.save(entity);
+
+		if (dto.getMentionedProjectMemberIds() != null && !dto.getMentionedProjectMemberIds().isEmpty()) {
+			List<ThreadMessageMention> mentions = dto.getMentionedProjectMemberIds().stream()
+				.map(id -> {
+					ProjectMember member = projectMemberRepository.findById(id)
+						.orElseThrow(() -> new CustomException("PROJECT_MEMBER_NOT_FOUND", "존재하지 않는 멤버입니다."));
+					return ThreadMessageMention.builder()
+						.threadMessage(savedReply)
+						.mentionedMember(member)
+						.build();
+				}).collect(Collectors.toCollection(ArrayList::new));
+			savedReply.setMentions(mentions);
+			threadMessageRepository.save(savedReply);
+		}
 
 		String senderName = workspaceMemberService.getWorkspaceMemberById(message.getSenderWorkspaceMemberId())
 			.getNickName();
 
 		ThreadMessageDto responseMessage = ThreadMessageDto.builder()
-			.ticketId(SavedThreadMeesage.getTicketId())
-			.parentThreadId(SavedThreadMeesage.getParentThreadId())
-			.senderWorkspaceMemberId(SavedThreadMeesage.getSenderWorkspaceMemberId())
+			.ticketId(savedReply.getTicketId())
+			.parentThreadId(savedReply.getParentThreadId())
+			.senderWorkspaceMemberId(savedReply.getSenderWorkspaceMemberId())
 			.senderName(senderName)
-			.content(SavedThreadMeesage.getContent())
+			.content(savedReply.getContent())
 			.resources(dto.getResources())
-			.sentAt(SavedThreadMeesage.getSentAt())
+			.sentAt(savedReply.getSentAt())
 			.isModified(false)
+			.mentionedProjectMemberIds(extractMentionIds(savedReply))
 			.build();
 
 		String topic = "thread-ticket-" + message.getTicketId();
@@ -181,4 +247,13 @@ public class ThreadMessageService {
 			throw new CustomException("THREAD_MESSAGE_REPLY_ERROR", "스레드 메시지 답글 작성에 실패했습니다.");
 		}
 	}
+
+	private List<Long> extractMentionIds(ThreadMessage message) {
+		if (message.getMentions() == null)
+			return Collections.emptyList();
+		return message.getMentions().stream()
+			.map(mention -> mention.getMentionedMember().getId()) // ProjectMember ID 추출
+			.toList();
+	}
+
 }
