@@ -36,69 +36,66 @@ import lombok.Setter;
 @Table(name = "workspace_billing")
 public class WorkspaceBilling {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workspace_id", nullable = false)
-    private Workspace workspace;
+	@NotNull
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "workspace_id", nullable = false)
+	private Workspace workspace;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    private BillingPlan billingPlan;
+	@NotNull
+	@Enumerated(EnumType.STRING)
+	private BillingPlan billingPlan;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "credit_card_id")
-    private CreditCard creditCard;
+	@Column(nullable = false)
+	private Integer memberCount;
 
-    @Column(nullable = false)
-    private Integer memberCount;
+	@Column(nullable = false)
+	private Integer year;
 
-    @Column(nullable = false)
-    private Integer year;
+	@Column(nullable = false)
+	private Integer month;
 
-    @Column(nullable = false)
-    private Integer month;
+	@Column(nullable = false)
+	private Integer amount;  // 확정된 금액
 
-    @Column(nullable = false)
-    private Integer amount;  // 확정된 금액
+	@CreationTimestamp
+	private LocalDateTime createdAt;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+	@UpdateTimestamp
+	private LocalDateTime updatedAt;
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+	// 현재 월에 대한 히스토리 기록을 생성하는 헬퍼 메소드
+	public static WorkspaceBilling createForCurrentMonth(Workspace workspace, BillingPlan plan, int memberCount,
+		int amount) {
+		YearMonth currentMonth = YearMonth.now();
+		return WorkspaceBilling.builder()
+			.workspace(workspace)
+			.billingPlan(plan)
+			.memberCount(memberCount)
+			.year(currentMonth.getYear())
+			.month(currentMonth.getMonthValue())
+			.amount(amount)
+			.build();
+	}
 
-    // YearMonth 표현을 가져오는 헬퍼 메소드
-    public YearMonth getYearMonth() {
-        return year != null && month != null ? YearMonth.of(year, month) : null;
-    }
+	// 특정 월에 대한 히스토리 기록을 생성하는 헬퍼 메소드
+	public static WorkspaceBilling createForMonth(Workspace workspace, BillingPlan plan, int memberCount,
+		int year, int month, int amount) {
+		return WorkspaceBilling.builder()
+			.workspace(workspace)
+			.billingPlan(plan)
+			.memberCount(memberCount)
+			.year(year)
+			.month(month)
+			.amount(amount)
+			.build();
+	}
 
-    // 현재 월에 대한 히스토리 기록을 생성하는 헬퍼 메소드
-    public static WorkspaceBilling createForCurrentMonth(Workspace workspace, BillingPlan plan, int memberCount, int amount) {
-        YearMonth currentMonth = YearMonth.now();
-        return WorkspaceBilling.builder()
-            .workspace(workspace)
-            .billingPlan(plan)
-            .memberCount(memberCount)
-            .year(currentMonth.getYear())
-            .month(currentMonth.getMonthValue())
-            .amount(amount)
-            .build();
-    }
-
-    // 특정 월에 대한 히스토리 기록을 생성하는 헬퍼 메소드
-    public static WorkspaceBilling createForMonth(Workspace workspace, BillingPlan plan, int memberCount, 
-                                                 int year, int month, int amount) {
-        return WorkspaceBilling.builder()
-            .workspace(workspace)
-            .billingPlan(plan)
-            .memberCount(memberCount)
-            .year(year)
-            .month(month)
-            .amount(amount)
-            .build();
-    }
+	// YearMonth 표현을 가져오는 헬퍼 메소드
+	public YearMonth getYearMonth() {
+		return year != null && month != null ? YearMonth.of(year, month) : null;
+	}
 }

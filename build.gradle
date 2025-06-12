@@ -21,6 +21,11 @@ configurations {
 
 repositories {
     mavenCentral()
+    allprojects {
+        repositories {
+            maven { url 'https://jitpack.io' }
+        }
+    }
 }
 
 dependencies {
@@ -89,6 +94,9 @@ dependencies {
 
     // FCM
     implementation 'com.google.firebase:firebase-admin:9.3.0'
+
+    // PG(PortOne)
+    implementation 'com.github.iamport:iamport-rest-client-java:0.2.21'
 }
 
 tasks.withType(Test).configureEach {

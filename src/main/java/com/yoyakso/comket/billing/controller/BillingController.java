@@ -12,11 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.yoyakso.comket.billing.dto.request.BillingPlanChangeRequest;
-import com.yoyakso.comket.billing.dto.request.CreditCardRegisterRequest;
-import com.yoyakso.comket.billing.dto.request.CreditCardUpdateRequest;
 import com.yoyakso.comket.billing.dto.response.BillingStatusResponse;
-import com.yoyakso.comket.billing.dto.response.CreditCardResponse;
-import com.yoyakso.comket.billing.entity.CreditCard;
 import com.yoyakso.comket.billing.entity.WorkspacePlan;
 import com.yoyakso.comket.billing.mapper.BillingMapper;
 import com.yoyakso.comket.billing.service.BillingService;
@@ -76,69 +72,6 @@ public class BillingController {
 			workspacePlan, memberCountHistory, billingAmountHistory, memberCount));
 	}
 
-	@PostMapping("/credit-card")
-	@Operation(summary = "신용 카드 등록 API", description = "워크스페이스에 신용 카드를 등록하는 API")
-	public ResponseEntity<Void> registerCreditCard(
-		@PathVariable Long workspaceId,
-		@Valid @RequestBody CreditCardRegisterRequest request
-	) {
-		// 인증된 사용자 확인
-		Member authenticatedMember = memberService.getAuthenticatedMember();
-
-		// 워크스페이스 접근 권한 확인
-		Workspace workspace = workspaceService.getWorkspaceById(workspaceId, authenticatedMember);
-
-		// 관리자 권한 확인
-		workspaceService.validateAdminPermission(authenticatedMember, workspace);
-
-		// 신용 카드 생성 및 등록
-		billingService.registerCreditCard(workspaceId, billingMapper.toEntity(request));
-
-		return ResponseEntity.ok().build();
-	}
-
-	@GetMapping("/credit-card")
-	@Operation(summary = "신용 카드 조회 API", description = "워크스페이스에 등록된 신용 카드 정보를 조회하는 API")
-	public ResponseEntity<CreditCardResponse> getCreditCard(
-		@PathVariable Long workspaceId
-	) {
-		// 인증된 사용자 확인
-		Member authenticatedMember = memberService.getAuthenticatedMember();
-
-		// 워크스페이스 접근 권한 확인
-		Workspace workspace = workspaceService.getWorkspaceById(workspaceId, authenticatedMember);
-
-		// 관리자 권한 확인
-		workspaceService.validateAdminPermission(authenticatedMember, workspace);
-
-		// 신용 카드 정보 조회
-		CreditCard creditCard = billingService.getCreditCard(workspaceId);
-
-		// 응답 생성
-		return ResponseEntity.ok(billingMapper.toCreditCardResponse(creditCard));
-	}
-
-	@PutMapping("/credit-card")
-	@Operation(summary = "신용 카드 수정 API", description = "워크스페이스에 등록된 신용 카드 정보를 수정하는 API")
-	public ResponseEntity<CreditCardResponse> updateCreditCard(
-		@PathVariable Long workspaceId,
-		@Valid @RequestBody CreditCardUpdateRequest request
-	) {
-		// 인증된 사용자 확인
-		Member authenticatedMember = memberService.getAuthenticatedMember();
-
-		// 워크스페이스 접근 권한 확인
-		Workspace workspace = workspaceService.getWorkspaceById(workspaceId, authenticatedMember);
-
-		// 관리자 권한 확인
-		workspaceService.validateAdminPermission(authenticatedMember, workspace);
-
-		// 신용 카드 정보 업데이트
-		CreditCard updatedCreditCard = billingService.updateCreditCard(workspaceId, billingMapper.toEntity(request));
-
-		// 응답 생성
-		return ResponseEntity.ok(billingMapper.toCreditCardResponse(updatedCreditCard));
-	}
 
 	@PostMapping("/admin/record")
 	@Operation(summary = "워크스페이스 빌링 히스토리 수동 기록 API", description = "워크스페이스 빌링 데이터를 수동으로 기록하는 API")
