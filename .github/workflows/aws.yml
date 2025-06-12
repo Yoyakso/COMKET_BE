@@ -88,6 +88,8 @@ jobs:
             echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
             echo "KAFKA_EC2_HOST_IP=${{ secrets.KAFKA_EC2_HOST_IP }}" >> .env
             echo "GPT_SECRET=${{secrets.GPT_SECRET}}" >> .env
+            echo "IAMPORT_API_KEY=${{ secrets.IAMPORT_API_KEY }}" >> .env
+            echo "IAMPORT_API_SECRET=${{ secrets.IAMPORT_API_SECRET }}" >> .env
 
             # Firebase 서비스 계정 파일 생성
             echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > firebase-service-account.json

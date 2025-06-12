@@ -118,3 +118,8 @@ logging:
     name: logs/application.log
   level:
     root: INFO
+
+iamport:
+  api:
+    key: ${IAMPORT_API_KEY}
+    secret: ${IAMPORT_API_SECRET}

@@ -48,9 +48,6 @@ public class WorkspacePlan {
 	@Enumerated(EnumType.STRING)
 	private BillingPlan currentPlan;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "credit_card_id")
-	private CreditCard creditCard;
 
 	@CreationTimestamp
 	private LocalDateTime createdAt;
@@ -63,8 +60,8 @@ public class WorkspacePlan {
 		return currentPlan.getPricePerMember() * memberCount;
 	}
 
-	// 현재 요금제에 신용 카드가 필요한지 확인하는 메소드
-	public boolean isCreditCardRequired() {
+	// 현재 요금제에 결제 정보가 필요한지 확인하는 메소드
+	public boolean isPaymentRequired() {
 		return currentPlan != BillingPlan.BASIC;
 	}
 }
