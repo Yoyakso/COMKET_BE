@@ -28,6 +28,7 @@ public class MemberMapper {
 			.memberId(member.getId())
 			.email(member.getEmail())
 			.fullName(member.getFullName())
+			.isAdmin(member.getIsAdmin())
 			.build();
 	}
 
@@ -49,6 +50,7 @@ public class MemberMapper {
 		return MemberInfoResponse.builder()
 			.email(member.getEmail())
 			.fullName(member.getFullName())
+			.isAdmin(member.getIsAdmin())
 			.build();
 	}
 

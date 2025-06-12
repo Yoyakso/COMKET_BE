@@ -15,4 +15,6 @@ public class MemberInfoResponse {
 	private String email;
 	@JsonProperty("full_name")
 	private String fullName;
+	@JsonProperty("isAdmin")
+	private Boolean isAdmin;
 }
