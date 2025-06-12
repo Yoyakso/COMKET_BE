@@ -76,6 +76,7 @@ public class SecurityConfig {
 		config.addAllowedOriginPattern("http://localhost:3333");
 		config.addAllowedOriginPattern("https://localhost:3333");
 		config.addAllowedOriginPattern("https://comket.co.kr");
+		config.addAllowedOriginPattern("https://comket-api.co.kr");
 		config.addAllowedMethod("*");
 		config.addAllowedHeader("*");
 		config.setAllowCredentials(true);
