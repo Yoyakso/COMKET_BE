@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문의 관리</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 사이드바 -->
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin">
+                                대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/admin/inquiries">
+                                문의 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/statistics/operations">
+                                운영 통계
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/statistics/user-behavior">
+                                사용자 행동 분석
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/statistics/feature-usage">
+                                기능 사용률 분석
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- 메인 콘텐츠 -->
+            <main class="col-md-10 ms-sm-auto px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">문의 관리</h1>
+                </div>
+
+                <!-- 문의 목록 테이블 -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>이름</th>
+                                <th>이메일</th>
+                                <th>문의 유형</th>
+                                <th>답변 상태</th>
+                                <th>등록일</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="inquiry : ${inquiries}">
+                                <td th:text="${inquiry.id}">1</td>
+                                <td th:text="${inquiry.name}">홍길동</td>
+                                <td th:text="${inquiry.email}">hong@example.com</td>
+                                <td th:text="${inquiry.type}">서비스 이용 문의</td>
+                                <td>
+                                    <span th:if="${inquiry.answered}" class="badge bg-success">답변 완료</span>
+                                    <span th:unless="${inquiry.answered}" class="badge bg-warning">대기 중</span>
+                                </td>
+                                <td th:text="${#temporals.format(inquiry.createdAt, 'yyyy-MM-dd HH:mm')}">2023-01-01 12:00</td>
+                                <td>
+                                    <a th:href="@{/admin/inquiries/{id}(id=${inquiry.id})}" class="btn btn-sm btn-primary">상세보기</a>
+                                </td>
+                            </tr>
+                            <!-- 데이터가 없을 경우 -->
+                            <tr th:if="${#lists.isEmpty(inquiries)}">
+                                <td colspan="7" class="text-center">문의 내역이 없습니다.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 사이드바 링크 클릭 이벤트 처리
+        document.addEventListener('DOMContentLoaded', function() {
+            // 모든 사이드바 링크에 이벤트 리스너 추가
+            const sidebarLinks = document.querySelectorAll('.sidebar .nav-link');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault(); // 기본 링크 동작 방지
+
+                    const url = this.getAttribute('href');
+                    const token = localStorage.getItem('accessToken');
+
+                    if (token) {
+                        // JWT 토큰을 포함하여 페이지 요청
+                        fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': 'Bearer ' + token
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.text();
+                            } else {
+                                throw new Error('페이지 로드에 실패했습니다.');
+                            }
+                        })
+                        .then(html => {
+                            // 응답 HTML을 현재 페이지에 적용
+                            document.open();
+                            document.write(html);
+                            document.close();
+
+                            // 브라우저 주소창 URL 변경 (히스토리에 기록)
+                            window.history.pushState({}, '', url);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert(error.message);
+                            // 오류 발생 시 로그인 페이지로 리다이렉트
+                            window.location.href = '/admin-login';
+                        });
+                    } else {
+                        // 토큰이 없으면 로그인 페이지로 리다이렉트
+                        window.location.href = '/admin-login';
+                    }
+                });
+            });
+
+            // 상세보기 버튼 클릭 이벤트 처리
+            const detailButtons = document.querySelectorAll('.btn-primary');
+            detailButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault(); // 기본 링크 동작 방지
+
+                    const url = this.getAttribute('href');
+                    const token = localStorage.getItem('accessToken');
+
+                    if (token) {
+                        // JWT 토큰을 포함하여 페이지 요청
+                        fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': 'Bearer ' + token
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.text();
+                            } else {
+                                throw new Error('페이지 로드에 실패했습니다.');
+                            }
+                        })
+                        .then(html => {
+                            // 응답 HTML을 현재 페이지에 적용
+                            document.open();
+                            document.write(html);
+                            document.close();
+
+                            // 브라우저 주소창 URL 변경 (히스토리에 기록)
+                            window.history.pushState({}, '', url);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert(error.message);
+                            // 오류 발생 시 로그인 페이지로 리다이렉트
+                            window.location.href = '/admin-login';
+                        });
+                    } else {
+                        // 토큰이 없으면 로그인 페이지로 리다이렉트
+                        window.location.href = '/admin-login';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

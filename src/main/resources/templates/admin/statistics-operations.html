@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>운영 통계</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- 사이드바 -->
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin">
+                            대시보드
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/inquiries">
+                            문의 관리
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/statistics/operations">
+                            운영 통계
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/statistics/user-behavior">
+                            사용자 행동 분석
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/statistics/feature-usage">
+                            기능 사용률 분석
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- 메인 콘텐츠 -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">운영 통계</h1>
+            </div>
+
+            <!-- 주요 통계 카드 및 그래프 -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>전체 통계</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <h6>전체 워크스페이스</h6>
+                                    <p class="h3" th:text="${stats.totalWorkspaces}">0</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6>전체 프로젝트</h6>
+                                    <p class="h3" th:text="${stats.totalProjects}">0</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6>전체 유저</h6>
+                                    <p class="h3" th:text="${stats.totalMembers}">0</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6>전체 티켓</h6>
+                                    <p class="h3" th:text="${stats.totalTickets}">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>전체 통계 그래프</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="totalStatsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상세 통계 및 그래프 -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>일일 티켓 생성 추이</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="ticketCreationChart"></canvas>
+                            <div class="text-center mt-3">
+                                <p>하루 평균 티켓 생성 수: <span class="fw-bold"
+                                                        th:text="${#numbers.formatDecimal(stats.avgDailyTickets, 1, 1)}">0.0</span>
+                                </p>
+                                <p class="text-muted small">최근 30일 기준</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>일일 유저 가입 추이</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="userSignupChart"></canvas>
+                            <div class="text-center mt-3">
+                                <p>하루 평균 유저 가입 수: <span class="fw-bold"
+                                                        th:text="${#numbers.formatDecimal(stats.avgDailySignups, 1, 1)}">0.0</span>
+                                </p>
+                                <p class="text-muted small">최근 30일 기준</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 활성 이용자 카드 -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>활성 이용자 수</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="display-4 text-center" th:text="${stats.activeUsers}">0</p>
+                            <p class="text-muted text-center">최근 30일 내 활동 기준</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 이탈율 차트 -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">이탈율</h5>
+                            <div class="progress" style="height: 30px;">
+                                <div class="progress-bar bg-danger" role="progressbar"
+                                     th:style="'width: ' + ${stats.churnRate * 100} + '%'"
+                                     th:text="${#numbers.formatPercent(stats.churnRate, 1, 1)}">
+                                    0%
+                                </div>
+                            </div>
+                            <p class="text-muted mt-2">전체 사용자 중 최근 30일간 활동하지 않은 사용자의 비율</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+    // 사이드바 링크 클릭 이벤트 처리
+    document.addEventListener('DOMContentLoaded', function () {
+        // 모든 사이드바 링크에 이벤트 리스너 추가
+        const sidebarLinks = document.querySelectorAll('.sidebar .nav-link');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault(); // 기본 링크 동작 방지
+
+                const url = this.getAttribute('href');
+                const token = localStorage.getItem('accessToken');
+
+                if (token) {
+                    // JWT 토큰을 포함하여 페이지 요청
+                    fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': 'Bearer ' + token
+                        }
+                    })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.text();
+                            } else {
+                                throw new Error('페이지 로드에 실패했습니다.');
+                            }
+                        })
+                        .then(html => {
+                            // 응답 HTML을 현재 페이지에 적용
+                            document.open();
+                            document.write(html);
+                            document.close();
+
+                            // 브라우저 주소창 URL 변경 (히스토리에 기록)
+                            window.history.pushState({}, '', url);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert(error.message);
+                            // 오류 발생 시 로그인 페이지로 리다이렉트
+                            window.location.href = '/admin-login';
+                        });
+                } else {
+                    // 토큰이 없으면 로그인 페이지로 리다이렉트
+                    window.location.href = '/admin-login';
+                }
+            });
+        });
+
+        // 전체 통계 그래프
+        const totalStatsCtx = document.getElementById('totalStatsChart').getContext('2d');
+        new Chart(totalStatsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['워크스페이스', '프로젝트', '유저', '티켓'],
+                datasets: [{
+                    label: '전체 수',
+                    data: [
+                        /*[[${stats.totalWorkspaces}]]*/ 0,
+                        /*[[${stats.totalProjects}]]*/ 0,
+                        /*[[${stats.totalMembers}]]*/ 0,
+                        /*[[${stats.totalTickets}]]*/ 0
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // 일일 티켓 생성 추이 그래프 (예시 데이터)
+        const ticketCreationCtx = document.getElementById('ticketCreationChart').getContext('2d');
+        new Chart(ticketCreationCtx, {
+            type: 'line',
+            data: {
+                labels: ['1일전', '2일전', '3일전', '4일전', '5일전', '6일전', '7일전'],
+                datasets: [{
+                    label: '일일 티켓 생성 수',
+                    data: [12, 19, 3, 5, 2, 3, /*[[${stats.avgDailyTickets}]]*/ 7],
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // 일일 유저 가입 추이 그래프 (예시 데이터)
+        const userSignupCtx = document.getElementById('userSignupChart').getContext('2d');
+        new Chart(userSignupCtx, {
+            type: 'line',
+            data: {
+                labels: ['1일전', '2일전', '3일전', '4일전', '5일전', '6일전', '7일전'],
+                datasets: [{
+                    label: '일일 유저 가입 수',
+                    data: [5, 7, 2, 8, 3, 1, /*[[${stats.avgDailySignups}]]*/ 4],
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

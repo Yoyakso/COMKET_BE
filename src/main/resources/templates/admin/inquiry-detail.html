@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문의 상세</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 사이드바 -->
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin">
+                                대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/admin/inquiries">
+                                문의 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/statistics/operations">
+                                운영 통계
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/statistics/user-behavior">
+                                사용자 행동 분석
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/statistics/feature-usage">
+                                기능 사용률 분석
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- 메인 콘텐츠 -->
+            <main class="col-md-10 ms-sm-auto px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">문의 상세</h1>
+                    <a href="/admin/inquiries" class="btn btn-outline-secondary">목록으로</a>
+                </div>
+
+                <!-- 문의 상세 정보 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 th:text="${inquiry.name} + ' (' + ${inquiry.email} + ')'">홍길동 (hong@example.com)</h5>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <span class="badge bg-primary" th:text="${inquiry.type}">서비스 이용 문의</span>
+                                <span th:if="${inquiry.answered}" class="badge bg-success">답변 완료</span>
+                                <span th:unless="${inquiry.answered}" class="badge bg-warning">대기 중</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">문의 내용</h5>
+                        <p class="card-text" th:text="${inquiry.message}">문의 내용입니다.</p>
+                        <hr>
+                        <div th:if="${inquiry.answered}">
+                            <h5 class="card-title">답변 내용</h5>
+                            <p class="card-text" th:text="${inquiry.answer}">답변 내용입니다.</p>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <div class="row">
+                            <div class="col-md-6">
+                                등록일: <span th:text="${#temporals.format(inquiry.createdAt, 'yyyy-MM-dd HH:mm')}">2023-01-01 12:00</span>
+                            </div>
+                            <div class="col-md-6 text-end" th:if="${inquiry.answered}">
+                                답변일: <span th:text="${#temporals.format(inquiry.updatedAt, 'yyyy-MM-dd HH:mm')}">2023-01-02 12:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 답변 폼 -->
+                <div class="card" th:if="${!inquiry.answered}">
+                    <div class="card-header">
+                        <h5>답변 작성</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/inquiries/{id}/answer(id=${inquiry.id})}" method="post">
+                            <div class="mb-3">
+                                <label for="answer" class="form-label">답변 내용</label>
+                                <textarea class="form-control" id="answer" name="answer" rows="5" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">답변 등록</button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 사이드바 링크 클릭 이벤트 처리
+        document.addEventListener('DOMContentLoaded', function() {
+            // 모든 사이드바 링크에 이벤트 리스너 추가
+            const sidebarLinks = document.querySelectorAll('.sidebar .nav-link');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault(); // 기본 링크 동작 방지
+
+                    const url = this.getAttribute('href');
+                    const token = localStorage.getItem('accessToken');
+
+                    if (token) {
+                        // JWT 토큰을 포함하여 페이지 요청
+                        fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': 'Bearer ' + token
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.text();
+                            } else {
+                                throw new Error('페이지 로드에 실패했습니다.');
+                            }
+                        })
+                        .then(html => {
+                            // 응답 HTML을 현재 페이지에 적용
+                            document.open();
+                            document.write(html);
+                            document.close();
+
+                            // 브라우저 주소창 URL 변경 (히스토리에 기록)
+                            window.history.pushState({}, '', url);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert(error.message);
+                            // 오류 발생 시 로그인 페이지로 리다이렉트
+                            window.location.href = '/admin-login';
+                        });
+                    } else {
+                        // 토큰이 없으면 로그인 페이지로 리다이렉트
+                        window.location.href = '/admin-login';
+                    }
+                });
+            });
+
+            // 목록으로 버튼 클릭 이벤트 처리
+            const backButton = document.querySelector('.btn-outline-secondary');
+            if (backButton) {
+                backButton.addEventListener('click', function(e) {
+                    e.preventDefault(); // 기본 링크 동작 방지
+
+                    const url = this.getAttribute('href');
+                    const token = localStorage.getItem('accessToken');
+
+                    if (token) {
+                        // JWT 토큰을 포함하여 페이지 요청
+                        fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': 'Bearer ' + token
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.text();
+                            } else {
+                                throw new Error('페이지 로드에 실패했습니다.');
+                            }
+                        })
+                        .then(html => {
+                            // 응답 HTML을 현재 페이지에 적용
+                            document.open();
+                            document.write(html);
+                            document.close();
+
+                            // 브라우저 주소창 URL 변경 (히스토리에 기록)
+                            window.history.pushState({}, '', url);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert(error.message);
+                            // 오류 발생 시 로그인 페이지로 리다이렉트
+                            window.location.href = '/admin-login';
+                        });
+                    } else {
+                        // 토큰이 없으면 로그인 페이지로 리다이렉트
+                        window.location.href = '/admin-login';
+                    }
+                });
+            }
+
+            // 답변 폼 제출 이벤트 처리
+            const answerForm = document.querySelector('form');
+            if (answerForm) {
+                answerForm.addEventListener('submit', function(e) {
+                    e.preventDefault(); // 기본 폼 제출 동작 방지
+
+                    const url = this.getAttribute('action');
+                    const token = localStorage.getItem('accessToken');
+                    const answer = document.getElementById('answer').value;
+
+                    if (token) {
+                        // JWT 토큰을 포함하여 폼 데이터 제출
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Authorization': 'Bearer ' + token
+                            },
+                            body: 'answer=' + encodeURIComponent(answer)
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                // 성공 시 문의 목록 페이지로 이동
+                                return fetch('/admin/inquiries', {
+                                    method: 'GET',
+                                    headers: {
+                                        'Authorization': 'Bearer ' + token
+                                    }
+                                });
+                            } else {
+                                throw new Error('답변 등록에 실패했습니다.');
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.text();
+                            } else {
+                                throw new Error('페이지 로드에 실패했습니다.');
+                            }
+                        })
+                        .then(html => {
+                            // 응답 HTML을 현재 페이지에 적용
+                            document.open();
+                            document.write(html);
+                            document.close();
+
+                            // 브라우저 주소창 URL 변경 (히스토리에 기록)
+                            window.history.pushState({}, '', '/admin/inquiries');
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert(error.message);
+                        });
+                    } else {
+                        // 토큰이 없으면 로그인 페이지로 리다이렉트
+                        window.location.href = '/admin-login';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

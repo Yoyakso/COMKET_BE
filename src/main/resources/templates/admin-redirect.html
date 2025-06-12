@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지로 이동 중...</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+        }
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <h2>관리자 페이지로 이동 중입니다...</h2>
+    <p>잠시만 기다려 주세요.</p>
+
+    <script th:inline="javascript">
+        // URL에서 토큰 파라미터 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (token) {
+            // 토큰을 localStorage에 저장
+            localStorage.setItem('accessToken', token);
+            
+            // Authorization 헤더에 토큰을 포함하여 /admin으로 요청
+            fetch('/admin', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('관리자 페이지 접근에 실패했습니다.');
+                }
+            })
+            .then(html => {
+                // 응답 HTML을 현재 페이지에 적용
+                document.open();
+                document.write(html);
+                document.close();
+                
+                // 브라우저 주소창 URL 변경 (히스토리에 기록되지 않음)
+                window.history.replaceState({}, 'Admin Dashboard', '/admin');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message);
+                window.location.href = '/admin-login';
+            });
+        } else {
+            // 토큰이 없으면 로그인 페이지로 리다이렉트
+            window.location.href = '/admin-login';
+        }
+    </script>
+</body>
+</html>

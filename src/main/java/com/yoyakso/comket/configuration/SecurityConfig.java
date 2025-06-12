@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
 	private final JwtTokenFilter jwtTokenFilter;
+	private final AdminAuthenticationEntryPoint adminAuthenticationEntryPoint;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -49,10 +50,16 @@ public class SecurityConfig {
 					"/sub/**",
 					"/pub/**"
 				).permitAll()
+				.requestMatchers("/admin-login").permitAll() // 관리자 로그인 페이지는 인증 없이 접근 가능
+				.requestMatchers("/admin-redirect").permitAll() // 관리자 리다이렉트 페이지는 인증 없이 접근 가능
+				.requestMatchers("/admin/**").authenticated() // 관리자 페이지는 인증 필요 (AdminController에서 추가로 관리자 권한 검증)
 				.anyRequest().authenticated() // 그 외 요청은 인증 필요
 			)
 			.formLogin(AbstractHttpConfigurer::disable) // 폼 로그인 비활성화
 			.httpBasic(AbstractHttpConfigurer::disable) // HTTP Basic 인증 비활성화
+			.exceptionHandling(exception -> exception
+				.authenticationEntryPoint(adminAuthenticationEntryPoint) // 인증 실패 시 처리
+			)
 			.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 등록
 
 		return http.build();
