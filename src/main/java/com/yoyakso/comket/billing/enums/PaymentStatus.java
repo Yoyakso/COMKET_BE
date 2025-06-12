@@ -6,10 +6,10 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum PaymentStatus {
-	IDLE("IDLE"),
-	PENDING("PENDING"),
-	FAILED("FAILED"),
-	PAID("PAID"),
+	IDLE("idle"),
+	PENDING("pending"),
+	FAILED("failed"),
+	PAID("paid"),
 	;
 	private final String key;
 }
